@@ -245,8 +245,6 @@ class exporter_footprint_kicad():
 
         # For circles
         for ee_circle in self.input.circles:
-            print(ee_circle)
-            print(self.input.bbox.x)
             ki_circle = ki_footprint_circle(
                 cx=ee_circle.cx - self.input.bbox.x,
                 cy=ee_circle.cy - self.input.bbox.y,

@@ -51,7 +51,7 @@ class exporter_symbol_kicad():
                 type=KI_PIN_TYPES[ee_pin.settings.type],
                 orientation=KI_PIN_ORIENTATIONS[kicad_pin_orientation(ee_pin.name.rotation).name],
                 pos_x=resize_to_kicad(int(ee_pin.settings.pos_x)-int(self.input.bbox.x)),
-                pos_y=resize_to_kicad(int(ee_pin.settings.pos_y)-int(self.input.bbox.y)),
+                pos_y=-resize_to_kicad(int(ee_pin.settings.pos_y)-int(self.input.bbox.y)),
             )
             
             ki_pin.style = KI_PIN_STYLES['inverted'] if ee_pin.dot.is_displayed == '1' else '' # A vérifier
@@ -73,11 +73,11 @@ class exporter_symbol_kicad():
         # Pour les rectangles
         for ee_rectangle in self.input.rectangles:
             ki_rectangle = ki_symbol_rectangle(
-                pos_x0=resize_to_kicad(int(ee_rectangle.pos_y) - int(self.input.bbox.y)),
-                pos_y0=resize_to_kicad(int(ee_rectangle.pos_y) - int(self.input.bbox.y)),
+                pos_x0=resize_to_kicad(int(ee_rectangle.pos_x) - int(self.input.bbox.x)),
+                pos_y0=-resize_to_kicad(int(ee_rectangle.pos_y) - int(self.input.bbox.y)),
             )
             ki_rectangle.pos_x1 = resize_to_kicad(int(ee_rectangle.width)) + ki_rectangle.pos_x0
-            ki_rectangle.pos_y1 = resize_to_kicad(int(ee_rectangle.height)) + ki_rectangle.pos_y0
+            ki_rectangle.pos_y1 = -resize_to_kicad(int(ee_rectangle.height)) + ki_rectangle.pos_y0
 
             self.output.rectangles.append(ki_rectangle)
         
