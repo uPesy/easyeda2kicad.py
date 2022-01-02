@@ -46,10 +46,10 @@ class exporter_symbol_kicad():
         for ee_pin in self.input.pins:
             ki_pin = ki_symbol_pin(
                 name=ee_pin.name.text.replace(' ',''),
-                number=ee_pin.name.text.replace(' ',''),
+                number=ee_pin.settings.spice_pin_number.replace(' ',''),
                 style="",
                 type=KI_PIN_TYPES[ee_pin.settings.type],
-                orientation=KI_PIN_ORIENTATIONS[kicad_pin_orientation(ee_pin.name.rotation).name],
+                orientation=KI_PIN_ORIENTATIONS[kicad_pin_orientation(ee_pin.settings.rotation).name],
                 pos_x=resize_to_kicad(int(ee_pin.settings.pos_x)-int(self.input.bbox.x)),
                 pos_y=-resize_to_kicad(int(ee_pin.settings.pos_y)-int(self.input.bbox.y)),
             )

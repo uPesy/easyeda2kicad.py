@@ -28,7 +28,6 @@ if __name__ == '__main__':
         print(f"[*] Creating Kicad symbol library for LCSC id : {component_id}")
         importer = easyeda_symbol_importer(easyeda_cp_cad_data=cad_data)
         easyeda_symbol = importer.get_symbol()
-        # print(easyeda_symbol)
         exporter = exporter_symbol_kicad(symbol=easyeda_symbol)
         # print(exporter.output)
         kicad_symbol_lib = exporter.export_symbol()
