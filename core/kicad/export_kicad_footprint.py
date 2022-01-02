@@ -245,15 +245,18 @@ class exporter_footprint_kicad():
 
         # For circles
         for ee_circle in self.input.circles:
+            print(ee_circle)
+            print(self.input.bbox.x)
             ki_circle = ki_footprint_circle(
                 cx=ee_circle.cx - self.input.bbox.x,
                 cy=ee_circle.cy - self.input.bbox.y,
                 end_x=0.0,
-                end_y=0,
+                end_y=0.0,
                 layers=KI_LAYERS[ee_circle.layer_id] if ee_circle.layer_id in KI_LAYERS else 'F.Fab',
                 stroke_width=max(ee_circle.stroke_width, 0.01)
             )
             ki_circle.end_x = ki_circle.cx + ee_circle.radius
+            ki_circle.end_y = ki_circle.cy
             self.output.circles.append(ki_circle)
 
         # For rectangles
