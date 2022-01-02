@@ -1,1 +1,1 @@
-easyeda2kicad
+-- easyeda2kicad --
