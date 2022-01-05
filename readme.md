@@ -2,6 +2,13 @@
 
 A Python script that convert any electronic components from [LCSC](https://www.lcsc.com/) or [EasyEDA](https://easyeda.com/) to a Kicad library
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/demo_symbol.png" width="500">
+</p>
+<div align="center">
+  <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/demo_footprint.png" width="500">
+</div>
+
 
 ## Installation
 
