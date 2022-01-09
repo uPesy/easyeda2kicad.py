@@ -56,3 +56,9 @@ Some stuffs to be done:
 - [ ] Add unit testing and code coverage badge
 - [ ] Adding in the Python repo to install it with pip
 - [ ] Call the script directly from the terminal without using python easyeda2kicad.py
+
+## Inspirations
+
+- [KiPart](https://github.com/devbisme/KiPart) - A utility that generates single
+and multi-unit symbols from a CSV file containing all the pin information for
+one or more parts.
