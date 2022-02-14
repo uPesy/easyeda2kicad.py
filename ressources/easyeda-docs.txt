@@ -1,2 +1,2 @@
 For schematic : https://docs.easyeda.com/en/DocumentFormat/2-EasyEDA-Schematic-File-Format/index.html
-For footprint : https://docs.easyeda.com/en/DocumentFormat/3-EasyEDA-PCB-File-Format/index.html 
+For footprint : https://docs.easyeda.com/en/DocumentFormat/3-EasyEDA-PCB-File-Format/index.html

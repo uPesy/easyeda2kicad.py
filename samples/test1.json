@@ -14,7 +14,7 @@
             "min": 1,
             "price": 8.87,
             "stock": 15760,
-            "url": "http:\/\/www.szlcsc.com\/product\/details_7033.html"
+            "url": "http://www.szlcsc.com/product/details_7033.html"
         },
         "lcsc": {
             "id": 7033,
@@ -23,17 +23,15 @@
             "min": 1,
             "price": 1.5246,
             "stock": 15760,
-            "url": "https:\/\/lcsc.com\/product-detail\/USB-ICs_SILICON-LABS_CP2102-GMR_SILICON-LABS-CP2102-GMR_C6568.html"
+            "url": "https://lcsc.com/product-detail/USB-ICs_SILICON-LABS_CP2102-GMR_SILICON-LABS-CP2102-GMR_C6568.html"
         },
         "owner": {
             "uuid": "0819f05c4eef4c71ace90d822a990e87",
             "username": "LCSC",
             "nickname": "LCSC",
-            "avatar": "\/\/image.lceda.cn\/avatars\/2018\/6\/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png"
+            "avatar": "//image.lceda.cn/avatars/2018/6/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png"
         },
-        "tags": [
-            "USB ICs"
-        ],
+        "tags": ["USB ICs"],
         "updateTime": 1577753410,
         "updated_at": "2021-04-20 14:16:11",
         "dataStr": {
@@ -47,7 +45,7 @@
                     "BOM_Supplier": "LCSC",
                     "BOM_Manufacturer": "SILICON LABS",
                     "BOM_Manufacturer Part": "CP2102-GMR",
-                    "image": "\/\/image.lceda.cn\/szlcsc\/C6568.jpg",
+                    "image": "//image.lceda.cn/szlcsc/C6568.jpg",
                     "BOM_Supplier Part": "C6568",
                     "SMT Type": "Basic",
                     "BOM_JLCPCB SMD": "Yes",
@@ -118,7 +116,7 @@
                 "uuid": "0819f05c4eef4c71ace90d822a990e87",
                 "username": "LCSC",
                 "nickname": "LCSC",
-                "avatar": "\/\/image.lceda.cn\/avatars\/2018\/6\/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png",
+                "avatar": "//image.lceda.cn/avatars/2018/6/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png",
                 "team": true
             },
             "writable": false,
@@ -129,7 +127,7 @@
                     "c_para": {
                         "pre": "U?",
                         "package": "QFN-28_L5.0-W5.0-P0.50-BL-EP",
-                        "link": "https:\/\/item.szlcsc.com\/2242757.html",
+                        "link": "https://item.szlcsc.com/2242757.html",
                         "Contributor": "\u7acb\u521bEDA\u5b98\u65b9\u5c01\u88c5\u5e93",
                         "3DModel": "TQFN-28_L5.0-W5.0-H0.8-P0.50"
                     },

@@ -1,0 +1,55 @@
+repos:
+-   repo: https://github.com/hadialqattan/pycln
+    rev: v1.1.0
+    hooks:
+    -   id: pycln
+        args: [--config=pyproject.toml]
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0
+    hooks:
+    # -   id: no-commit-to-branch
+    #     args: ["--branch","master"]
+    -   id: check-yaml
+    -   id: check-toml
+    -   id: check-xml
+    -   id: check-json
+    -   id: check-case-conflict
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+        files: "\\.(py|txt|yaml|xml|json|md|toml|lock|cfg|html|sh|js|yml)$"
+    -   id: requirements-txt-fixer
+    -   id: mixed-line-ending
+        args: ["--fix","auto"]
+    -   id: check-executables-have-shebangs
+-   repo: https://github.com/asottile/pyupgrade
+    rev: v2.31.0
+    hooks:
+    -   id: pyupgrade
+        args: [--py36-plus]
+-   repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+    -   id: isort
+        files: "\\.(py)$"
+        args: ["--profile", "black", "--filter-files"]
+-   repo: https://github.com/psf/black
+    rev: 22.1.0
+    hooks:
+    -   id: black
+        args: ["--line-length", "88"]
+-   repo: https://github.com/PyCQA/flake8.git
+    rev: 4.0.1
+    hooks:
+    -   id: flake8
+        files: "\\.(py)$"
+        exclude: (.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env)/"
+-   repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v2.5.1
+    hooks:
+    -   id: prettier
+        args: [--tab-width=4, --print-width=120, --end-of-line=auto]
+        types_or: [javascript, jsx, ts, tsx, html, css, json]
+        exclude: (.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env)/"
+
+default_language_version:
+    python: python3.8

@@ -1,15 +1,18 @@
 # Global import
-import json
 
-# Local import 
-from core.easyeda.easyeda_api import easyeda_api
+# Local imports
 from core.cmd import cmd_interface
+
+# Local import
+from core.easyeda.easyeda_api import easyeda_api
+from core.easyeda.easyeda_importer import (
+    easyeda_footprint_importer,
+    easyeda_symbol_importer,
+)
 from core.kicad.export_kicad_footprint import exporter_footprint_kicad
-from core.easyeda.easyeda_importer import easyeda_footprint_importer, easyeda_symbol_importer
 from core.kicad.export_kicad_symbol import exporter_symbol_kicad
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Create cli interface
     cmd = cmd_interface()
     component_id = cmd.lcsc_id
@@ -31,13 +34,15 @@ if __name__ == '__main__':
         exporter = exporter_symbol_kicad(symbol=easyeda_symbol)
         # print(exporter.output)
         kicad_symbol_lib = exporter.export_symbol()
-        with open(file="output_lib/easyeda2kicad.lib", mode="a+", encoding='utf-8') as my_lib:
+        with open(
+            file="output_lib/easyeda2kicad.lib", mode="a+", encoding="utf-8"
+        ) as my_lib:
             my_lib.write(kicad_symbol_lib)
-        
+
         # print(kicad_symbol_lib)
 
     # ---------------- FOOTPRINT ----------------
-    
+
     if cmd.get_footprint:
         print(f"[*] Creating Kicad footprint library for LCSC id : {component_id}")
         importer = easyeda_footprint_importer(easyeda_cp_cad_data=cad_data)
@@ -49,5 +54,9 @@ if __name__ == '__main__':
             # print(exporter.output)
             kicad_footprint_lib, lib_name = exporter.export_footprint()
             # print(kicad_footprint_lib)
-            with open(file=f"output_lib/easyeda2kicad.pretty/{lib_name}.kicad_mod", mode="w", encoding='utf-8') as my_lib:
+            with open(
+                file=f"output_lib/easyeda2kicad.pretty/{lib_name}.kicad_mod",
+                mode="w",
+                encoding="utf-8",
+            ) as my_lib:
                 my_lib.write(kicad_footprint_lib)
