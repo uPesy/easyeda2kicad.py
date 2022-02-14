@@ -7,8 +7,8 @@ repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.1.0
     hooks:
-    # -   id: no-commit-to-branch
-    #     args: ["--branch","master"]
+    -   id: no-commit-to-branch
+        args: ["--branch","master"]
     -   id: check-yaml
     -   id: check-toml
     -   id: check-xml
