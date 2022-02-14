@@ -1,0 +1,14 @@
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+extend_skip = [".md", ".json", ".po", ".mo",".html", ".js", ".css", ".rst"]
+skip_glob = ["env/*"]
+known_local_folder = ["core"]
+import_heading_stdlib="Global imports"
+import_heading_localfolder="Local imports"
+
+[tool.pycln]
+include=".*\\.py$"
+exclude="(.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env|)/"

@@ -39,15 +39,15 @@ python easyeda2kicad.py --footprint --lcsc_id=C2040
 
 Before configuring KiCad, run at least once time the script to create lib files
 
-- In KiCad, Go to Preferences > Configure Paths, and add the environment variables `EASYEDA2KICAD` : `path/to/easyeda2kicad.py/ouput_lib` 
+- In KiCad, Go to Preferences > Configure Paths, and add the environment variables `EASYEDA2KICAD` : `path/to/easyeda2kicad.py/ouput_lib`
 - Go to Preferences > Manage Symbol Libraries, and Add the global library `easyeda2kicad` : `${EASYEDA2KICAD}/easyeda2kicad.lib`
 - Go to Preferences > Manage Footprint Libraries, and Add the global library `easyeda2kicad` : `${EASYEDA2KICAD}/easyeda2kicad.pretty`
 - Enjoy :wink:
 
 ## Notes
 
-**It's still in development : all features are not implemented. I'm not a Python expert and don't have a lot of free time for coding.  
-I need your help to improve the code base architecture, adding unit tests and adding in the pip repo  
+**It's still in development : all features are not implemented. I'm not a Python expert and don't have a lot of free time for coding.
+I need your help to improve the code base architecture, adding unit tests and adding in the pip repo
 Feel free to contribute on the `dev` branch :slightly_smiling_face:**
 
 Some stuffs to be done:

@@ -14,7 +14,7 @@
             "min": 1,
             "price": 0.935,
             "stock": 65145,
-            "url": "http:\/\/www.szlcsc.com\/product\/details_112422.html"
+            "url": "http://www.szlcsc.com/product/details_112422.html"
         },
         "lcsc": {
             "id": 112422,
@@ -23,17 +23,15 @@
             "min": 1,
             "price": 0.1607,
             "stock": 65145,
-            "url": "https:\/\/lcsc.com\/product-detail\/Card-Sockets-Connectors_SOFNG-TF-15-15_C111196.html"
+            "url": "https://lcsc.com/product-detail/Card-Sockets-Connectors_SOFNG-TF-15-15_C111196.html"
         },
         "owner": {
             "uuid": "0819f05c4eef4c71ace90d822a990e87",
             "username": "LCSC",
             "nickname": "LCSC",
-            "avatar": "\/\/image.lceda.cn\/avatars\/2018\/6\/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png"
+            "avatar": "//image.lceda.cn/avatars/2018/6/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png"
         },
-        "tags": [
-            "Card Sockets Connectors"
-        ],
+        "tags": ["Card Sockets Connectors"],
         "updateTime": 1592962983,
         "updated_at": "2021-05-05 13:11:34",
         "dataStr": {
@@ -62,7 +60,7 @@
             "shape": [
                 "PG~300 190 340 190 378 170 400 170 400 188 420 188 440 170 460 170 460 390 300 390~#000000~1~0~#EFEFEF~gge2~0",
                 "P~show~1~1~270~210~180~gge3~0^^270~210^^M 270 210 h 30~#000000^^1~305~213~0~DAT2~start~~~#000000^^1~295~209~0~1~end~~~#000000^^0~297~210^^0~M 300 213 L 303 210 L 300 207",
-                "P~show~1~2~270~230~180~gge10~0^^270~230^^M 270 230 h 30~#000000^^1~305~233~0~CD\/DAT3~start~~~#000000^^1~295~229~0~2~end~~~#000000^^0~297~230^^0~M 300 233 L 303 230 L 300 227",
+                "P~show~1~2~270~230~180~gge10~0^^270~230^^M 270 230 h 30~#000000^^1~305~233~0~CD/DAT3~start~~~#000000^^1~295~229~0~2~end~~~#000000^^0~297~230^^0~M 300 233 L 303 230 L 300 227",
                 "P~show~1~3~270~250~180~gge19~0^^270~250^^M 270 250 h 30~#000000^^1~305~253~0~CMD~start~~~#000000^^1~295~249~0~3~end~~~#000000^^0~297~250^^0~M 300 253 L 303 250 L 300 247",
                 "P~show~1~4~270~270~180~gge26~0^^270~270^^M 270 270 h 30~#FF0000^^1~305~273~0~VDD~start~~~#FF0000^^1~295~269~0~4~end~~~#FF0000^^0~297~270^^0~M 300 273 L 303 270 L 300 267",
                 "P~show~1~5~270~290~180~gge33~0^^270~290^^M 270 290 h 30~#000000^^1~305~293~0~CLK~start~~~#000000^^1~295~289~0~5~end~~~#000000^^0~297~290^^0~M 300 293 L 303 290 L 300 287",
@@ -95,7 +93,7 @@
                 "uuid": "0819f05c4eef4c71ace90d822a990e87",
                 "username": "LCSC",
                 "nickname": "LCSC",
-                "avatar": "\/\/image.lceda.cn\/avatars\/2018\/6\/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png",
+                "avatar": "//image.lceda.cn/avatars/2018/6/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png",
                 "team": true
             },
             "writable": false,
@@ -112,7 +110,7 @@
                         "sourceId": "9eOMmk3lD",
                         "timeStamp": "1473392842",
                         "Contributor": "\u7acb\u521bEDA\u5b98\u65b9\u5c01\u88c5\u5e93",
-                        "link": "https:\/\/item.szlcsc.com\/112422.html",
+                        "link": "https://item.szlcsc.com/112422.html",
                         "3DModel": "TF-SMD_TF-15-15"
                     },
                     "uuid": "f7dd54f89a0d4286a07c114c2b6d06ed",

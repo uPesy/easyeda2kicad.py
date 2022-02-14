@@ -14,8 +14,8 @@
             "min": 1,
             "price": 1.1823,
             "stock": 80486,
-            "url": "http:\/\/www.szlcsc.com\/product\/details_92334.html",
-            "image": "https:\/\/assets.lcsc.com\/images\/szlcsc\/96x96\/Korean-Hroparts-Elec-TF-01A_C91145_front_10.jpg"
+            "url": "http://www.szlcsc.com/product/details_92334.html",
+            "image": "https://assets.lcsc.com/images/szlcsc/96x96/Korean-Hroparts-Elec-TF-01A_C91145_front_10.jpg"
         },
         "lcsc": {
             "id": 92334,
@@ -24,17 +24,15 @@
             "min": 1,
             "price": 0.1691,
             "stock": 80486,
-            "url": "https:\/\/lcsc.com\/product-detail\/Card-Sockets_TF-01A_C91145.html"
+            "url": "https://lcsc.com/product-detail/Card-Sockets_TF-01A_C91145.html"
         },
         "owner": {
             "uuid": "0819f05c4eef4c71ace90d822a990e87",
             "username": "LCSC",
             "nickname": "LCSC",
-            "avatar": "\/\/image.lceda.cn\/avatars\/2018\/6\/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png"
+            "avatar": "//image.lceda.cn/avatars/2018/6/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png"
         },
-        "tags": [
-            "Card Sockets Connectors"
-        ],
+        "tags": ["Card Sockets Connectors"],
         "updateTime": 1574842158,
         "updated_at": "2021-06-28 12:42:21",
         "dataStr": {
@@ -98,7 +96,7 @@
                 "uuid": "0819f05c4eef4c71ace90d822a990e87",
                 "username": "LCSC",
                 "nickname": "LCSC",
-                "avatar": "\/\/image.lceda.cn\/avatars\/2018\/6\/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png",
+                "avatar": "//image.lceda.cn/avatars/2018/6/kFlrasi7W06gTdBLAqW3fkrqbDhbowynuSzkjqso.png",
                 "team": true
             },
             "writable": false,
@@ -110,7 +108,7 @@
                         "package": "TF-SMD_TF-01A",
                         "pre": "U?",
                         "Contributor": "\u7acb\u521bEDA\u5b98\u65b9\u5c01\u88c5\u5e93",
-                        "link": "https:\/\/item.szlcsc.com\/92334.html",
+                        "link": "https://item.szlcsc.com/92334.html",
                         "3DModel": "TF-SMD_L14.8-W14.5-H1.9-P1.1"
                     },
                     "x": 4033,
