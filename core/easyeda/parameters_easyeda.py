@@ -146,9 +146,34 @@ class ee_symbol_polyline(BaseModel):
         return False if is_locked == "" else is_locked
 
 
+# ---------------- POLYGON ----------------
+class ee_symbol_polygon(ee_symbol_polyline):
+    ...
+
+
+# ---------------- PATH ----------------
+# TODO : ee_symbol_path.paths should be a SVG PATH https://www.w3.org/TR/SVG11/paths.html#PathElement
+# TODO : small svg parser and then convert to kicad
+# TODO: support bezier curve, currently paths are seen as polygone
+class ee_symbol_path(BaseModel):
+    paths: str
+    stroke_color: str
+    stroke_width: str
+    stroke_style: str
+    fill_color: str
+    id: str
+    is_locked: bool
+
+    @validator("is_locked", pre=True)
+    def empty_str_lock(cls, is_locked):
+        return False if is_locked == "" else is_locked
+
+    # @validator("paths", pre=True)
+    # def clean_svg_path(cls, paths:str):
+    #     return paths.replace("M", "").replace("C","")
+
+
 # ---------------- SYMBOL ----------------
-
-
 @dataclass
 class ee_symbol_info:
     name: str = ""
@@ -167,6 +192,8 @@ class ee_symbol:
     pins: List[ee_symbol_pin] = field(default_factory=list)
     rectangles: List[ee_symbol_rectangle] = field(default_factory=list)
     polylines: List[ee_symbol_polyline] = field(default_factory=list)
+    polygons: List[ee_symbol_polygon] = field(default_factory=list)
+    paths: List[ee_symbol_path] = field(default_factory=list)
 
 
 # ------------------------------------------------------------------------------
