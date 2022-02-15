@@ -234,6 +234,7 @@ class ki_symbol_rectangle:
 class ki_symbol_polyline:
     points: List[List[int]] = field(default_factory=List[List[int]])
     points_number: int = 0
+    is_closed: bool = False
 
 
 # ---------------- SYMBOL ----------------

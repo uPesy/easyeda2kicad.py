@@ -1,7 +1,4 @@
-# Global import
 # Global imports
-import time
-from datetime import datetime
 from itertools import chain
 
 # Local imports
@@ -10,9 +7,8 @@ from core.easyeda.parameters_easyeda import ee_symbol
 # Local import
 from core.kicad.parameters_kicad import *
 
+
 # ---------------------------------------
-
-
 def resize_to_kicad(dim: int):
     return 10 * dim
 
@@ -42,7 +38,7 @@ class exporter_symbol_kicad:
 
         self.output = ki_symbol(info=ki_info, pins=[], rectangles=[], polylines=[])
 
-        # Pour les pins
+        # For pins
         for ee_pin in self.input.pins:
             ki_pin = ki_symbol_pin(
                 name=ee_pin.name.text.replace(" ", ""),
@@ -80,7 +76,7 @@ class exporter_symbol_kicad:
 
             self.output.pins.append(ki_pin)
 
-        # Pour les rectangles
+        # For rectangles
         for ee_rectangle in self.input.rectangles:
             ki_rectangle = ki_symbol_rectangle(
                 pos_x0=resize_to_kicad(
@@ -99,7 +95,7 @@ class exporter_symbol_kicad:
 
             self.output.rectangles.append(ki_rectangle)
 
-        # Pour les polylines
+        # For polylines
         for ee_polyline in self.input.polylines:
             raw_pts = ee_polyline.points.split(" ")
             x_points = [
@@ -117,6 +113,45 @@ class exporter_symbol_kicad:
                     for i in range(min(len(x_points), len(y_points)))
                 ],
                 points_number=min(len(x_points), len(y_points)),
+            )
+
+            self.output.polylines.append(ki_polyline)
+
+        # For paths
+        for ee_path in self.input.paths:
+            raw_pts = ee_path.paths.split(" ")
+
+            x_points = []
+            y_points = []
+
+            # Small svg path parser : doc -> https://www.w3.org/TR/SVG11/paths.html#PathElement
+            for i in range(len(raw_pts) - 1):
+                if raw_pts[i] in ["M", "L"]:
+                    x_points.append(
+                        resize_to_kicad(
+                            int(float(raw_pts[i + 1])) - int(self.input.bbox.x)
+                        )
+                    )
+                    y_points.append(
+                        resize_to_kicad(
+                            int(float(raw_pts[i + 2])) - int(self.input.bbox.y)
+                        )
+                    )
+                    i += 2
+                elif raw_pts[i] == "Z":
+                    x_points.append(x_points[0])
+                    y_points.append(y_points[0])
+                elif raw_pts[i] == "C":
+                    ...
+                    # TODO : Add bezier support
+
+            ki_polyline = ki_symbol_polyline(
+                points=[
+                    [str(x_points[i]), str(y_points[i])]
+                    for i in range(min(len(x_points), len(y_points)))
+                ],
+                points_number=min(len(x_points), len(y_points)),
+                is_closed=x_points[0] == x_points[-1] and y_points[0] == y_points[-1],
             )
 
             self.output.polylines.append(ki_polyline)
@@ -201,8 +236,8 @@ class exporter_symbol_kicad:
 
         # Start the section of the part definition that holds the part's units.
         ki_lib += KI_START_DRAW
-        # ---------------------------------------
 
+        # ---------------------------------------
         for ki_pin in ki.pins:
             ki_lib += KI_PIN.format(
                 name=ki_pin.name,
@@ -217,8 +252,8 @@ class exporter_symbol_kicad:
                 pin_type=ki_pin.type,
                 pin_style=ki_pin.style,
             )
-        # ---------------------------------------
 
+        # ---------------------------------------
         for rectangle in ki.rectangles:
             ki_lib += KI_BOX.format(
                 x0=int(round(rectangle.pos_x0 / 50.0)) * 50,
@@ -229,15 +264,17 @@ class exporter_symbol_kicad:
                 line_width=KI_DEFAULT_BOX_LINE_WIDTH,
                 fill=KI_BOX_FILLS["bg_fill"],
             )
-        # ---------------------------------------
 
+        # ---------------------------------------
         for polyline in ki.polylines:
             ki_lib += KI_POLYLINE.format(
                 points_number=polyline.points_number,
                 unit_num=1,
                 line_width=KI_DEFAULT_BOX_LINE_WIDTH,
                 coordinate=" ".join(list(chain.from_iterable(polyline.points))),
-                fill=KI_BOX_FILLS["bg_fill"],
+                fill=KI_BOX_FILLS["bg_fill"]
+                if polyline.is_closed
+                else KI_BOX_FILLS["no_fill"],
             )
         # ---------------------------------------
 
