@@ -44,26 +44,35 @@ class easyeda_symbol_importer:
 
         for line in self.ee_data["dataStr"]["shape"]:
             designator = line.split("~")[0]
-            # Pour les pins
+            # For pins
             if designator == "P":
                 ee_pin = self.extract_easyeda_pin(pin_data=line)
                 new_ee_symbol.pins.append(self.tune_ee_pin(pin=ee_pin))
-            # Pour les rectangles
+            # For rectangles
             elif designator == "R":
-                ee_rectangle = self.extract_easyeda_rectangle(pin_data=line)
+                ee_rectangle = self.extract_easyeda_rectangle(rectangle_data=line)
                 new_ee_symbol.rectangles.append(
                     self.tune_ee_rectangle(rect=ee_rectangle)
                 )
-            # Pour les polylines
+            # For polylines
             elif designator == "PL":
-                ee_polyline = self.extract_easyeda_polyline(pin_data=line)
+                ee_polyline = self.extract_easyeda_polyline(polyline_data=line)
                 new_ee_symbol.polylines.append(
                     self.tune_ee_polyline(polyline=ee_polyline)
                 )
-            # Pour les ellipse
+            # For polygons
+            elif designator == "PG":
+                ee_polygon = self.extract_easyeda_polygon(polygon_data=line)
+                new_ee_symbol.polygons.append(self.tune_ee_polygon(polygon=ee_polygon))
+            # For paths
+            elif designator == "PT":
+                ee_path = self.extract_easyeda_path(path_data=line)
+                new_ee_symbol.paths.append(self.tune_ee_path(path=ee_path))
+
+            # For ellipse
             elif designator == "E":
                 ...  # TODO
-            # Pour les arcs
+            # For arcs
             elif designator == "A":
                 ...  # TODO
             else:
@@ -107,19 +116,27 @@ class easyeda_symbol_importer:
 
     # ---------------------------------------
 
-    def extract_easyeda_rectangle(self, pin_data: str):
-        ee_segment = pin_data.split("~")
+    def extract_easyeda_rectangle(self, rectangle_data: str):
+        ee_segment = rectangle_data.split("~")
         return ee_symbol_rectangle(
             **dict(zip(ee_symbol_rectangle.__fields__, ee_segment[1:]))
         )
 
-    # ---------------------------------------
-
-    def extract_easyeda_polyline(self, pin_data: str):
-        ee_segment = pin_data.split("~")
+    def extract_easyeda_polyline(self, polyline_data: str):
+        ee_segment = polyline_data.split("~")
         return ee_symbol_polyline(
             **dict(zip(ee_symbol_polyline.__fields__, ee_segment[1:]))
         )
+
+    def extract_easyeda_polygon(self, polygon_data: str):
+        ee_segment = polygon_data.split("~")
+        return ee_symbol_polygon(
+            **dict(zip(ee_symbol_polygon.__fields__, ee_segment[1:]))
+        )
+
+    def extract_easyeda_path(self, path_data: str):
+        ee_segment = path_data.split("~")
+        return ee_symbol_path(**dict(zip(ee_symbol_path.__fields__, ee_segment[1:])))
 
     # ---------------------------------------
 
@@ -141,6 +158,12 @@ class easyeda_symbol_importer:
 
     def tune_ee_polyline(self, polyline: ee_symbol_polyline):
         return polyline
+
+    def tune_ee_polygon(self, polygon: ee_symbol_polygon):
+        return polygon
+
+    def tune_ee_path(self, path: ee_symbol_path):
+        return path
 
     # ---------------------------------------
 
