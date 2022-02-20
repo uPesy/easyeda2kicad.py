@@ -19,8 +19,10 @@ class cmd_interface:
             ) as my_lib:
                 my_lib.write("EESchema-LIBRARY Version 2.4\n#encoding utf-8\n")
 
-        self.parser = argparse.ArgumentParser(description="easyeda2kicad")
-        # self.parser.add_argument("--lcsc_id", help="LCSC id", required=True, default=None)
+        self.parser = argparse.ArgumentParser(
+            description="A Python script that convert any electronic components from LCSC or EasyEDA to a Kicad library"
+        )
+
         self.parser.add_argument(
             "--lcsc_id", help="LCSC id", required=True
         )  # For devlopment

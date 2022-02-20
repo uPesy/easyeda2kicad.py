@@ -7,40 +7,33 @@ from easyeda2kicad.easyeda.parameters_easyeda import *
 
 class easyeda_symbol_importer:
     def __init__(self, easyeda_cp_cad_data):
-        self.ee_data = easyeda_cp_cad_data
-        self.ee_data_info = easyeda_cp_cad_data["dataStr"]["head"]["c_para"]
+        self.input = easyeda_cp_cad_data
+        self.output: ee_symbol = self.extract_easyeda_data(
+            ee_data=easyeda_cp_cad_data,
+            ee_data_info=easyeda_cp_cad_data["dataStr"]["head"]["c_para"],
+        )
 
     def get_symbol(self):
-        return self.extract_easyeda_data()
+        return self.output
 
-    def extract_easyeda_data(self):
+    def extract_easyeda_data(self, ee_data: dict, ee_data_info: dict):
         new_ee_symbol = ee_symbol(
             info=ee_symbol_info(
-                name=self.ee_data_info["name"],
-                prefix=self.ee_data_info["pre"],
-                package=self.ee_data_info["package"]
-                if "package" in self.ee_data_info
-                else None,
-                manufacturer=self.ee_data_info["BOM_Manufacturer"]
-                if "BOM_Manufacturer" in self.ee_data_info
-                else None,
-                datasheet=self.ee_data["lcsc"]["url"]
-                if "url" in self.ee_data["lcsc"]
-                else None,
-                lcsc_id=self.ee_data["lcsc"]["number"]
-                if "number" in self.ee_data["lcsc"]
-                else None,
-                jlc_id=self.ee_data_info["BOM_JLCPCB Part Class"]
-                if "BOM_JLCPCB Part Class" in self.ee_data_info
-                else None,
+                name=ee_data_info["name"],
+                prefix=ee_data_info["pre"],
+                package=ee_data_info.get("package", None),
+                manufacturer=ee_data_info.get("BOM_Manufacturer", None),
+                datasheet=ee_data["lcsc"].get("url", None),
+                lcsc_id=ee_data["lcsc"].get("number", None),
+                jlc_id=ee_data_info.get("BOM_JLCPCB Part Class", None),
             ),
             bbox=ee_symbol_bbox(
-                x=float(self.ee_data["dataStr"]["head"]["x"]),
-                y=float(self.ee_data["dataStr"]["head"]["y"]),
+                x=float(ee_data["dataStr"]["head"]["x"]),
+                y=float(ee_data["dataStr"]["head"]["y"]),
             ),
         )
 
-        for line in self.ee_data["dataStr"]["shape"]:
+        for line in ee_data["dataStr"]["shape"]:
             designator = line.split("~")[0]
             # For pins
             if designator == "P":
@@ -171,29 +164,28 @@ class easyeda_symbol_importer:
 
 class easyeda_footprint_importer:
     def __init__(self, easyeda_cp_cad_data):
-        self.ee_data = easyeda_cp_cad_data
-        self.ee_data_str = easyeda_cp_cad_data["packageDetail"]["dataStr"]
-        self.ee_data_info = easyeda_cp_cad_data["packageDetail"]["dataStr"]["head"][
-            "c_para"
-        ]
+        self.input = easyeda_cp_cad_data
+        self.output = self.extract_easyeda_data(
+            ee_data_str=self.input["packageDetail"]["dataStr"],
+            ee_data_info=self.input["packageDetail"]["dataStr"]["head"]["c_para"],
+        )
 
     def get_footprint(self):
-        self.easyeda_footprint_lib = self.extract_easyeda_data()
-        return self.easyeda_footprint_lib
+        return self.output
 
-    def extract_easyeda_data(self):
+    def extract_easyeda_data(self, ee_data_str: str, ee_data_info: str):
         new_ee_footprint = ee_footprint(
             info=ee_footprint_info(
-                name=self.ee_data_info["package"],
-                fp_type="smd" if "SMT" in self.ee_data_info else "tht",
+                name=ee_data_info["package"],
+                fp_type="smd" if "SMT" in ee_data_info else "tht",
             ),
             bbox=ee_footprint_bbox(
-                x=float(self.ee_data_str["head"]["x"]),
-                y=float(self.ee_data_str["head"]["y"]),
+                x=float(ee_data_str["head"]["x"]),
+                y=float(ee_data_str["head"]["y"]),
             ),
         )
 
-        for line in self.ee_data_str["shape"]:
+        for line in ee_data_str["shape"]:
 
             ee_designator = line.split("~")[0]
             ee_fields = line.split("~")[1:]
