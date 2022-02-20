@@ -2,9 +2,7 @@
 # Global imports
 import json
 
-# Local imports
-# Local import
-from core.easyeda.parameters_easyeda import *
+from easyeda2kicad.easyeda.parameters_easyeda import *
 
 
 class easyeda_symbol_importer:

@@ -1,18 +1,17 @@
-# Global import
+# Global imports
+import json
 
-# Local imports
-from core.cmd import cmd_interface
-
-# Local import
-from core.easyeda.easyeda_api import easyeda_api
-from core.easyeda.easyeda_importer import (
+from easyeda2kicad.cmd import cmd_interface
+from easyeda2kicad.easyeda.easyeda_api import easyeda_api
+from easyeda2kicad.easyeda.easyeda_importer import (
     easyeda_footprint_importer,
     easyeda_symbol_importer,
 )
-from core.kicad.export_kicad_footprint import exporter_footprint_kicad
-from core.kicad.export_kicad_symbol import exporter_symbol_kicad
+from easyeda2kicad.kicad.export_kicad_footprint import exporter_footprint_kicad
+from easyeda2kicad.kicad.export_kicad_symbol import exporter_symbol_kicad
 
-if __name__ == "__main__":
+
+def main():
     # Create cli interface
     cmd = cmd_interface()
     component_id = cmd.lcsc_id
@@ -23,8 +22,8 @@ if __name__ == "__main__":
     cad_data = api.get_cad_data_of_component(lcsc_id=component_id)
 
     # For testing
-    # with open('samples/test4.json') as json_file:
-    #     cad_data = json.load(json_file)['result']
+    with open("samples/test5.json") as json_file:
+        cad_data = json.load(json_file)["result"]
 
     # ---------------- SYMBOL ----------------
     if cmd.get_symbol:
@@ -61,3 +60,7 @@ if __name__ == "__main__":
                 encoding="utf-8",
             ) as my_lib:
                 my_lib.write(kicad_footprint_lib)
+
+
+if __name__ == "__main__":
+    main()

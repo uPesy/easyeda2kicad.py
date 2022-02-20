@@ -254,7 +254,7 @@ class ki_symbol:
 
 KI_MODULE_INFO = "(module {package_lib}:{package_name} (layer F.Cu) (tedit {edit})\n"
 KI_DESCRIPTION = (
-    '\t(descr "{datasheet_link}, generated with footprint_dumper on {date}")\n'
+    '\t(descr "{datasheet_link}, generated with easyeda2kicad.py on {date}")\n'
 )
 KI_TAGS_INFO = '\t(tags "{tag}")\n'
 KI_FP_TYPE = "\t(attr {component_type})\n"
