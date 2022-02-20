@@ -160,8 +160,8 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         return 1
 
     component_id = arguments["lcsc_id"]
-
     print("-- easyeda2kicad.py --")
+
     # Get CAD data of the component using easyeda API
     api = easyeda_api()
     cad_data = api.get_cad_data_of_component(lcsc_id=component_id)
