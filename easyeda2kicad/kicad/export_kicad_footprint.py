@@ -1,13 +1,9 @@
-# Global import
 # Global imports
 from itertools import chain
 from math import acos, cos, isnan, pi, sin, sqrt
 
-# Local imports
-from core.easyeda.parameters_easyeda import ee_footprint
-
-# Local import
-from core.kicad.parameters_kicad import *
+from easyeda2kicad.easyeda.parameters_easyeda import ee_footprint
+from easyeda2kicad.kicad.parameters_kicad import *
 
 # ---------------------------------------
 

@@ -1,11 +1,8 @@
 # Global imports
 from itertools import chain
 
-# Local imports
-from core.easyeda.parameters_easyeda import ee_symbol
-
-# Local import
-from core.kicad.parameters_kicad import *
+from easyeda2kicad.easyeda.parameters_easyeda import ee_symbol
+from easyeda2kicad.kicad.parameters_kicad import *
 
 
 # ---------------------------------------
@@ -14,8 +11,6 @@ def resize_to_kicad(dim: int):
 
 
 # ---------------------------------------
-
-
 class exporter_symbol_kicad:
     def __init__(self, symbol):
         self.input: ee_symbol = symbol
@@ -98,6 +93,7 @@ class exporter_symbol_kicad:
         # For polylines
         for ee_polyline in self.input.polylines:
             raw_pts = ee_polyline.points.split(" ")
+            print(raw_pts)
             x_points = [
                 resize_to_kicad(int(float(raw_pts[i])) - int(self.input.bbox.x))
                 for i in range(0, len(raw_pts), 2)
@@ -106,6 +102,8 @@ class exporter_symbol_kicad:
                 resize_to_kicad(int(float(raw_pts[i])) - int(self.input.bbox.y))
                 for i in range(1, len(raw_pts), 2)
             ]
+            print(x_points, y_points)
+            print(self.input.bbox.x, self.input.bbox.y)
 
             ki_polyline = ki_symbol_polyline(
                 points=[
