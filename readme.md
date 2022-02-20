@@ -13,9 +13,7 @@ A Python script that convert any electronic components from [LCSC](https://www.l
 ## Installation
 
 ```bash
-git clone https://github.com/uPesy/easyeda2kicad.py.git
-cd easyeda2kicad.py/
-pip install requirements.txt
+pip install easyeda2kicad
 ```
 The script uses only one external library [pydantic](https://pydantic-docs.helpmanual.io/) for data validation.
 
