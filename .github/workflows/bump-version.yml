@@ -10,7 +10,7 @@ jobs:
     bump-version:
         runs-on: ubuntu-latest
 
-        if: "!startsWith(github.event.head_commit.message, '[SKIP]') && github.event.head_commit.author.name != 'upesy-bot'"
+        if: "github.event.head_commit.author.name != 'upesy-bot'"
 
         steps:
             - uses: actions/checkout@v2
@@ -20,10 +20,6 @@ jobs:
               uses: actions/setup-python@v2
               with:
                   python-version: "3.x"
-            - name: test2
-              env:
-                GITHUB_CONTEXT: ${{ toJSON(github) }}
-              run: echo "$GITHUB_CONTEXT"
             - name: Setup Git
               run: |
                   git config user.name "upesy-bot"
@@ -57,13 +53,13 @@ jobs:
                   echo "SKIPBUMP=TRUE" >> $GITHUB_ENV
               if: "startsWith(github.event.head_commit.message, '[FEATURE]')"
 
-            # Default action
+            # If a commit starts with [FIX] a new patch verion upgrade will be triggered.
             - name: Bump Patch Version
               env:
                   COMMIT_MSG: ${{ github.event.head_commit.message }}
               run: |
                   bump2version patch
-              if: env.SKIPBUMP == 'FALSE'
+              if: "startsWith(github.event.head_commit.message, '[FIX]')"
 
             - name: Commit version change to master
               run: |
