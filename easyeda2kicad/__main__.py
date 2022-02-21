@@ -77,9 +77,6 @@ def valid_arguments(arguments: dict) -> bool:
         if not os.path.isdir(base_folder):
             print("Can't find the folder")
             return False
-        if not arguments["output"].endswith(".lib"):
-            print("[-] Error: Wrong file extension. Should be .lib")
-            return False
     else:
         default_folder = os.path.join(
             os.path.expanduser("~"), "Documents", "Kicad", "easyeda2kicad"
