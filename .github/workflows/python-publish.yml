@@ -1,5 +1,5 @@
 
-name: uPesy package release CI/CD
+name: upload package to pypi
 
 on:
   push:
@@ -20,52 +20,10 @@ jobs:
               uses: actions/setup-python@v2
               with:
                   python-version: "3.x"
-            - name: Setup Git
-              run: |
-                  git config user.name "uPesy Bot"
-                  git config user.email 'upesy@users.noreply.github.com'
-                  git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
-                  git checkout "${GITHUB_REF:11}"
-                  echo "$GITHUB_CONTEXT"
-            - name: Setup env variables
-              run: |
-                  echo "SKIPBUMP=FALSE" >> $GITHUB_ENV
             - name: Install dependencies
               run: |
                   python -m pip install --upgrade pip
-                  pip install bump2version build
-                  toto
-
-            # If a commit starts with [MAJOR] a new major verion upgrade will be triggered.
-            - name: Bump Major Version
-              env:
-                  COMMIT_MSG: ${{ github.event.head_commit.message }}
-              run: |
-                  bump2version minor
-                  echo "SKIPBUMP=TRUE" >> $GITHUB_ENV
-              if: "startsWith(github.event.head_commit.message, '[MAJOR]')"
-
-            # If a commit starts with [FEATURE] a new minor verion upgrade will be triggered.
-            - name: Bump Minor Version
-              env:
-                  COMMIT_MSG: ${{ github.event.head_commit.message }}
-              run: |
-                  bump2version minor
-                  echo "SKIPBUMP=TRUE" >> $GITHUB_ENV
-              if: "startsWith(github.event.head_commit.message, '[FEATURE]')"
-
-            # Default action
-            - name: Bump Patch Version
-              env:
-                  COMMIT_MSG: ${{ github.event.head_commit.message }}
-              run: |
-                  bump2version patch
-              if: env.SKIPBUMP == 'FALSE'
-
-            - name: Commit version change to master
-              run: |
-                  git push --follow-tags
-
+                  pip install build
             - name: Build package
               run: python -m build
 
