@@ -1,5 +1,5 @@
 
-name: uPesy package release CI/CD
+name: bump-version
 
 on:
   push:
