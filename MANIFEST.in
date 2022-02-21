@@ -1,5 +1,16 @@
 include LICENSE
 include README.md
 
+prune devtools
+prune tests
+
+global-exclude tags
+global-exclude *.swp
+
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+
+exclude .bumpversion.cfg
+exclude .coveragerc
+exclude tox.ini
+exclude .travis.yml
