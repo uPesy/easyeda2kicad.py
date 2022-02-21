@@ -9,6 +9,7 @@ on:
 jobs:
     deploy:
         runs-on: ubuntu-latest
+
         if: "!startsWith(github.event.head_commit.message, '[SKIP]')"
 
         steps:
@@ -25,6 +26,8 @@ jobs:
                   git config user.email 'upesy@users.noreply.github.com'
                   git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
                   git checkout "${GITHUB_REF:11}"
+                  echo "$GITHUB_CONTEXT"
+                  tototo
             - name: Setup env variables
               run: |
                   echo "SKIPBUMP=FALSE" >> $GITHUB_ENV
