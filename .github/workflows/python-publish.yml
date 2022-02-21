@@ -27,7 +27,6 @@ jobs:
                   git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
                   git checkout "${GITHUB_REF:11}"
                   echo "$GITHUB_CONTEXT"
-                  tototo
             - name: Setup env variables
               run: |
                   echo "SKIPBUMP=FALSE" >> $GITHUB_ENV
@@ -35,6 +34,7 @@ jobs:
               run: |
                   python -m pip install --upgrade pip
                   pip install bump2version build
+                  toto
 
             # If a commit starts with [MAJOR] a new major verion upgrade will be triggered.
             - name: Bump Major Version
