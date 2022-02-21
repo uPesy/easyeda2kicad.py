@@ -1,5 +1,5 @@
 
-name: Bump version and upload to PyPi
+name: uPesy package release CI/CD
 
 on:
   push:
@@ -7,7 +7,14 @@ on:
       - master
 
 jobs:
+    pre-commit:
+      runs-on: ubuntu-latest
+      steps:
+          - uses: actions/checkout@v2
+          - uses: actions/setup-python@v2
+          - uses: pre-commit/action@v2.0.3
     deploy:
+        needs: [pre-commit]
         runs-on: ubuntu-latest
         if: "!startsWith(github.event.head_commit.message, '[SKIP]')"
 
@@ -62,8 +69,10 @@ jobs:
             - name: Commit version change to master
               run: |
                   git push --follow-tags
+
             - name: Build package
               run: python -m build
+
             - name: Publish package
               uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
               with:
