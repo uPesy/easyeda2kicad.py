@@ -20,7 +20,7 @@ jobs:
               uses: actions/setup-python@v2
               with:
                   python-version: "3.x"
-            - name: test2
+            - name: test
               env:
                 GITHUB_CONTEXT: ${{ toJSON(github) }}
               run: echo "$GITHUB_CONTEXT"
