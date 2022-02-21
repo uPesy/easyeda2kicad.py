@@ -10,7 +10,7 @@ jobs:
     bump-version:
         runs-on: ubuntu-latest
 
-        if: "!startsWith(github.event.head_commit.message, '[SKIP]')"
+        if: "!startsWith(github.event.head_commit.message, '[SKIP]') && github.event.head_commit.name != 'upesy-bot'"
 
         steps:
             - uses: actions/checkout@v2
@@ -26,7 +26,7 @@ jobs:
               run: echo "$GITHUB_CONTEXT"
             - name: Setup Git
               run: |
-                  git config user.name "uPesy Bot"
+                  git config user.name "upesy-bot"
                   git config user.email 'upesy@users.noreply.github.com'
                   git remote set-url origin https://x-access-token:${{ secrets.API_GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
                   git checkout "${GITHUB_REF:11}"
