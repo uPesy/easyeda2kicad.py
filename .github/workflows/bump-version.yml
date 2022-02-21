@@ -1,5 +1,5 @@
 
-name: uPesy package release CI/CD
+name: bump version
 
 on:
   push:
@@ -10,21 +10,21 @@ jobs:
     bump-version:
         runs-on: ubuntu-latest
 
-        if: "!startsWith(github.event.head_commit.message, '[SKIP]')"
+        if: "startsWith(github.event.head_commit.message, '[') && github.event.head_commit.author.name != 'upesy-bot'"
 
         steps:
             - uses: actions/checkout@v2
               with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                  token: ${{ secrets.API_GITHUB_TOKEN }}
             - name: Set up Python
               uses: actions/setup-python@v2
               with:
                   python-version: "3.x"
             - name: Setup Git
               run: |
-                  git config user.name "uPesy Bot"
+                  git config user.name "upesy-bot"
                   git config user.email 'upesy@users.noreply.github.com'
-                  git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
+                  git remote set-url origin https://x-access-token:${{ secrets.API_GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
                   git checkout "${GITHUB_REF:11}"
 
             - name: Setup env variables
@@ -53,13 +53,13 @@ jobs:
                   echo "SKIPBUMP=TRUE" >> $GITHUB_ENV
               if: "startsWith(github.event.head_commit.message, '[FEATURE]')"
 
-            # Default action
+            # If a commit starts with [FIX] a new patch verion upgrade will be triggered.
             - name: Bump Patch Version
               env:
                   COMMIT_MSG: ${{ github.event.head_commit.message }}
               run: |
                   bump2version patch
-              if: env.SKIPBUMP == 'FALSE'
+              if: "startsWith(github.event.head_commit.message, '[FIX]')"
 
             - name: Commit version change to master
               run: |
