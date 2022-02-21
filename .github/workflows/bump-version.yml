@@ -15,7 +15,7 @@ jobs:
         steps:
             - uses: actions/checkout@v2
               with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                  token: ${{ secrets.API_GITHUB_TOKEN }}
             - name: Set up Python
               uses: actions/setup-python@v2
               with:
@@ -24,7 +24,7 @@ jobs:
               run: |
                   git config user.name "uPesy Bot"
                   git config user.email 'upesy@users.noreply.github.com'
-                  git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
+                  git remote set-url origin https://x-access-token:${{ secrets.API_GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY
                   git checkout "${GITHUB_REF:11}"
 
             - name: Setup env variables
