@@ -1,4 +1,4 @@
-# easyeda2kicad v0.0.1
+# easyeda2kicad v0.0.2
 
 A Python script that convert any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a Kicad library
 
