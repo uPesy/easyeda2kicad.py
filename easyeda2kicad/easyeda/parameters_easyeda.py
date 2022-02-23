@@ -34,15 +34,15 @@ class ee_symbol_pin_settings(BaseModel):
     is_locked: bool
 
     @validator("is_displayed", pre=True)
-    def parse_display_field(cls, v):
+    def parse_display_field(self, v):
         return True if v == "show" else v
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
+    def empty_str_lock(self, is_locked):
         return False if is_locked == "" else is_locked
 
     @validator("rotation", pre=True)
-    def empty_str_rotation(cls, rotation):
+    def empty_str_rotation(self, rotation):
         return 0.0 if rotation == "" else rotation
 
 
@@ -68,17 +68,17 @@ class ee_symbol_pin_name(BaseModel):
     font_size: float
 
     @validator("font_size", pre=True)
-    def empty_str_font(cls, font_size):
+    def empty_str_font(self, font_size):
         if isinstance(font_size, str) and "pt" in font_size:
             return float(font_size.replace("pt", ""))
         return 7.0 if font_size == "" else font_size
 
     @validator("is_displayed", pre=True)
-    def parse_display_field(cls, v):
+    def parse_display_field(self, v):
         return True if v == "show" else v
 
     @validator("rotation", pre=True)
-    def empty_str_rotation(cls, rotation):
+    def empty_str_rotation(self, rotation):
         return 0.0 if rotation == "" else rotation
 
 
@@ -88,7 +88,7 @@ class ee_symbol_pin_dot_bis(BaseModel):
     circle_y: float
 
     @validator("is_displayed", pre=True)
-    def parse_display_field(cls, v):
+    def parse_display_field(self, v):
         return True if v == "show" else v
 
 
@@ -97,7 +97,7 @@ class ee_symbol_pin_clock(BaseModel):
     path: str
 
     @validator("is_displayed", pre=True)
-    def parse_display_field(cls, v):
+    def parse_display_field(self, v):
         return True if v == "show" else v
 
 
@@ -127,7 +127,7 @@ class ee_symbol_rectangle(BaseModel):
     is_locked: bool
 
     @validator("*", pre=True)
-    def empty_str_to_none(cls, v):
+    def empty_str_to_none(self, v):
         return None if v == "" else v
 
 
@@ -142,7 +142,7 @@ class ee_symbol_polyline(BaseModel):
     is_locked: bool
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
+    def empty_str_lock(self, is_locked):
         return False if is_locked == "" else is_locked
 
 
@@ -165,11 +165,11 @@ class ee_symbol_path(BaseModel):
     is_locked: bool
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
+    def empty_str_lock(self, is_locked):
         return False if is_locked == "" else is_locked
 
     # @validator("paths", pre=True)
-    # def clean_svg_path(cls, paths:str):
+    # def clean_svg_path(self, paths:str):
     #     return paths.replace("M", "").replace("C","")
 
 
@@ -242,11 +242,11 @@ class ee_footprint_pad(BaseModel):
         self.hole_length = convert_to_mm(self.hole_length)
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
+    def empty_str_lock(self, is_locked):
         return False if is_locked == "" else is_locked
 
     @validator("rotation", pre=True)
-    def empty_str_rotation(cls, rotation):
+    def empty_str_rotation(self, rotation):
         return 0.0 if rotation == "" else rotation
 
 
@@ -259,7 +259,7 @@ class ee_footprint_track(BaseModel):
     is_locked: bool
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
+    def empty_str_lock(self, is_locked):
         return False if is_locked == "" else is_locked
 
     def convert_to_mm(self):
@@ -274,7 +274,7 @@ class ee_footprint_hole(BaseModel):
     is_locked: bool
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
+    def empty_str_lock(self, is_locked):
         return False if is_locked == "" else is_locked
 
     def convert_to_mm(self):
@@ -293,7 +293,7 @@ class ee_footprint_circle(BaseModel):
     is_locked: bool
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
+    def empty_str_lock(self, is_locked):
         return False if is_locked == "" else is_locked
 
     def convert_to_mm(self):
@@ -314,7 +314,7 @@ class ee_footprint_rectangle(BaseModel):
     is_locked: bool
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
+    def empty_str_lock(self, is_locked):
         return False if is_locked == "" else is_locked
 
     def convert_to_mm(self):
@@ -334,7 +334,7 @@ class ee_footprint_arc(BaseModel):
     is_locked: bool
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
+    def empty_str_lock(self, is_locked):
         return False if is_locked == "" else is_locked
 
 
@@ -355,15 +355,15 @@ class ee_footprint_text(BaseModel):
     is_locked: bool
 
     @validator("is_displayed", pre=True)
-    def empty_str_display(cls, is_displayed):
+    def empty_str_display(self, is_displayed):
         return True if is_displayed == "" else is_displayed
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
+    def empty_str_lock(self, is_locked):
         return False if is_locked == "" else is_locked
 
     @validator("rotation", pre=True)
-    def empty_str_rotation(cls, rotation):
+    def empty_str_rotation(self, rotation):
         return 0.0 if rotation == "" else rotation
 
     def convert_to_mm(self):

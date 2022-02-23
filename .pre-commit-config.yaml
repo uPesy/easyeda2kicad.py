@@ -41,6 +41,13 @@ repos:
     rev: 4.0.1
     hooks:
     -   id: flake8
+        additional_dependencies: [
+                'flake8-bugbear',
+                'flake8-coding',
+                'flake8-comprehensions',
+                # 'flake8-docstrings==1.5.0',
+                # 'flake8-print==3.1.4',
+            ]
         files: "\\.(py)$"
         exclude: (.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env)/"
 -   repo: https://github.com/pre-commit/mirrors-prettier
