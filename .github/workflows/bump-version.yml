@@ -20,6 +20,8 @@ jobs:
               uses: actions/setup-python@v2
               with:
                   python-version: "3.x"
+                  cache: 'pip'
+
             - name: Setup Git
               run: |
                   git config user.name "upesy-bot"
