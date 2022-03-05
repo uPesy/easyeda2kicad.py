@@ -1,4 +1,5 @@
 # Global imports
+import itertools
 from dataclasses import dataclass, field, fields
 from enum import Enum
 from typing import List
@@ -75,10 +76,6 @@ KI_LCSC_FIELD = 'F6 "{id}" 0 0 0 H I C CNN "LCSC Part"\n'
 KI_JLCPCB_FIELD = 'F7 "{type}" 0 0 0 H I C CNN "JLC Part"\n'
 
 KI_START_DRAW = "DRAW\n"
-
-KI_BOX = "S {x0} {y0} {x1} {y1} {unit_num} 1 {line_width} {fill}\n"
-KI_PIN = "X {name} {num} {x} {y} {length} {orientation} {num_sz} {name_sz} {unit_num} 1 {pin_type} {pin_style}\n"
-KI_POLYLINE = "P {points_number} {unit_num} 1 {line_width} {coordinate} {fill}\n"
 
 
 KI_END_DRAW = "ENDDRAW\n"
@@ -207,6 +204,67 @@ class ki_symbol_info:
     datasheet: str
     lcsc_id: str
     jlc_id: str
+    y_low: int = 0
+    y_high: int = 0
+
+    def export(self) -> str:
+        return "".join(
+            (
+                f"#\n# {self.name}\n#\n",
+                "DEF {name} {ref} 0 {pin_name_offset} {show_pin_number} {show_pin_name} {num_units} L N\n".format(
+                    name=self.name,
+                    ref=self.prefix,
+                    pin_name_offset=KI_PIN_NAME_OFFSET,
+                    show_pin_number=KI_SHOW_PIN_NUMBER and "Y" or "N",
+                    show_pin_name=KI_SHOW_PIN_NAME and "Y" or "N",
+                    num_units=1,
+                ),
+                'F0 "{ref_prefix}" {x} {y} {font_size} H V {text_justification} CNN\n'.format(
+                    ref_prefix=self.prefix,
+                    x=0,
+                    y=self.y_high + KI_REF_Y_OFFSET,
+                    text_justification="C",  # Center align
+                    font_size=KI_REF_SIZE,
+                ),
+                'F1 "{num}" {x} {y} {font_size} H V {text_justification} CNN\n'.format(
+                    num=self.name,
+                    x=0,
+                    y=self.y_low - KI_PART_NUM_Y_OFFSET,
+                    text_justification="C",  # Center align
+                    font_size=KI_PART_NUM_SIZE,
+                ),
+                'F2 "{footprint}" {x} {y} {font_size} H I {text_justification} CNN\n'.format(
+                    footprint=self.package,
+                    x=0,
+                    y=self.y_low - KI_PART_FOOTPRINT_Y_OFFSET,
+                    text_justification="C",  # Center align
+                    font_size=KI_PART_FOOTPRINT_SIZE,
+                )
+                if self.package
+                else "",
+                'F3 "{datasheet}" {x} {y} {font_size} H I {text_justification} CNN\n'.format(
+                    datasheet=self.datasheet,
+                    x=0,
+                    y=self.y_low - KI_PART_DATASHEET_Y_OFFSET,
+                    text_justification="C",  # Center align
+                    font_size=KI_PART_DATASHEET_SIZE,
+                )
+                if self.datasheet
+                else "",
+                'F4 "{manufacturer}" 0 0 0 H I C CNN "Manufacturer"\n'.format(
+                    manufacturer=self.manufacturer,
+                )
+                if self.manufacturer
+                else "",
+                f'F6 "{self.lcsc_id}" 0 0 0 H I C CNN "LCSC Part"\n'
+                if self.lcsc_id
+                else "",
+                f'F7 "{self.jlc_id}" 0 0 0 H I C CNN "JLC Part"\n'
+                if self.jlc_id
+                else "",
+                "DRAW\n",
+            )
+        )
 
 
 # ---------------- PIN ----------------
@@ -220,6 +278,21 @@ class ki_symbol_pin:
     pos_x: int
     pos_y: int
 
+    def export(self) -> str:
+        return "X {name} {num} {x} {y} {length} {orientation} {num_sz} {name_sz} {unit_num} 1 {pin_type} {pin_style}\n".format(
+            name=self.name,
+            num=self.number,
+            x=self.pos_x,
+            y=self.pos_y,
+            length=KI_PIN_LENGTH,
+            orientation=self.orientation,
+            num_sz=KI_PIN_NUM_SIZE,
+            name_sz=KI_PIN_NAME_SIZE,
+            unit_num=1,
+            pin_type=self.type,
+            pin_style=self.style,
+        )
+
 
 # ---------------- RECTANGLE ----------------
 @dataclass
@@ -229,6 +302,17 @@ class ki_symbol_rectangle:
     pos_x1: int = 0
     pos_y1: int = 0
 
+    def export(self) -> str:
+        return "S {x0} {y0} {x1} {y1} {unit_num} 1 {line_width} {fill}\n".format(
+            x0=int(round(self.pos_x0 / 50.0)) * 50,
+            y0=int(round(self.pos_y0 / 50.0)) * 50,
+            x1=int(round(self.pos_x1 / 50.0)) * 50,
+            y1=int(round(self.pos_y1 / 50.0)) * 50,
+            unit_num=1,
+            line_width=KI_DEFAULT_BOX_LINE_WIDTH,
+            fill=KI_BOX_FILLS["bg_fill"],
+        )
+
 
 # ---------------- POLYLINE ----------------
 @dataclass
@@ -236,6 +320,19 @@ class ki_symbol_polyline:
     points: List[List[int]] = field(default_factory=List[List[int]])
     points_number: int = 0
     is_closed: bool = False
+
+    def export(self) -> str:
+        return (
+            "P {points_number} {unit_num} 1 {line_width} {coordinate} {fill}\n".format(
+                points_number=self.points_number,
+                unit_num=1,
+                line_width=KI_DEFAULT_BOX_LINE_WIDTH,
+                coordinate=" ".join(list(itertools.chain.from_iterable(self.points))),
+                fill=KI_BOX_FILLS["bg_fill"]
+                if self.is_closed
+                else KI_BOX_FILLS["no_fill"],
+            )
+        )
 
 
 # ---------------- CIRCLE ----------------
@@ -245,7 +342,7 @@ class ki_symbol_circle:
     pos_y: int = 0
     radius: int = 0
 
-    def export(self):
+    def export(self) -> str:
         return "C {pos_x} {pos_y} {radius} {unit_num} 1 {line_width} {fill}\n".format(
             pos_x=self.pos_x,
             pos_y=self.pos_y,
@@ -269,7 +366,7 @@ class ki_symbol_arc:
     end_x: int = 0
     end_y: int = 0
 
-    def export(self):
+    def export(self) -> str:
         return "C {pos_x} {pos_y} {radius} {angle_start} {angle_end} {unit_num} 1 {line_width} {fill} {start_x} {start_y} {end_x} {end_y}\n".format(
             pos_x=self.pos_x,
             pos_y=self.pos_y,
@@ -301,6 +398,24 @@ class ki_symbol:
     polylines: List[ki_symbol_polyline] = field(
         default_factory=List[ki_symbol_polyline]
     )
+
+    def export(self) -> str:
+        lib_output = ""
+        # Get y_min and y_max to put component info
+        self.info.y_low = min(pin.pos_y for pin in self.pins) if self.pins else 0
+        self.info.y_high = max(pin.pos_y for pin in self.pins) if self.pins else 0
+
+        for _field in fields(self):
+            shapes = getattr(self, _field.name)
+            if isinstance(shapes, list):
+                for sub_symbol in shapes:
+                    lib_output += sub_symbol.export()
+            else:
+                lib_output += shapes.export()
+
+        lib_output += "ENDDRAW\n" + "ENDDEF\n"
+
+        return lib_output
 
 
 # ---------------------------- FOOTPRINT PART ----------------------------
