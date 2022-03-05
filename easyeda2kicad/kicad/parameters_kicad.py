@@ -208,10 +208,10 @@ class ki_symbol_info:
     y_high: int = 0
 
     def export(self) -> str:
-        return "".join(
+        return "\n".join(
             (
-                f"#\n# {self.name}\n#\n",
-                "DEF {name} {ref} 0 {pin_name_offset} {show_pin_number} {show_pin_name} {num_units} L N\n".format(
+                f"#\n# {self.name}\n#",
+                "DEF {name} {ref} 0 {pin_name_offset} {show_pin_number} {show_pin_name} {num_units} L N".format(
                     name=self.name,
                     ref=self.prefix,
                     pin_name_offset=KI_PIN_NAME_OFFSET,
@@ -219,21 +219,21 @@ class ki_symbol_info:
                     show_pin_name=KI_SHOW_PIN_NAME and "Y" or "N",
                     num_units=1,
                 ),
-                'F0 "{ref_prefix}" {x} {y} {font_size} H V {text_justification} CNN\n'.format(
+                'F0 "{ref_prefix}" {x} {y} {font_size} H V {text_justification} CNN'.format(
                     ref_prefix=self.prefix,
                     x=0,
                     y=self.y_high + KI_REF_Y_OFFSET,
                     text_justification="C",  # Center align
                     font_size=KI_REF_SIZE,
                 ),
-                'F1 "{num}" {x} {y} {font_size} H V {text_justification} CNN\n'.format(
+                'F1 "{num}" {x} {y} {font_size} H V {text_justification} CNN'.format(
                     num=self.name,
                     x=0,
                     y=self.y_low - KI_PART_NUM_Y_OFFSET,
                     text_justification="C",  # Center align
                     font_size=KI_PART_NUM_SIZE,
                 ),
-                'F2 "{footprint}" {x} {y} {font_size} H I {text_justification} CNN\n'.format(
+                'F2 "{footprint}" {x} {y} {font_size} H I {text_justification} CNN'.format(
                     footprint=self.package,
                     x=0,
                     y=self.y_low - KI_PART_FOOTPRINT_Y_OFFSET,
@@ -242,7 +242,7 @@ class ki_symbol_info:
                 )
                 if self.package
                 else "",
-                'F3 "{datasheet}" {x} {y} {font_size} H I {text_justification} CNN\n'.format(
+                'F3 "{datasheet}" {x} {y} {font_size} H I {text_justification} CNN'.format(
                     datasheet=self.datasheet,
                     x=0,
                     y=self.y_low - KI_PART_DATASHEET_Y_OFFSET,
@@ -251,20 +251,18 @@ class ki_symbol_info:
                 )
                 if self.datasheet
                 else "",
-                'F4 "{manufacturer}" 0 0 0 H I C CNN "Manufacturer"\n'.format(
+                'F4 "{manufacturer}" 0 0 0 H I C CNN "Manufacturer"'.format(
                     manufacturer=self.manufacturer,
                 )
                 if self.manufacturer
                 else "",
-                f'F6 "{self.lcsc_id}" 0 0 0 H I C CNN "LCSC Part"\n'
+                f'F6 "{self.lcsc_id}" 0 0 0 H I C CNN "LCSC Part"'
                 if self.lcsc_id
                 else "",
-                f'F7 "{self.jlc_id}" 0 0 0 H I C CNN "JLC Part"\n'
-                if self.jlc_id
-                else "",
-                "DRAW\n",
+                f'F7 "{self.jlc_id}" 0 0 0 H I C CNN "JLC Part"' if self.jlc_id else "",
+                "DRAW",
             )
-        )
+        ).replace("\n\n", "\n")
 
 
 # ---------------- PIN ----------------
