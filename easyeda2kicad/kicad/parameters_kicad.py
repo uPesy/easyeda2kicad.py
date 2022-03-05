@@ -135,20 +135,8 @@ KI_PIN_TYPES = {
 
 KI_PIN_STYLES = {
     "line": "",
-    "": "",
     "inverted": "I",
-    "inv": "I",
-    "~": "I",
-    "#": "I",
     "clock": "C",
-    "clk": "C",
-    "rising_clk": "C",
-    "inverted_clock": "IC",
-    "inv_clk": "IC",
-    "clk_b": "IC",
-    "clk_n": "IC",
-    "~clk": "IC",
-    "#clk": "IC",
     "input_low": "L",
     "inp_low": "L",
     "in_lw": "L",
@@ -193,7 +181,6 @@ class kicad_pin_orientation(Enum):
 
 
 # ---------------------------- SYMBOL PART ----------------------------
-
 # ---------------- INFO HEADER ----------------
 @dataclass
 class ki_symbol_info:
