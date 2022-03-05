@@ -13,12 +13,11 @@ def px_to_mil(dim: int):
 class exporter_symbol_kicad:
     def __init__(self, symbol):
         self.input: ee_symbol = symbol
-        if type(self.input) is not ee_symbol:
-            print("Conversion non supportée")
-        else:
-            self.generate_kicad_symbol()
+        self.convert_to_kicad() if isinstance(self.input, ee_symbol) else print(
+            "[-] Unknown format"
+        )
 
-    def generate_kicad_symbol(self):
+    def convert_to_kicad(self):
 
         ki_info = ki_symbol_info(
             name=self.input.info.name.replace(" ", ""),
@@ -50,7 +49,7 @@ class exporter_symbol_kicad:
 
             ki_pin.style = (
                 KI_PIN_STYLES["inverted"] if ee_pin.dot.is_displayed == "1" else ""
-            )  # A vérifier
+            )
             ki_pin.style += (
                 KI_PIN_STYLES["clock"] if ee_pin.clock.is_displayed == "1" else ""
             )
