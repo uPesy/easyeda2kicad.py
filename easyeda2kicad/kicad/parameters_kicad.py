@@ -80,6 +80,7 @@ KI_BOX = "S {x0} {y0} {x1} {y1} {unit_num} 1 {line_width} {fill}\n"
 KI_PIN = "X {name} {num} {x} {y} {length} {orientation} {num_sz} {name_sz} {unit_num} 1 {pin_type} {pin_style}\n"
 KI_POLYLINE = "P {points_number} {unit_num} 1 {line_width} {coordinate} {fill}\n"
 
+
 KI_END_DRAW = "ENDDRAW\n"
 KI_END_DEF = "ENDDEF\n"
 
@@ -237,6 +238,56 @@ class ki_symbol_polyline:
     is_closed: bool = False
 
 
+# ---------------- CIRCLE ----------------
+@dataclass
+class ki_symbol_circle:
+    pos_x: int = 0
+    pos_y: int = 0
+    radius: int = 0
+
+    def export(self):
+        return "C {pos_x} {pos_y} {radius} {unit_num} 1 {line_width} {fill}\n".format(
+            pos_x=self.pos_x,
+            pos_y=self.pos_y,
+            radius=self.radius,
+            unit_num=1,
+            line_width=KI_DEFAULT_BOX_LINE_WIDTH,
+            fill=KI_BOX_FILLS["bg_fill"],
+        )
+
+
+# ---------------- ARC ----------------
+@dataclass
+class ki_symbol_arc:
+    pos_x: int = 0
+    pos_y: int = 0
+    radius: int = 0
+    angle_start: float = 0.0
+    angle_end: float = 0.0
+    start_x: int = 0
+    start_y: int = 0
+    end_x: int = 0
+    end_y: int = 0
+
+    def export(self):
+        return "C {pos_x} {pos_y} {radius} {angle_start} {angle_end} {unit_num} 1 {line_width} {fill} {start_x} {start_y} {end_x} {end_y}\n".format(
+            pos_x=self.pos_x,
+            pos_y=self.pos_y,
+            radius=self.radius,
+            angle_start=self.angle_start,
+            angle_end=self.angle_end,
+            unit_num=1,
+            line_width=KI_DEFAULT_BOX_LINE_WIDTH,
+            fill=KI_BOX_FILLS["bg_fill"]
+            if self.angle_start == self.angle_end
+            else KI_BOX_FILLS["no_fill"],
+            start_x=self.start_x,
+            start_y=self.start_y,
+            end_x=self.end_x,
+            end_y=self.end_y,
+        )
+
+
 # ---------------- SYMBOL ----------------
 @dataclass
 class ki_symbol:
@@ -245,6 +296,8 @@ class ki_symbol:
     rectangles: List[ki_symbol_rectangle] = field(
         default_factory=List[ki_symbol_rectangle]
     )
+    circles: List[ki_symbol_circle] = field(default_factory=List[ki_symbol_circle])
+    arcs: List[ki_symbol_arc] = field(default_factory=List[ki_symbol_arc])
     polylines: List[ki_symbol_polyline] = field(
         default_factory=List[ki_symbol_polyline]
     )

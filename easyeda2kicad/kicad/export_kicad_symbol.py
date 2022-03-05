@@ -6,7 +6,7 @@ from easyeda2kicad.kicad.parameters_kicad import *
 
 
 # ---------------------------------------
-def resize_to_kicad(dim: int):
+def px_to_mil(dim: int):
     return 10 * dim
 
 
@@ -43,12 +43,8 @@ class exporter_symbol_kicad:
                 orientation=KI_PIN_ORIENTATIONS[
                     kicad_pin_orientation(ee_pin.settings.rotation).name
                 ],
-                pos_x=resize_to_kicad(
-                    int(ee_pin.settings.pos_x) - int(self.input.bbox.x)
-                ),
-                pos_y=-resize_to_kicad(
-                    int(ee_pin.settings.pos_y) - int(self.input.bbox.y)
-                ),
+                pos_x=px_to_mil(int(ee_pin.settings.pos_x) - int(self.input.bbox.x)),
+                pos_y=-px_to_mil(int(ee_pin.settings.pos_y) - int(self.input.bbox.y)),
             )
 
             ki_pin.style = (
@@ -61,31 +57,27 @@ class exporter_symbol_kicad:
             pin_length = abs(int(float(ee_pin.pin_path.path.split("h")[-1])))
             # Deal with different pin length
             if ee_pin.settings.rotation == 0:
-                ki_pin.pos_x -= resize_to_kicad(pin_length) - KI_PIN_SPACING
+                ki_pin.pos_x -= px_to_mil(pin_length) - KI_PIN_SPACING
             elif ee_pin.settings.rotation == 180:
-                ki_pin.pos_x += resize_to_kicad(pin_length) - KI_PIN_SPACING
+                ki_pin.pos_x += px_to_mil(pin_length) - KI_PIN_SPACING
             elif ee_pin.settings.rotation == 90:
-                ki_pin.pos_y -= resize_to_kicad(pin_length) - KI_PIN_SPACING
+                ki_pin.pos_y -= px_to_mil(pin_length) - KI_PIN_SPACING
             elif ee_pin.settings.rotation == 270:
-                ki_pin.pos_y += resize_to_kicad(pin_length) - KI_PIN_SPACING
+                ki_pin.pos_y += px_to_mil(pin_length) - KI_PIN_SPACING
 
             self.output.pins.append(ki_pin)
 
         # For rectangles
         for ee_rectangle in self.input.rectangles:
             ki_rectangle = ki_symbol_rectangle(
-                pos_x0=resize_to_kicad(
-                    int(ee_rectangle.pos_x) - int(self.input.bbox.x)
-                ),
-                pos_y0=-resize_to_kicad(
-                    int(ee_rectangle.pos_y) - int(self.input.bbox.y)
-                ),
+                pos_x0=px_to_mil(int(ee_rectangle.pos_x) - int(self.input.bbox.x)),
+                pos_y0=-px_to_mil(int(ee_rectangle.pos_y) - int(self.input.bbox.y)),
             )
             ki_rectangle.pos_x1 = (
-                resize_to_kicad(int(ee_rectangle.width)) + ki_rectangle.pos_x0
+                px_to_mil(int(ee_rectangle.width)) + ki_rectangle.pos_x0
             )
             ki_rectangle.pos_y1 = (
-                -resize_to_kicad(int(ee_rectangle.height)) + ki_rectangle.pos_y0
+                -px_to_mil(int(ee_rectangle.height)) + ki_rectangle.pos_y0
             )
 
             self.output.rectangles.append(ki_rectangle)
@@ -93,17 +85,17 @@ class exporter_symbol_kicad:
         # For polylines
         for ee_polyline in self.input.polylines:
             raw_pts = ee_polyline.points.split(" ")
-            print(raw_pts)
+            # print(raw_pts)
             x_points = [
-                resize_to_kicad(int(float(raw_pts[i])) - int(self.input.bbox.x))
+                px_to_mil(int(float(raw_pts[i])) - int(self.input.bbox.x))
                 for i in range(0, len(raw_pts), 2)
             ]
             y_points = [
-                resize_to_kicad(int(float(raw_pts[i])) - int(self.input.bbox.y))
+                px_to_mil(int(float(raw_pts[i])) - int(self.input.bbox.y))
                 for i in range(1, len(raw_pts), 2)
             ]
-            print(x_points, y_points)
-            print(self.input.bbox.x, self.input.bbox.y)
+            # print(x_points, y_points)
+            # print(self.input.bbox.x, self.input.bbox.y)
 
             ki_polyline = ki_symbol_polyline(
                 points=[
@@ -126,14 +118,10 @@ class exporter_symbol_kicad:
             for i in range(len(raw_pts) - 1):
                 if raw_pts[i] in ["M", "L"]:
                     x_points.append(
-                        resize_to_kicad(
-                            int(float(raw_pts[i + 1])) - int(self.input.bbox.x)
-                        )
+                        px_to_mil(int(float(raw_pts[i + 1])) - int(self.input.bbox.x))
                     )
                     y_points.append(
-                        resize_to_kicad(
-                            int(float(raw_pts[i + 2])) - int(self.input.bbox.y)
-                        )
+                        px_to_mil(int(float(raw_pts[i + 2])) - int(self.input.bbox.y))
                     )
                     i += 2
                 elif raw_pts[i] == "Z":
@@ -153,6 +141,8 @@ class exporter_symbol_kicad:
             )
 
             self.output.polylines.append(ki_polyline)
+
+        # For circle
 
     def get_ki_symbol(self):
         return self.output
