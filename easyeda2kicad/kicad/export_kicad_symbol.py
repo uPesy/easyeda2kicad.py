@@ -133,7 +133,7 @@ def convert_ee_paths(
         for i in range(len(raw_pts) - 1):
             if raw_pts[i] in ["M", "L"]:
                 x_points.append(px_to_mil(int(float(raw_pts[i + 1])) - int(ee_bbox.x)))
-                y_points.append(px_to_mil(int(float(raw_pts[i + 2])) - int(ee_bbox.y)))
+                y_points.append(-px_to_mil(int(float(raw_pts[i + 2])) - int(ee_bbox.y)))
                 i += 2
             elif raw_pts[i] == "Z":
                 x_points.append(x_points[0])
