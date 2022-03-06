@@ -65,7 +65,7 @@ class easyeda_symbol_importer:
                 ...
             # For ellipse
             elif designator == "E":
-                ...  # TODO
+                ...  # Ellipse seems to be not supported in Kicad
             # For arcs
             elif designator == "A":
                 ...  # TODO

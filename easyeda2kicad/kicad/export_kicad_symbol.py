@@ -6,6 +6,7 @@ from easyeda2kicad.easyeda.parameters_easyeda import (
     ee_symbol_bbox,
     ee_symbol_path,
     ee_symbol_pin,
+    ee_symbol_polygon,
     ee_symbol_polyline,
     ee_symbol_rectangle,
 )
@@ -74,7 +75,8 @@ def convert_ee_rectangles(
 
 
 def convert_ee_polylines(
-    ee_polylines: List[ee_symbol_polyline], ee_bbox: ee_symbol_bbox
+    ee_polylines: List[Union[ee_symbol_polyline, ee_symbol_polygon]],
+    ee_bbox: ee_symbol_bbox,
 ) -> List[ki_symbol_polygon]:
     kicad_polygons = []
     for ee_polyline in ee_polylines:
@@ -88,6 +90,10 @@ def convert_ee_polylines(
             px_to_mil(int(float(raw_pts[i])) - int(ee_bbox.y))
             for i in range(1, len(raw_pts), 2)
         ]
+        if isinstance(ee_polyline, ee_symbol_polygon):
+            x_points.append(x_points[0])
+            y_points.append(y_points[0])
+
         # print(x_points, y_points)
         # print(ee_bbox.x, ee_bbox.y)
 
@@ -102,6 +108,12 @@ def convert_ee_polylines(
         kicad_polygons.append(kicad_polygon)
 
     return kicad_polygons
+
+
+def convert_ee_polygons(
+    ee_polygons: List[ee_symbol_polygon], ee_bbox: ee_symbol_bbox
+) -> List[ki_symbol_polygon]:
+    return convert_ee_polylines(ee_polylines=ee_polygons, ee_bbox=ee_bbox)
 
 
 def convert_ee_paths(
@@ -170,6 +182,9 @@ def convert_to_kicad(ee_symbol: ee_symbol):
     )
     kicad_symbol.polygons += convert_ee_polylines(
         ee_polylines=ee_symbol.polylines, ee_bbox=ee_symbol.bbox
+    )
+    kicad_symbol.polygons += convert_ee_polygons(
+        ee_polygons=ee_symbol.polygons, ee_bbox=ee_symbol.bbox
     )
 
     return kicad_symbol
