@@ -178,9 +178,10 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             return 1
 
         print(f"[*] Creating Kicad symbol library for LCSC id : {component_id}")
-        exporter = exporter_symbol_kicad(symbol=easyeda_symbol)
+
+        exporter = exporter_symbol_kicad(symbol=easyeda_symbol, kicad_version=5)
         # print(exporter.output)
-        kicad_symbol_lib = exporter.export_symbol()
+        kicad_symbol_lib = exporter.get_kicad_lib()
 
         if is_id_already_in_symbol_lib:
             delete_component_in_symbol_lib(

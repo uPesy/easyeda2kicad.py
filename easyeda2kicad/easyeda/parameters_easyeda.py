@@ -14,7 +14,7 @@ class easyeda_pin_type(Enum):
     power = 4
 
 
-# Symbol
+# ------------------------- Symbol -------------------------
 
 
 class ee_symbol_bbox(BaseModel):
@@ -196,8 +196,7 @@ class ee_symbol:
     paths: List[ee_symbol_path] = field(default_factory=list)
 
 
-# ------------------------------------------------------------------------------
-# Footprint
+# ------------------------- Footprint -------------------------
 
 
 def convert_to_mm(dim: float):
