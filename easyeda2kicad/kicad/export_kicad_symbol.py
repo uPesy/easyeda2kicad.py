@@ -87,7 +87,7 @@ def convert_ee_polylines(
             for i in range(0, len(raw_pts), 2)
         ]
         y_points = [
-            px_to_mil(int(float(raw_pts[i])) - int(ee_bbox.y))
+            -px_to_mil(int(float(raw_pts[i])) - int(ee_bbox.y))
             for i in range(1, len(raw_pts), 2)
         ]
         if isinstance(ee_polyline, ee_symbol_polygon):
@@ -103,6 +103,7 @@ def convert_ee_polylines(
                 for i in range(min(len(x_points), len(y_points)))
             ],
             points_number=min(len(x_points), len(y_points)),
+            is_closed=x_points[0] == x_points[-1] and y_points[0] == y_points[-1],
         )
 
         kicad_polygons.append(kicad_polygon)
