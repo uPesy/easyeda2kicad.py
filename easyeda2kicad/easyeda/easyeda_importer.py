@@ -59,10 +59,13 @@ class easyeda_symbol_importer:
             elif designator == "PT":
                 ee_path = self.extract_easyeda_path(path_data=line)
                 new_ee_symbol.paths.append(self.tune_ee_path(path=ee_path))
-
+            # For Pie
+            elif designator == "PI":
+                # Elliptical arc seems to be not supported in Kicad
+                ...
             # For ellipse
             elif designator == "E":
-                ...  # TODO
+                ...  # Ellipse seems to be not supported in Kicad
             # For arcs
             elif designator == "A":
                 ...  # TODO
