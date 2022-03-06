@@ -131,6 +131,16 @@ class ee_symbol_rectangle(BaseModel):
         return None if v == "" else v
 
 
+# ---------------- CIRCLE ----------------
+class ee_symbol_circle(BaseModel):
+    ...  # TODO
+
+
+# ---------------- ARC ----------------
+class ee_symbol_arc(BaseModel):
+    ...  # TODO
+
+
 # ---------------- POLYLINE ----------------
 class ee_symbol_polyline(BaseModel):
     points: str
