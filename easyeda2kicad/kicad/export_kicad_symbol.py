@@ -74,6 +74,16 @@ def convert_ee_rectangles(
     return kicad_rectangles
 
 
+def convert_ee_circles():
+    # TODO
+    return []
+
+
+def convert_ee_arcs():
+    # TODO
+    return []
+
+
 def convert_ee_polylines(
     ee_polylines: List[Union[ee_symbol_polyline, ee_symbol_polygon]],
     ee_bbox: ee_symbol_bbox,
@@ -174,8 +184,8 @@ def convert_to_kicad(ee_symbol: ee_symbol):
         rectangles=convert_ee_rectangles(
             ee_rectangles=ee_symbol.rectangles, ee_bbox=ee_symbol.bbox
         ),
-        circles=[],
-        arcs=[],
+        circles=convert_ee_circles(),
+        arcs=convert_ee_arcs(),
     )
 
     kicad_symbol.polygons, kicad_symbol.beziers = convert_ee_paths(
