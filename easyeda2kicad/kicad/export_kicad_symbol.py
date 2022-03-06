@@ -1,10 +1,12 @@
 # Global imports
-from typing import List
+from typing import List, Tuple, Union
 
 from easyeda2kicad.easyeda.parameters_easyeda import (
     ee_symbol,
     ee_symbol_bbox,
+    ee_symbol_path,
     ee_symbol_pin,
+    ee_symbol_polyline,
     ee_symbol_rectangle,
 )
 from easyeda2kicad.kicad.parameters_kicad import *
@@ -14,7 +16,7 @@ def px_to_mil(dim: int):
     return 10 * dim
 
 
-def convert_pins(
+def convert_ee_pins(
     ee_pins: List[ee_symbol_pin], ee_bbox: ee_symbol_bbox
 ) -> List[ki_symbol_pin]:
     kicad_pins = []
@@ -54,7 +56,7 @@ def convert_pins(
     return kicad_pins
 
 
-def convert_rectangles(
+def convert_ee_rectangles(
     ee_rectangles: List[ee_symbol_rectangle], ee_bbox: ee_symbol_bbox
 ) -> List[ki_symbol_rectangle]:
     kicad_rectangles = []
@@ -71,6 +73,76 @@ def convert_rectangles(
     return kicad_rectangles
 
 
+def convert_ee_polylines(
+    ee_polylines: List[ee_symbol_polyline], ee_bbox: ee_symbol_bbox
+) -> List[ki_symbol_polygon]:
+    kicad_polygons = []
+    for ee_polyline in ee_polylines:
+        raw_pts = ee_polyline.points.split(" ")
+        # print(raw_pts)
+        x_points = [
+            px_to_mil(int(float(raw_pts[i])) - int(ee_bbox.x))
+            for i in range(0, len(raw_pts), 2)
+        ]
+        y_points = [
+            px_to_mil(int(float(raw_pts[i])) - int(ee_bbox.y))
+            for i in range(1, len(raw_pts), 2)
+        ]
+        # print(x_points, y_points)
+        # print(ee_bbox.x, ee_bbox.y)
+
+        kicad_polygon = ki_symbol_polygon(
+            points=[
+                [str(x_points[i]), str(y_points[i])]
+                for i in range(min(len(x_points), len(y_points)))
+            ],
+            points_number=min(len(x_points), len(y_points)),
+        )
+
+        kicad_polygons.append(kicad_polygon)
+
+    return kicad_polygons
+
+
+def convert_ee_paths(
+    ee_paths: List[ee_symbol_path], ee_bbox: ee_symbol_bbox
+) -> Tuple[List[ki_symbol_polygon], List[ki_symbol_polygon]]:
+    kicad_polygons = []
+    kicad_beziers = []
+
+    for ee_path in ee_paths:
+        raw_pts = ee_path.paths.split(" ")
+
+        x_points = []
+        y_points = []
+
+        # Small svg path parser : doc -> https://www.w3.org/TR/SVG11/paths.html#PathElement
+        for i in range(len(raw_pts) - 1):
+            if raw_pts[i] in ["M", "L"]:
+                x_points.append(px_to_mil(int(float(raw_pts[i + 1])) - int(ee_bbox.x)))
+                y_points.append(px_to_mil(int(float(raw_pts[i + 2])) - int(ee_bbox.y)))
+                i += 2
+            elif raw_pts[i] == "Z":
+                x_points.append(x_points[0])
+                y_points.append(y_points[0])
+            elif raw_pts[i] == "C":
+                ...
+                # TODO : Add bezier support
+
+        ki_polygon = ki_symbol_polygon(
+            points=[
+                [str(x_points[i]), str(y_points[i])]
+                for i in range(min(len(x_points), len(y_points)))
+            ],
+            points_number=min(len(x_points), len(y_points)),
+            is_closed=x_points[0] == x_points[-1] and y_points[0] == y_points[-1],
+        )
+
+        kicad_polygons.append(ki_polygon)
+
+    return kicad_polygons, kicad_beziers
+
+
 def convert_to_kicad(ee_symbol: ee_symbol):
 
     ki_info = ki_symbol_info(
@@ -85,76 +157,21 @@ def convert_to_kicad(ee_symbol: ee_symbol):
 
     kicad_symbol = ki_symbol(
         info=ki_info,
-        pins=convert_pins(ee_pins=ee_symbol.pins, ee_bbox=ee_symbol.bbox),
-        rectangles=convert_rectangles(
+        pins=convert_ee_pins(ee_pins=ee_symbol.pins, ee_bbox=ee_symbol.bbox),
+        rectangles=convert_ee_rectangles(
             ee_rectangles=ee_symbol.rectangles, ee_bbox=ee_symbol.bbox
         ),
         circles=[],
         arcs=[],
-        polylines=[],
     )
 
-    # For polylines
-    for ee_polyline in ee_symbol.polylines:
-        raw_pts = ee_polyline.points.split(" ")
-        # print(raw_pts)
-        x_points = [
-            px_to_mil(int(float(raw_pts[i])) - int(ee_symbol.bbox.x))
-            for i in range(0, len(raw_pts), 2)
-        ]
-        y_points = [
-            px_to_mil(int(float(raw_pts[i])) - int(ee_symbol.bbox.y))
-            for i in range(1, len(raw_pts), 2)
-        ]
-        # print(x_points, y_points)
-        # print(ee_symbol.bbox.x, ee_symbol.bbox.y)
+    kicad_symbol.polygons, kicad_symbol.beziers = convert_ee_paths(
+        ee_paths=ee_symbol.paths, ee_bbox=ee_symbol.bbox
+    )
+    kicad_symbol.polygons += convert_ee_polylines(
+        ee_polylines=ee_symbol.polylines, ee_bbox=ee_symbol.bbox
+    )
 
-        ki_polyline = ki_symbol_polyline(
-            points=[
-                [str(x_points[i]), str(y_points[i])]
-                for i in range(min(len(x_points), len(y_points)))
-            ],
-            points_number=min(len(x_points), len(y_points)),
-        )
-
-        kicad_symbol.polylines.append(ki_polyline)
-
-    # For paths
-    for ee_path in ee_symbol.paths:
-        raw_pts = ee_path.paths.split(" ")
-
-        x_points = []
-        y_points = []
-
-        # Small svg path parser : doc -> https://www.w3.org/TR/SVG11/paths.html#PathElement
-        for i in range(len(raw_pts) - 1):
-            if raw_pts[i] in ["M", "L"]:
-                x_points.append(
-                    px_to_mil(int(float(raw_pts[i + 1])) - int(ee_symbol.bbox.x))
-                )
-                y_points.append(
-                    px_to_mil(int(float(raw_pts[i + 2])) - int(ee_symbol.bbox.y))
-                )
-                i += 2
-            elif raw_pts[i] == "Z":
-                x_points.append(x_points[0])
-                y_points.append(y_points[0])
-            elif raw_pts[i] == "C":
-                ...
-                # TODO : Add bezier support
-
-        ki_polyline = ki_symbol_polyline(
-            points=[
-                [str(x_points[i]), str(y_points[i])]
-                for i in range(min(len(x_points), len(y_points)))
-            ],
-            points_number=min(len(x_points), len(y_points)),
-            is_closed=x_points[0] == x_points[-1] and y_points[0] == y_points[-1],
-        )
-
-        kicad_symbol.polylines.append(ki_polyline)
-
-    # For circle
     return kicad_symbol
 
 

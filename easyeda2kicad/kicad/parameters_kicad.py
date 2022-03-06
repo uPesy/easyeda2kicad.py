@@ -247,7 +247,7 @@ class ki_symbol_info:
                 if self.lcsc_id
                 else "",
                 f'F7 "{self.jlc_id}" 0 0 0 H I C CNN "JLC Part"' if self.jlc_id else "",
-                "DRAW",
+                "DRAW\n",
             )
         ).replace("\n\n", "\n")
 
@@ -299,9 +299,9 @@ class ki_symbol_rectangle:
         )
 
 
-# ---------------- POLYLINE ----------------
+# ---------------- POLYGON ----------------
 @dataclass
-class ki_symbol_polyline:
+class ki_symbol_polygon:
     points: List[List[int]] = field(default_factory=List[List[int]])
     points_number: int = 0
     is_closed: bool = False
@@ -370,19 +370,37 @@ class ki_symbol_arc:
         )
 
 
+# ---------------- BEZIER CURVE ----------------
+@dataclass
+class ki_symbol_bezier:
+    points: List[List[int]] = field(default_factory=List[List[int]])
+    points_number: int = 0
+    is_closed: bool = False
+
+    def export(self) -> str:
+        return (
+            "B {points_number} {unit_num} 1 {line_width} {coordinate} {fill}\n".format(
+                points_number=self.points_number,
+                unit_num=1,
+                line_width=KI_DEFAULT_BOX_LINE_WIDTH,
+                coordinate=" ".join(list(itertools.chain.from_iterable(self.points))),
+                fill=KI_BOX_FILLS["bg_fill"]
+                if self.is_closed
+                else KI_BOX_FILLS["no_fill"],
+            )
+        )
+
+
 # ---------------- SYMBOL ----------------
 @dataclass
 class ki_symbol:
     info: ki_symbol_info
-    pins: List[ki_symbol_pin] = field(default_factory=List[ki_symbol_pin])
-    rectangles: List[ki_symbol_rectangle] = field(
-        default_factory=List[ki_symbol_rectangle]
-    )
-    circles: List[ki_symbol_circle] = field(default_factory=List[ki_symbol_circle])
-    arcs: List[ki_symbol_arc] = field(default_factory=List[ki_symbol_arc])
-    polylines: List[ki_symbol_polyline] = field(
-        default_factory=List[ki_symbol_polyline]
-    )
+    pins: List[ki_symbol_pin] = field(default_factory=lambda: [])
+    rectangles: List[ki_symbol_rectangle] = field(default_factory=lambda: [])
+    circles: List[ki_symbol_circle] = field(default_factory=lambda: [])
+    arcs: List[ki_symbol_arc] = field(default_factory=lambda: [])
+    polygons: List[ki_symbol_polygon] = field(default_factory=lambda: [])
+    beziers: List[ki_symbol_bezier] = field(default_factory=lambda: [])
 
     def export(self) -> str:
         lib_output = ""
