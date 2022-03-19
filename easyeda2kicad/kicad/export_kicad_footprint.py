@@ -165,7 +165,7 @@ class exporter_footprint_kicad:
     def __init__(self, footprint: ee_footprint):
         self.input = footprint
         if type(self.input) is not ee_footprint:
-            print("Conversion non supportée")
+            print("Unsupported conversion")
         else:
             self.generate_kicad_footprint()
 
@@ -173,6 +173,7 @@ class exporter_footprint_kicad:
 
         # Convert dimension from easyeda to kicad
         self.input.bbox.convert_to_mm()
+
         for fields in (
             self.input.pads,
             self.input.tracks,
@@ -188,9 +189,25 @@ class exporter_footprint_kicad:
             name=self.input.info.name, fp_type=self.input.info.fp_type
         )
 
-        self.output = ki_footprint(
-            info=ki_info,
-        )
+        if self.input.model_3d is not None:
+            self.input.model_3d.convert_to_mm()
+
+            ki_3d_model_info = ki_3d_model(
+                name=self.input.model_3d.name,
+                translation=ki_3d_model_base(
+                    x=round((self.input.model_3d.translation.x - self.input.bbox.x), 2),
+                    y=-round(
+                        (self.input.model_3d.translation.y - self.input.bbox.y), 2
+                    ),
+                    z=round(self.input.model_3d.translation.z * 0.0254, 2),
+                ),
+                rotation=self.input.model_3d.rotation,
+                raw_wrl=None,
+            )
+        else:
+            ki_3d_model_info = None
+
+        self.output = ki_footprint(info=ki_info, model_3d=ki_3d_model_info)
 
         # For pads
         for ee_pad in self.input.pads:
@@ -413,7 +430,7 @@ class exporter_footprint_kicad:
     def get_ki_footprint(self):
         return self.output
 
-    def export_footprint(self):
+    def export(self, output_path: str):
         ki = self.output
         ki_lib = ""
 
@@ -463,6 +480,22 @@ class exporter_footprint_kicad:
         for text in ki.texts:
             ki_lib += KI_TEXT.format(**vars(text))
 
+        if ki.model_3d is not None:
+            ki_lib += KI_MODEL_3D.format(
+                file_3d=f"{output_path}.3dshapes/{ki.model_3d.name}.wrl",
+                pos_x=ki.model_3d.translation.x,
+                pos_y=ki.model_3d.translation.y,
+                pos_z=ki.model_3d.translation.z,
+                rot_x=ki.model_3d.rotation.x,
+                rot_y=ki.model_3d.rotation.y,
+                rot_z=ki.model_3d.rotation.z,
+            )
+
         ki_lib += KI_END_FILE
 
-        return ki_lib, ki.info.name
+        with open(
+            file=f"{output_path}.pretty/{ki.info.name}.kicad_mod",
+            mode="w",
+            encoding="utf-8",
+        ) as my_lib:
+            my_lib.write(ki_lib)

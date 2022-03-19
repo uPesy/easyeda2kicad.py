@@ -15,8 +15,6 @@ class easyeda_pin_type(Enum):
 
 
 # ------------------------- Symbol -------------------------
-
-
 class ee_symbol_bbox(BaseModel):
     x: float
     y: float
@@ -387,15 +385,48 @@ class ee_footprint_text(BaseModel):
 
 
 @dataclass
+class ee_symbol_pin_path:
+    path: str
+    color: str
+
+
+@dataclass
 class ee_footprint_info:
     name: str
     fp_type: str
+    model_3d_name: str
+
+
+# ------------------------- 3D MODEL -------------------------
+class ee_3d_model_base(BaseModel):
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+
+    def convert_to_mm(self):
+        self.x = convert_to_mm(self.x)
+        self.y = convert_to_mm(self.y)
+        # self.z = convert_to_mm(self.z)
+
+
+@dataclass
+class ee_3d_model:
+    name: str
+    uuid: str
+    translation: ee_3d_model_base
+    rotation: ee_3d_model_base
+    raw_obj: str = None
+
+    def convert_to_mm(self):
+        self.translation.convert_to_mm()
+        # self.translation.z = self.translation.z
 
 
 @dataclass
 class ee_footprint:
     info: ee_footprint_info
     bbox: ee_footprint_bbox
+    model_3d: ee_3d_model
     pads: List[ee_footprint_pad] = field(default_factory=list)
     tracks: List[ee_footprint_track] = field(default_factory=list)
     holes: List[ee_footprint_hole] = field(default_factory=list)

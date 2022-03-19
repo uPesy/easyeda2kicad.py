@@ -1,7 +1,9 @@
 # Global import
 # Global imports
 import json
+from unicodedata import name
 
+from easyeda2kicad.easyeda.easyeda_api import easyeda_api
 from easyeda2kicad.easyeda.parameters_easyeda import *
 
 
@@ -181,11 +183,13 @@ class easyeda_footprint_importer:
             info=ee_footprint_info(
                 name=ee_data_info["package"],
                 fp_type="smd" if "SMT" in ee_data_info else "tht",
+                model_3d_name=ee_data_info["3DModel"],
             ),
             bbox=ee_footprint_bbox(
                 x=float(ee_data_str["head"]["x"]),
                 y=float(ee_data_str["head"]["y"]),
             ),
+            model_3d=None,
         )
 
         for line in ee_data_str["shape"]:
@@ -228,11 +232,57 @@ class easyeda_footprint_importer:
                     **dict(zip(ee_footprint_text.__fields__, ee_fields))
                 )
                 new_ee_footprint.texts.append(ee_text)
-            elif ee_designator == "SOLIDREGION":
-                ...
             elif ee_designator == "SVGNODE":
+                new_ee_footprint.model_3d = easyeda_3d_model_importer(
+                    easyeda_cp_cad_data=[line]
+                ).output
+
+            elif ee_designator == "SOLIDREGION":
                 ...
             else:
                 print(f"\t[-] Unknow footprint designator : {ee_designator}")
 
         return new_ee_footprint
+
+
+# ------------------------------------------------------------------------------
+
+
+class easyeda_3d_model_importer:
+    def __init__(self, easyeda_cp_cad_data):
+        self.input = easyeda_cp_cad_data
+        self.output = self.create_3d_model()
+
+    def create_3d_model(self):
+        ee_data = (
+            self.input["packageDetail"]["dataStr"]["shape"]
+            if isinstance(self.input, dict)
+            else self.input
+        )
+        model_3d: ee_3d_model = self.parse_3d_model_info(
+            info=self.get_3d_model_info(ee_data=ee_data)
+        )
+        model_3d.raw_obj = easyeda_api().get_raw_3d_model_obj(uuid=model_3d.uuid)
+        return model_3d
+
+    def get_3d_model_info(self, ee_data: str) -> dict:
+        for line in ee_data:
+            ee_designator = line.split("~")[0]
+            if ee_designator == "SVGNODE":
+                raw_json = line.split("~")[1:][0]
+                return json.loads(raw_json)["attrs"]
+        return {}
+
+    def parse_3d_model_info(self, info: dict) -> ee_3d_model:
+        return ee_3d_model(
+            name=info["title"],
+            uuid=info["uuid"],
+            translation=ee_3d_model_base(
+                x=info["c_origin"].split(",")[0],
+                y=info["c_origin"].split(",")[1],
+                z=info["z"],
+            ),
+            rotation=ee_3d_model_base(
+                **dict(zip(ee_3d_model_base.__fields__, info["c_rotation"].split(",")))
+            ),
+        )
