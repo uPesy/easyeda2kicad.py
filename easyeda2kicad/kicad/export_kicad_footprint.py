@@ -195,11 +195,11 @@ class exporter_footprint_kicad:
             ki_3d_model_info = ki_3d_model(
                 name=self.input.model_3d.name,
                 translation=ki_3d_model_base(
-                    x=round((self.input.model_3d.translation.x - self.input.bbox.x), 2),
-                    y=-round(
-                        (self.input.model_3d.translation.y - self.input.bbox.y), 2
-                    ),
-                    z=round(self.input.model_3d.translation.z * 0.0254, 2),
+                    # x=round((self.input.model_3d.translation.x - self.input.bbox.x), 2),
+                    # y=-round(
+                    #     (self.input.model_3d.translation.y - self.input.bbox.y), 2
+                    # ),
+                    # z=round(self.input.model_3d.translation.z * 0.0254, 2),
                 ),
                 rotation=self.input.model_3d.rotation,
                 raw_wrl=None,
