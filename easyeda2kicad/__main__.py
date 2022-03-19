@@ -7,10 +7,12 @@ from typing import List
 
 from easyeda2kicad.easyeda.easyeda_api import easyeda_api
 from easyeda2kicad.easyeda.easyeda_importer import (
+    easyeda_3d_model_importer,
     easyeda_footprint_importer,
     easyeda_symbol_importer,
 )
 from easyeda2kicad.easyeda.parameters_easyeda import ee_symbol
+from easyeda2kicad.kicad.export_kicad_3d_model import exporter_3d_model_kicad
 from easyeda2kicad.kicad.export_kicad_footprint import exporter_footprint_kicad
 from easyeda2kicad.kicad.export_kicad_symbol import exporter_symbol_kicad
 
@@ -33,8 +35,19 @@ def get_parser() -> argparse.ArgumentParser:
         required=False,
         action="store_true",
     )
+
     parser.add_argument(
-        "--3d", help="Get 3d model of this id", required=False, action="store_true"
+        "--3d",
+        help="Get the 3d model of this id",
+        required=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--full",
+        help="Get the symbol, footprint and 3d model of this id",
+        required=False,
+        action="store_true",
     )
 
     parser.add_argument(
@@ -61,6 +74,9 @@ def valid_arguments(arguments: dict) -> bool:
     if not arguments["lcsc_id"].startswith("C"):
         print("[-] Error: lcsc_id should start by C....")
         return False
+
+    if arguments["full"]:
+        arguments["symbol"], arguments["footprint"], arguments["3d"] = True, True, True
 
     if not any([arguments["symbol"], arguments["footprint"], arguments["3d"]]):
         print("[-] Error: Missing action arguments. For example :")
@@ -92,6 +108,11 @@ def valid_arguments(arguments: dict) -> bool:
     if not os.path.isdir(f"{arguments['output']}.pretty"):
         os.mkdir(f"{arguments['output']}.pretty")
         print(f"[+] Create {lib_name}.pretty footprint folder in {base_folder}")
+
+    # Create new 3d model folder if don't exist
+    if not os.path.isdir(f"{arguments['output']}.3dshapes"):
+        os.mkdir(f"{arguments['output']}.3dshapes")
+        print(f"[+] Create {lib_name}.3dshapes 3D model folder in {base_folder}")
 
     if not os.path.isfile(f"{arguments['output']}.lib"):
         with open(
@@ -163,7 +184,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     api = easyeda_api()
     cad_data = api.get_cad_data_of_component(lcsc_id=component_id)
 
-    #   ---------------- SYMBOL ----------------
+    # ---------------- SYMBOL ----------------
     if arguments["symbol"]:
         importer = easyeda_symbol_importer(easyeda_cp_cad_data=cad_data)
         easyeda_symbol: ee_symbol = importer.get_symbol()
@@ -209,16 +230,16 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             return 1
 
         print(f"[*] Creating Kicad footprint library for LCSC id : {component_id}")
-        exporter = exporter_footprint_kicad(footprint=easyeda_footprint)
-        kicad_footprint_lib, lib_name = exporter.export_footprint()
+        exporter = exporter_footprint_kicad(footprint=easyeda_footprint).export(
+            output_path=arguments["output"]
+        )
 
-        # print(kicad_footprint_lib)
-        with open(
-            file=f"{arguments['output']}.pretty/{lib_name}.kicad_mod",
-            mode="w",
-            encoding="utf-8",
-        ) as my_lib:
-            my_lib.write(kicad_footprint_lib)
+    # ---------------- 3D MODEL ----------------
+    if arguments["3d"]:
+        print(f"[*] Creating 3D model for LCSC id : {component_id}")
+        exporter = exporter_3d_model_kicad(
+            model_3d=easyeda_3d_model_importer(easyeda_cp_cad_data=cad_data).output
+        ).export(lib_path=arguments["output"])
 
     return 0
 

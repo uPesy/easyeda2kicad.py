@@ -2,7 +2,7 @@
 import requests
 
 API_ENDPOINT = "https://easyeda.com/api/products/{lcsc_id}/components?version=6.4.19.5"
-
+ENDPOINT_3D_MODEL = "https://easyeda.com/analyzer/api/3dmodel/{uuid}"
 # ------------------------------------------------------------
 
 
@@ -32,3 +32,13 @@ class easyeda_api:
         if cp_cad_info == {}:
             return {}
         return cp_cad_info["result"]
+
+    def get_raw_3d_model_obj(self, uuid: str):
+        r = requests.get(
+            url=ENDPOINT_3D_MODEL.format(uuid=uuid),
+            headers={"User-Agent": self.headers["User-Agent"]},
+        )
+        if r.status_code != requests.codes.ok:
+            print(f"[-] No 3D model found for uuid:{uuid}")
+            return None
+        return r.content.decode()

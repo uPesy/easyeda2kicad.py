@@ -440,6 +440,8 @@ KI_HOLE = '\t(pad "" thru_hole circle (at {pos_x:.2f} {pos_y:.2f}) (size {size:.
 KI_CIRCLE = "\t(fp_circle (center {cx:.2f} {cy:.2f}) (end {end_x:.2f} {end_y:.2f}) (layer {layers}) (width {stroke_width:.2f}))\n"
 KI_ARC = "\t(fp_arc (start {start_x:.2f} {start_y:.2f}) (end {end_x:.2f} {end_y:.2f}) (angle {angle:.2f}) (layer {layers}) (width {stroke_width:.2f}))\n"
 KI_TEXT = "\t(fp_text user {text} (at {pos_x:.2f} {pos_y:.2f} {orientation:.2f}) (layer {layers}){display}\n\t\t(effects (font (size {font_size:.2f} {font_size:.2f}) (thickness {thickness:.2f})) (justify left{mirror}))\n\t)\n"
+KI_MODEL_3D = '\t(model "{file_3d}"\n\t\t(offset (xyz {pos_x:.3f} {pos_y:.3f} {pos_z:.3f}))\n\t\t(scale (xyz 1 1 1))\n\t\t(rotate (xyz {rot_x:.0f} {rot_y:.0f} {rot_z:.0f}))\n\t)\n'
+
 
 # ---------------------------------------
 
@@ -612,10 +614,27 @@ class ki_footprint_info:
     fp_type: str
 
 
-# ---------------- FOOTPRINT OBJ ----------------
+# ---------------- 3D MODEL ----------------
+@dataclass
+class ki_3d_model_base:
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+
+
+@dataclass
+class ki_3d_model:
+    name: str
+    translation: ki_3d_model_base
+    rotation: ki_3d_model_base
+    raw_wrl: str = None
+
+
+# ---------------- FOOTPRINT  ----------------
 @dataclass
 class ki_footprint:
     info: ki_footprint_info
+    model_3d: ki_3d_model
     pads: List[ki_footprint_pad] = field(default_factory=list)
     tracks: List[ki_footprint_track] = field(default_factory=list)
     vias: List[ki_footprint_via] = field(default_factory=list)
