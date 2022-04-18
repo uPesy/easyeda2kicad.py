@@ -26,7 +26,6 @@ A Python script that convert any electronic components from [EasyEDA](https://ea
 ```bash
 pip install easyeda2kicad
 ```
-The script uses only one external library [pydantic](https://pydantic-docs.helpmanual.io/) for data validation.
 
 ## Usage
 
