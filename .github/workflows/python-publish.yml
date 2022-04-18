@@ -13,11 +13,11 @@ jobs:
         if: "!startsWith(github.event.head_commit.message, '[SKIP]')"
 
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
               with:
                   token: ${{ secrets.GITHUB_TOKEN }}
             - name: Set up Python
-              uses: actions/setup-python@v2
+              uses: actions/setup-python@v3
               with:
                   python-version: "3.x"
                   cache: pip
