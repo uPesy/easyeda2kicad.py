@@ -1,5 +1,5 @@
 """
-Convert 3D model in .obj format to .wrl with colors
+Convert 3D model from .obj format to .wrl with colors
 """
 
 # Global imports
