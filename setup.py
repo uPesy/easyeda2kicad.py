@@ -23,7 +23,7 @@ setup(
     package_dir={"easyeda2kicad": "easyeda2kicad"},
     entry_points={"console_scripts": ["easyeda2kicad = easyeda2kicad.__main__:main"]},
     python_requires=">=3.6",
-    install_requires=["pydantic"],
+    install_requires=["pydantic", "requests"],
     extras_require={"dev": ["pre-commit"]},
     zip_safe=False,
     keywords="easyeda kicad library conversion",
