@@ -1,4 +1,5 @@
 # Global imports
+import logging
 from typing import List, Tuple, Union
 
 from easyeda2kicad.easyeda.parameters_easyeda import (
@@ -19,16 +20,16 @@ def px_to_mil(dim: int):
 
 def convert_ee_pins(
     ee_pins: List[ee_symbol_pin], ee_bbox: ee_symbol_bbox
-) -> List[ki_symbol_pin]:
+) -> List[KiSymbolPin]:
     kicad_pins = []
     for ee_pin in ee_pins:
-        ki_pin = ki_symbol_pin(
+        ki_pin = KiSymbolPin(
             name=ee_pin.name.text.replace(" ", ""),
             number=ee_pin.settings.spice_pin_number.replace(" ", ""),
             style="",
             type=KI_PIN_TYPES[ee_pin.settings.type],
             orientation=KI_PIN_ORIENTATIONS[
-                kicad_pin_orientation(ee_pin.settings.rotation).name
+                KicadPinOrientation(ee_pin.settings.rotation).name
             ],
             pos_x=px_to_mil(int(ee_pin.settings.pos_x) - int(ee_bbox.x)),
             pos_y=-px_to_mil(int(ee_pin.settings.pos_y) - int(ee_bbox.y)),
@@ -59,10 +60,10 @@ def convert_ee_pins(
 
 def convert_ee_rectangles(
     ee_rectangles: List[ee_symbol_rectangle], ee_bbox: ee_symbol_bbox
-) -> List[ki_symbol_rectangle]:
+) -> List[KiSymbolRectangle]:
     kicad_rectangles = []
     for ee_rectangle in ee_rectangles:
-        ki_rectangle = ki_symbol_rectangle(
+        ki_rectangle = KiSymbolRectangle(
             pos_x0=px_to_mil(int(ee_rectangle.pos_x) - int(ee_bbox.x)),
             pos_y0=-px_to_mil(int(ee_rectangle.pos_y) - int(ee_bbox.y)),
         )
@@ -87,7 +88,7 @@ def convert_ee_arcs():
 def convert_ee_polylines(
     ee_polylines: List[Union[ee_symbol_polyline, ee_symbol_polygon]],
     ee_bbox: ee_symbol_bbox,
-) -> List[ki_symbol_polygon]:
+) -> List[KiSymbolPolygon]:
     kicad_polygons = []
     for ee_polyline in ee_polylines:
         raw_pts = ee_polyline.points.split(" ")
@@ -107,7 +108,7 @@ def convert_ee_polylines(
         # print(x_points, y_points)
         # print(ee_bbox.x, ee_bbox.y)
 
-        kicad_polygon = ki_symbol_polygon(
+        kicad_polygon = KiSymbolPolygon(
             points=[
                 [str(x_points[i]), str(y_points[i])]
                 for i in range(min(len(x_points), len(y_points)))
@@ -123,13 +124,13 @@ def convert_ee_polylines(
 
 def convert_ee_polygons(
     ee_polygons: List[ee_symbol_polygon], ee_bbox: ee_symbol_bbox
-) -> List[ki_symbol_polygon]:
+) -> List[KiSymbolPolygon]:
     return convert_ee_polylines(ee_polylines=ee_polygons, ee_bbox=ee_bbox)
 
 
 def convert_ee_paths(
     ee_paths: List[ee_symbol_path], ee_bbox: ee_symbol_bbox
-) -> Tuple[List[ki_symbol_polygon], List[ki_symbol_polygon]]:
+) -> Tuple[List[KiSymbolPolygon], List[KiSymbolPolygon]]:
     kicad_polygons = []
     kicad_beziers = []
 
@@ -152,7 +153,7 @@ def convert_ee_paths(
                 ...
                 # TODO : Add bezier support
 
-        ki_polygon = ki_symbol_polygon(
+        ki_polygon = KiSymbolPolygon(
             points=[
                 [str(x_points[i]), str(y_points[i])]
                 for i in range(min(len(x_points), len(y_points)))
@@ -168,7 +169,7 @@ def convert_ee_paths(
 
 def convert_to_kicad(ee_symbol: ee_symbol):
 
-    ki_info = ki_symbol_info(
+    ki_info = KiSymbolInfo(
         name=ee_symbol.info.name.replace(" ", ""),
         prefix=ee_symbol.info.prefix.replace(" ", ""),
         package=ee_symbol.info.package,
@@ -178,7 +179,7 @@ def convert_to_kicad(ee_symbol: ee_symbol):
         jlc_id=ee_symbol.info.jlc_id,
     )
 
-    kicad_symbol = ki_symbol(
+    kicad_symbol = KiSymbol(
         info=ki_info,
         pins=convert_ee_pins(ee_pins=ee_symbol.pins, ee_bbox=ee_symbol.bbox),
         rectangles=convert_ee_rectangles(
@@ -208,7 +209,7 @@ class exporter_symbol_kicad:
         self.output = (
             convert_to_kicad(ee_symbol=self.input)
             if isinstance(self.input, ee_symbol)
-            else print("[-] Unknown format")
+            else logging.error("[-] Unknown format")
         )
 
     def get_kicad_lib(self):

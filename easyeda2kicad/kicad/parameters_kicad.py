@@ -61,7 +61,10 @@ KI_PIN_SPACER_PREFIX = "*"
 # --------------
 
 KI_LIB_HEADER = "EESchema-LIBRARY Version 2.3\n#encoding utf-8\n"
-KI_START_DEF = "DEF {name} {ref} 0 {pin_name_offset} {show_pin_number} {show_pin_name} {num_units} L N\n"
+KI_START_DEF = (
+    "DEF {name} {ref} 0 {pin_name_offset} {show_pin_number} {show_pin_name} {num_units}"
+    " L N\n"
+)
 KI_REF_FIELD = 'F0 "{ref_prefix}" {x} {y} {font_size} H V {text_justification} CNN\n'
 KI_PARTNUM_FIELD = 'F1 "{num}" {x} {y} {font_size} H V {text_justification} CNN\n'
 KI_FOOTPRINT_FIELD = (
@@ -173,7 +176,7 @@ KI_PIN_ORIENTATIONS = {
 }
 
 
-class kicad_pin_orientation(Enum):
+class KicadPinOrientation(Enum):
     right = 0
     top = 90
     left = 180
@@ -183,7 +186,7 @@ class kicad_pin_orientation(Enum):
 # ---------------------------- SYMBOL PART ----------------------------
 # ---------------- INFO HEADER ----------------
 @dataclass
-class ki_symbol_info:
+class KiSymbolInfo:
     name: str
     prefix: str
     package: str
@@ -198,7 +201,8 @@ class ki_symbol_info:
         return "\n".join(
             (
                 f"#\n# {self.name}\n#",
-                "DEF {name} {ref} 0 {pin_name_offset} {show_pin_number} {show_pin_name} {num_units} L N".format(
+                "DEF {name} {ref} 0 {pin_name_offset} {show_pin_number} {show_pin_name}"
+                " {num_units} L N".format(
                     name=self.name,
                     ref=self.prefix,
                     pin_name_offset=KI_PIN_NAME_OFFSET,
@@ -206,7 +210,8 @@ class ki_symbol_info:
                     show_pin_name=KI_SHOW_PIN_NAME and "Y" or "N",
                     num_units=1,
                 ),
-                'F0 "{ref_prefix}" {x} {y} {font_size} H V {text_justification} CNN'.format(
+                'F0 "{ref_prefix}" {x} {y} {font_size} H V {text_justification} CNN'
+                .format(
                     ref_prefix=self.prefix,
                     x=0,
                     y=self.y_high + KI_REF_Y_OFFSET,
@@ -220,7 +225,8 @@ class ki_symbol_info:
                     text_justification="C",  # Center align
                     font_size=KI_PART_NUM_SIZE,
                 ),
-                'F2 "{footprint}" {x} {y} {font_size} H I {text_justification} CNN'.format(
+                'F2 "{footprint}" {x} {y} {font_size} H I {text_justification} CNN'
+                .format(
                     footprint=self.package,
                     x=0,
                     y=self.y_low - KI_PART_FOOTPRINT_Y_OFFSET,
@@ -229,7 +235,8 @@ class ki_symbol_info:
                 )
                 if self.package
                 else "",
-                'F3 "{datasheet}" {x} {y} {font_size} H I {text_justification} CNN'.format(
+                'F3 "{datasheet}" {x} {y} {font_size} H I {text_justification} CNN'
+                .format(
                     datasheet=self.datasheet,
                     x=0,
                     y=self.y_low - KI_PART_DATASHEET_Y_OFFSET,
@@ -254,7 +261,7 @@ class ki_symbol_info:
 
 # ---------------- PIN ----------------
 @dataclass
-class ki_symbol_pin:
+class KiSymbolPin:
     name: str
     number: str
     style: str
@@ -264,24 +271,27 @@ class ki_symbol_pin:
     pos_y: int
 
     def export(self) -> str:
-        return "X {name} {num} {x} {y} {length} {orientation} {num_sz} {name_sz} {unit_num} 1 {pin_type} {pin_style}\n".format(
-            name=self.name,
-            num=self.number,
-            x=self.pos_x,
-            y=self.pos_y,
-            length=KI_PIN_LENGTH,
-            orientation=self.orientation,
-            num_sz=KI_PIN_NUM_SIZE,
-            name_sz=KI_PIN_NAME_SIZE,
-            unit_num=1,
-            pin_type=self.type,
-            pin_style=self.style,
+        return (
+            "X {name} {num} {x} {y} {length} {orientation} {num_sz} {name_sz}"
+            " {unit_num} 1 {pin_type} {pin_style}\n".format(
+                name=self.name,
+                num=self.number,
+                x=self.pos_x,
+                y=self.pos_y,
+                length=KI_PIN_LENGTH,
+                orientation=self.orientation,
+                num_sz=KI_PIN_NUM_SIZE,
+                name_sz=KI_PIN_NAME_SIZE,
+                unit_num=1,
+                pin_type=self.type,
+                pin_style=self.style,
+            )
         )
 
 
 # ---------------- RECTANGLE ----------------
 @dataclass
-class ki_symbol_rectangle:
+class KiSymbolRectangle:
     pos_x0: int = 0
     pos_y0: int = 0
     pos_x1: int = 0
@@ -301,7 +311,7 @@ class ki_symbol_rectangle:
 
 # ---------------- POLYGON ----------------
 @dataclass
-class ki_symbol_polygon:
+class KiSymbolPolygon:
     points: List[List[int]] = field(default_factory=List[List[int]])
     points_number: int = 0
     is_closed: bool = False
@@ -322,7 +332,7 @@ class ki_symbol_polygon:
 
 # ---------------- CIRCLE ----------------
 @dataclass
-class ki_symbol_circle:
+class KiSymbolCircle:
     pos_x: int = 0
     pos_y: int = 0
     radius: int = 0
@@ -340,7 +350,7 @@ class ki_symbol_circle:
 
 # ---------------- ARC ----------------
 @dataclass
-class ki_symbol_arc:
+class KiSymbolArc:
     pos_x: int = 0
     pos_y: int = 0
     radius: int = 0
@@ -352,27 +362,30 @@ class ki_symbol_arc:
     end_y: int = 0
 
     def export(self) -> str:
-        return "C {pos_x} {pos_y} {radius} {angle_start} {angle_end} {unit_num} 1 {line_width} {fill} {start_x} {start_y} {end_x} {end_y}\n".format(
-            pos_x=self.pos_x,
-            pos_y=self.pos_y,
-            radius=self.radius,
-            angle_start=self.angle_start,
-            angle_end=self.angle_end,
-            unit_num=1,
-            line_width=KI_DEFAULT_BOX_LINE_WIDTH,
-            fill=KI_BOX_FILLS["bg_fill"]
-            if self.angle_start == self.angle_end
-            else KI_BOX_FILLS["no_fill"],
-            start_x=self.start_x,
-            start_y=self.start_y,
-            end_x=self.end_x,
-            end_y=self.end_y,
+        return (
+            "C {pos_x} {pos_y} {radius} {angle_start} {angle_end} {unit_num} 1"
+            " {line_width} {fill} {start_x} {start_y} {end_x} {end_y}\n".format(
+                pos_x=self.pos_x,
+                pos_y=self.pos_y,
+                radius=self.radius,
+                angle_start=self.angle_start,
+                angle_end=self.angle_end,
+                unit_num=1,
+                line_width=KI_DEFAULT_BOX_LINE_WIDTH,
+                fill=KI_BOX_FILLS["bg_fill"]
+                if self.angle_start == self.angle_end
+                else KI_BOX_FILLS["no_fill"],
+                start_x=self.start_x,
+                start_y=self.start_y,
+                end_x=self.end_x,
+                end_y=self.end_y,
+            )
         )
 
 
 # ---------------- BEZIER CURVE ----------------
 @dataclass
-class ki_symbol_bezier:
+class KiSymbolBezier:
     points: List[List[int]] = field(default_factory=List[List[int]])
     points_number: int = 0
     is_closed: bool = False
@@ -393,14 +406,14 @@ class ki_symbol_bezier:
 
 # ---------------- SYMBOL ----------------
 @dataclass
-class ki_symbol:
-    info: ki_symbol_info
-    pins: List[ki_symbol_pin] = field(default_factory=lambda: [])
-    rectangles: List[ki_symbol_rectangle] = field(default_factory=lambda: [])
-    circles: List[ki_symbol_circle] = field(default_factory=lambda: [])
-    arcs: List[ki_symbol_arc] = field(default_factory=lambda: [])
-    polygons: List[ki_symbol_polygon] = field(default_factory=lambda: [])
-    beziers: List[ki_symbol_bezier] = field(default_factory=lambda: [])
+class KiSymbol:
+    info: KiSymbolInfo
+    pins: List[KiSymbolPin] = field(default_factory=lambda: [])
+    rectangles: List[KiSymbolRectangle] = field(default_factory=lambda: [])
+    circles: List[KiSymbolCircle] = field(default_factory=lambda: [])
+    arcs: List[KiSymbolArc] = field(default_factory=lambda: [])
+    polygons: List[KiSymbolPolygon] = field(default_factory=lambda: [])
+    beziers: List[KiSymbolBezier] = field(default_factory=lambda: [])
 
     def export(self) -> str:
         lib_output = ""
@@ -429,18 +442,50 @@ KI_DESCRIPTION = (
 )
 KI_TAGS_INFO = '\t(tags "{tag}")\n'
 KI_FP_TYPE = "\t(attr {component_type})\n"
-KI_REFERENCE = "\t(fp_text reference REF** (at {pos_x} {pos_y}) (layer F.SilkS)\n\t\t(effects (font (size 1 1) (thickness 0.15)))\n\t)\n"
-KI_PACKAGE_VALUE = "\t(fp_text value {package_name} (at {pos_x} {pos_y}) (layer F.Fab)\n\t\t(effects (font (size 1 1) (thickness 0.15)))\n\t)\n"
-KI_FAB_REF = "\t(fp_text user %R (at 0 0) (layer F.Fab)\n\t\t(effects (font (size 1 1) (thickness 0.15)))\n\t)\n"
+KI_REFERENCE = (
+    "\t(fp_text reference REF** (at {pos_x} {pos_y}) (layer F.SilkS)\n\t\t(effects"
+    " (font (size 1 1) (thickness 0.15)))\n\t)\n"
+)
+KI_PACKAGE_VALUE = (
+    "\t(fp_text value {package_name} (at {pos_x} {pos_y}) (layer F.Fab)\n\t\t(effects"
+    " (font (size 1 1) (thickness 0.15)))\n\t)\n"
+)
+KI_FAB_REF = (
+    "\t(fp_text user %R (at 0 0) (layer F.Fab)\n\t\t(effects (font (size 1 1)"
+    " (thickness 0.15)))\n\t)\n"
+)
 KI_END_FILE = ")"
 
-KI_PAD = "\t(pad {number} {type} {shape} (at {pos_x:.2f} {pos_y:.2f} {orientation:.2f}) (size {width:.2f} {height:.2f}) (layers {layers}){drill}{polygon})\n"
-KI_LINE = "\t(fp_line (start {start_x:.2f} {start_y:.2f}) (end {end_x:.2f} {end_y:.2f}) (layer {layers}) (width {stroke_width:.2f}))\n"
-KI_HOLE = '\t(pad "" thru_hole circle (at {pos_x:.2f} {pos_y:.2f}) (size {size:.2f} {size:.2f}) (drill {size:.2f}) (layers *.Cu *.Mask))\n'
-KI_CIRCLE = "\t(fp_circle (center {cx:.2f} {cy:.2f}) (end {end_x:.2f} {end_y:.2f}) (layer {layers}) (width {stroke_width:.2f}))\n"
-KI_ARC = "\t(fp_arc (start {start_x:.2f} {start_y:.2f}) (end {end_x:.2f} {end_y:.2f}) (angle {angle:.2f}) (layer {layers}) (width {stroke_width:.2f}))\n"
-KI_TEXT = "\t(fp_text user {text} (at {pos_x:.2f} {pos_y:.2f} {orientation:.2f}) (layer {layers}){display}\n\t\t(effects (font (size {font_size:.2f} {font_size:.2f}) (thickness {thickness:.2f})) (justify left{mirror}))\n\t)\n"
-KI_MODEL_3D = '\t(model "{file_3d}"\n\t\t(offset (xyz {pos_x:.3f} {pos_y:.3f} {pos_z:.3f}))\n\t\t(scale (xyz 1 1 1))\n\t\t(rotate (xyz {rot_x:.0f} {rot_y:.0f} {rot_z:.0f}))\n\t)\n'
+KI_PAD = (
+    "\t(pad {number} {type} {shape} (at {pos_x:.2f} {pos_y:.2f} {orientation:.2f})"
+    " (size {width:.2f} {height:.2f}) (layers {layers}){drill}{polygon})\n"
+)
+KI_LINE = (
+    "\t(fp_line (start {start_x:.2f} {start_y:.2f}) (end {end_x:.2f} {end_y:.2f})"
+    " (layer {layers}) (width {stroke_width:.2f}))\n"
+)
+KI_HOLE = (
+    '\t(pad "" thru_hole circle (at {pos_x:.2f} {pos_y:.2f}) (size {size:.2f}'
+    " {size:.2f}) (drill {size:.2f}) (layers *.Cu *.Mask))\n"
+)
+KI_CIRCLE = (
+    "\t(fp_circle (center {cx:.2f} {cy:.2f}) (end {end_x:.2f} {end_y:.2f}) (layer"
+    " {layers}) (width {stroke_width:.2f}))\n"
+)
+KI_ARC = (
+    "\t(fp_arc (start {start_x:.2f} {start_y:.2f}) (end {end_x:.2f} {end_y:.2f}) (angle"
+    " {angle:.2f}) (layer {layers}) (width {stroke_width:.2f}))\n"
+)
+KI_TEXT = (
+    "\t(fp_text user {text} (at {pos_x:.2f} {pos_y:.2f} {orientation:.2f}) (layer"
+    " {layers}){display}\n\t\t(effects (font (size {font_size:.2f} {font_size:.2f})"
+    " (thickness {thickness:.2f})) (justify left{mirror}))\n\t)\n"
+)
+KI_MODEL_3D = (
+    '\t(model "{file_3d}"\n\t\t(offset (xyz {pos_x:.3f} {pos_y:.3f}'
+    " {pos_z:.3f}))\n\t\t(scale (xyz 1 1 1))\n\t\t(rotate (xyz {rot_x:.0f} {rot_y:.0f}"
+    " {rot_z:.0f}))\n\t)\n"
+)
 
 
 # ---------------------------------------

@@ -2,6 +2,8 @@
 Convert 3D model from .obj format to .wrl with colors
 """
 
+from __future__ import annotations
+
 # Global imports
 import re
 from typing import List
@@ -38,7 +40,7 @@ def get_materials(obj_data: str) -> dict:
     return materials
 
 
-def get_vertices(obj_data: str) -> List:
+def get_vertices(obj_data: str) -> list:
     vertices_regex = "v (.*?)\n"
     matchs = re.findall(pattern=vertices_regex, string=obj_data, flags=re.DOTALL)
 

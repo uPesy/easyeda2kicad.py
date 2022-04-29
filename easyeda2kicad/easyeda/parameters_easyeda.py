@@ -32,16 +32,16 @@ class ee_symbol_pin_settings(BaseModel):
     is_locked: bool
 
     @validator("is_displayed", pre=True)
-    def parse_display_field(cls, v):
+    def parse_display_field(cls, v: str) -> bool:
         return True if v == "show" else v
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
-        return False if is_locked == "" else is_locked
+    def empty_str_lock(cls, is_locked: str) -> str:
+        return is_locked or False
 
     @validator("rotation", pre=True)
-    def empty_str_rotation(cls, rotation):
-        return 0.0 if rotation == "" else rotation
+    def empty_str_rotation(cls, rotation: str) -> str:
+        return rotation or 0.0
 
 
 class ee_symbol_pin_dot(BaseModel):
@@ -66,18 +66,18 @@ class ee_symbol_pin_name(BaseModel):
     font_size: float
 
     @validator("font_size", pre=True)
-    def empty_str_font(cls, font_size):
+    def empty_str_font(cls, font_size: str) -> float:
         if isinstance(font_size, str) and "pt" in font_size:
             return float(font_size.replace("pt", ""))
-        return 7.0 if font_size == "" else font_size
+        return font_size or 7.0
 
     @validator("is_displayed", pre=True)
-    def parse_display_field(cls, v):
+    def parse_display_field(cls, v: str) -> str:
         return True if v == "show" else v
 
     @validator("rotation", pre=True)
-    def empty_str_rotation(cls, rotation):
-        return 0.0 if rotation == "" else rotation
+    def empty_str_rotation(cls, rotation: str) -> str:
+        return rotation or 0.0
 
 
 class ee_symbol_pin_dot_bis(BaseModel):
@@ -86,7 +86,7 @@ class ee_symbol_pin_dot_bis(BaseModel):
     circle_y: float
 
     @validator("is_displayed", pre=True)
-    def parse_display_field(cls, v):
+    def parse_display_field(cls, v: str) -> str:
         return True if v == "show" else v
 
 
@@ -95,7 +95,7 @@ class ee_symbol_pin_clock(BaseModel):
     path: str
 
     @validator("is_displayed", pre=True)
-    def parse_display_field(cls, v):
+    def parse_display_field(cls, v: str) -> str:
         return True if v == "show" else v
 
 
@@ -125,8 +125,8 @@ class ee_symbol_rectangle(BaseModel):
     is_locked: bool
 
     @validator("*", pre=True)
-    def empty_str_to_none(cls, v):
-        return None if v == "" else v
+    def empty_str_to_none(cls, v: str) -> str:
+        return v or None
 
 
 # ---------------- CIRCLE ----------------
@@ -150,8 +150,8 @@ class ee_symbol_polyline(BaseModel):
     is_locked: bool
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
-        return False if is_locked == "" else is_locked
+    def empty_str_lock(cls, is_locked: str) -> str:
+        return is_locked or False
 
 
 # ---------------- POLYGON ----------------
@@ -173,8 +173,8 @@ class ee_symbol_path(BaseModel):
     is_locked: bool
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
-        return False if is_locked == "" else is_locked
+    def empty_str_lock(cls, is_locked: str) -> str:
+        return is_locked or False
 
     # @validator("paths", pre=True)
     # def clean_svg_path(cls, paths:str):
@@ -207,7 +207,7 @@ class ee_symbol:
 # ------------------------- Footprint -------------------------
 
 
-def convert_to_mm(dim: float):
+def convert_to_mm(dim: float) -> float:
     return float(dim) * 10 * 0.0254
 
 
@@ -217,7 +217,7 @@ class ee_footprint_bbox:
     x: float
     y: float
 
-    def convert_to_mm(self):
+    def convert_to_mm(self) -> None:
         self.x = convert_to_mm(self.x)
         self.y = convert_to_mm(self.y)
 
@@ -240,7 +240,7 @@ class ee_footprint_pad(BaseModel):
     is_plated: bool
     is_locked: bool
 
-    def convert_to_mm(self):
+    def convert_to_mm(self) -> None:
         self.center_x = convert_to_mm(self.center_x)
         self.center_y = convert_to_mm(self.center_y)
         self.width = convert_to_mm(self.width)
@@ -249,12 +249,12 @@ class ee_footprint_pad(BaseModel):
         self.hole_length = convert_to_mm(self.hole_length)
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
-        return False if is_locked == "" else is_locked
+    def empty_str_lock(cls, is_locked: str) -> str:
+        return is_locked or False
 
     @validator("rotation", pre=True)
-    def empty_str_rotation(cls, rotation):
-        return 0.0 if rotation == "" else rotation
+    def empty_str_rotation(cls, rotation: str) -> str:
+        return rotation or 0.0
 
 
 class ee_footprint_track(BaseModel):
@@ -266,10 +266,10 @@ class ee_footprint_track(BaseModel):
     is_locked: bool
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
-        return False if is_locked == "" else is_locked
+    def empty_str_lock(cls, is_locked: str) -> str:
+        return is_locked or False
 
-    def convert_to_mm(self):
+    def convert_to_mm(self) -> None:
         self.stroke_width = convert_to_mm(self.stroke_width)
 
 
@@ -281,10 +281,10 @@ class ee_footprint_hole(BaseModel):
     is_locked: bool
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
-        return False if is_locked == "" else is_locked
+    def empty_str_lock(cls, is_locked: str) -> str:
+        return is_locked or False
 
-    def convert_to_mm(self):
+    def convert_to_mm(self) -> None:
         self.center_x = convert_to_mm(self.center_x)
         self.center_y = convert_to_mm(self.center_y)
         self.radius = convert_to_mm(self.radius)
@@ -300,10 +300,10 @@ class ee_footprint_circle(BaseModel):
     is_locked: bool
 
     @validator("is_locked", pre=True)
-    def empty_str_lock(cls, is_locked):
-        return False if is_locked == "" else is_locked
+    def empty_str_lock(cls, is_locked: str) -> str:
+        return is_locked or False
 
-    def convert_to_mm(self):
+    def convert_to_mm(self) -> None:
         self.cx = convert_to_mm(self.cx)
         self.cy = convert_to_mm(self.cy)
         self.radius = convert_to_mm(self.radius)
@@ -403,7 +403,7 @@ class ee_3d_model_base(BaseModel):
     y: float = 0.0
     z: float = 0.0
 
-    def convert_to_mm(self):
+    def convert_to_mm(self) -> None:
         self.x = convert_to_mm(self.x)
         self.y = convert_to_mm(self.y)
         # self.z = convert_to_mm(self.z)
@@ -417,7 +417,7 @@ class ee_3d_model:
     rotation: ee_3d_model_base
     raw_obj: str = None
 
-    def convert_to_mm(self):
+    def convert_to_mm(self) -> None:
         self.translation.convert_to_mm()
         # self.translation.z = self.translation.z
 

@@ -1,5 +1,5 @@
 # Global imports
-from itertools import chain
+import logging
 from math import acos, cos, isnan, pi, sin, sqrt
 
 from easyeda2kicad.easyeda.parameters_easyeda import ee_footprint
@@ -25,8 +25,8 @@ def compute_arc(
     rx: float,
     ry: float,
     angle: float,
-    largeArcFlag: bool,
-    sweepFlag: bool,
+    large_arc_flag: bool,
+    sweep_flag: bool,
     x: float,
     y: float,
 ):
@@ -37,12 +37,12 @@ def compute_arc(
 
     # Convert angle from degrees to radians
     angle = to_radians(angle % 360.0)
-    cosAngle = cos(angle)
-    sinAngle = sin(angle)
+    cos_angle = cos(angle)
+    sin_angle = sin(angle)
 
     # Step 1 : Compute (x1, y1)
-    x1 = cosAngle * dx2 + sinAngle * dy2
-    y1 = -sinAngle * dx2 + cosAngle * dy2
+    x1 = cos_angle * dx2 + sin_angle * dy2
+    y1 = -sin_angle * dx2 + cos_angle * dy2
 
     # Ensure radii are large enough
     rx = abs(rx)
@@ -62,7 +62,7 @@ def compute_arc(
         Pry = ry * ry
 
     # Step 2 : Compute (cx1, cy1)
-    sign = -1 if largeArcFlag == sweepFlag else 1
+    sign = -1 if large_arc_flag == sweep_flag else 1
     sq = 0
     if Prx * Py1 + Pry * Px1 > 0:
         sq = (Prx * Pry - Prx * Py1 - Pry * Px1) / (Prx * Py1 + Pry * Px1)
@@ -75,10 +75,10 @@ def compute_arc(
     sx2 = (x0 + x) / 2.0
     sy2 = (y0 + y) / 2.0
     # print(x0, x)
-    cx = sx2 + (cosAngle * cx1 - sinAngle * cy1)
-    cy = sy2 + (sinAngle * cx1 + cosAngle * cy1)
+    cx = sx2 + (cos_angle * cx1 - sin_angle * cy1)
+    cy = sy2 + (sin_angle * cx1 + cos_angle * cy1)
 
-    # Step 4 : Compute the angleExtent (dangle)
+    # Step 4 : Compute the angle_extent (dangle)
     ux = (x1 - cx1) / rx if rx != 0 else 0
     uy = (y1 - cy1) / ry if ry != 0 else 0
     vx = (-x1 - cx1) / rx if rx != 0 else 0
@@ -89,19 +89,19 @@ def compute_arc(
     p = ux * vx + uy * vy
     sign = -1 if (ux * vy - uy * vx) < 0 else 1
     if n != 0:
-        angleExtent = to_degrees(sign * acos(p / n)) if abs(p / n) < 1 else 360 + 359
+        angle_extent = to_degrees(sign * acos(p / n)) if abs(p / n) < 1 else 360 + 359
     else:
-        angleExtent = 360 + 359
-    if not (sweepFlag) and angleExtent > 0:
-        angleExtent -= 360
-    elif sweepFlag and angleExtent < 0:
-        angleExtent += 360
+        angle_extent = 360 + 359
+    if not (sweep_flag) and angle_extent > 0:
+        angle_extent -= 360
+    elif sweep_flag and angle_extent < 0:
+        angle_extent += 360
 
-    angleExtent_sign = 1 if angleExtent < 0 else -1
-    angleExtent = (abs(angleExtent) % 360) * angleExtent_sign
-    # angleExtent %= 360
+    angleExtent_sign = 1 if angle_extent < 0 else -1
+    angle_extent = (abs(angle_extent) % 360) * angleExtent_sign
+    # angle_extent %= 360
 
-    return cx, cy, angleExtent
+    return cx, cy, angle_extent
 
 
 # ---------------------------------------
@@ -110,6 +110,7 @@ def compute_arc(
 def fp_to_ki(dim: float):
     if dim not in ["", None] and isnan(float(dim)) is False:
         return round(float(dim) * 10 * 0.0254, 2)
+    return dim
 
 
 # ---------------------------------------
@@ -161,11 +162,11 @@ def rotate(x: float, y: float, degrees: float):
 # ---------------------------------------
 
 
-class exporter_footprint_kicad:
+class ExporterFootprintKicad:
     def __init__(self, footprint: ee_footprint):
         self.input = footprint
-        if type(self.input) is not ee_footprint:
-            print("Unsupported conversion")
+        if not isinstance(self.input, ee_footprint):
+            logging.error("Unsupported conversion")
         else:
             self.generate_kicad_footprint()
 
@@ -239,7 +240,7 @@ class exporter_footprint_kicad:
             point_list = [fp_to_ki(point) for point in ee_pad.points.split(" ")]
             if is_custom_shape:
                 if len(point_list) <= 0:
-                    print(
+                    logging.warning(
                         "PAD ${id} is a polygon, but has no points defined".format(
                             id=ee_pad.id
                         )
@@ -257,7 +258,10 @@ class exporter_footprint_kicad:
                         )
                         for i in range(0, len(point_list), 2)
                     )
-                    ki_pad.polygon = f"\n\t\t(primitives \n\t\t\t(gr_poly \n\t\t\t\t(pts {path}\n\t\t\t\t) \n\t\t\t\t(width 0.1) \n\t\t\t)\n\t\t)\n\t"
+                    ki_pad.polygon = (
+                        "\n\t\t(primitives \n\t\t\t(gr_poly \n\t\t\t\t(pts"
+                        f" {path}\n\t\t\t\t) \n\t\t\t\t(width 0.1) \n\t\t\t)\n\t\t)\n\t"
+                    )
 
             self.output.pads.append(ki_pad)
 
@@ -364,8 +368,8 @@ class exporter_footprint_kicad:
             (
                 svg_rx,
                 svg_ry,
-                xAxisRotation,
-                largeArc,
+                x_axis_rotation,
+                large_arc,
                 sweep,
                 end_x,
                 end_y,
@@ -380,8 +384,8 @@ class exporter_footprint_kicad:
                     start_y,
                     rx,
                     ry,
-                    float(xAxisRotation),
-                    largeArc == "1",
+                    float(x_axis_rotation),
+                    large_arc == "1",
                     sweep == "1",
                     end_x,
                     end_y,
