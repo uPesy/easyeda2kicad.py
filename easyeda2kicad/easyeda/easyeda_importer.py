@@ -1,24 +1,23 @@
-# Global import
 # Global imports
 import json
-from unicodedata import name
+import logging
 
 from easyeda2kicad.easyeda.easyeda_api import easyeda_api
 from easyeda2kicad.easyeda.parameters_easyeda import *
 
 
-class easyeda_symbol_importer:
-    def __init__(self, easyeda_cp_cad_data):
+class EasyedaSymbolImporter:
+    def __init__(self, easyeda_cp_cad_data: dict):
         self.input = easyeda_cp_cad_data
         self.output: ee_symbol = self.extract_easyeda_data(
             ee_data=easyeda_cp_cad_data,
             ee_data_info=easyeda_cp_cad_data["dataStr"]["head"]["c_para"],
         )
 
-    def get_symbol(self):
+    def get_symbol(self) -> ee_symbol:
         return self.output
 
-    def extract_easyeda_data(self, ee_data: dict, ee_data_info: dict):
+    def extract_easyeda_data(self, ee_data: dict, ee_data_info: dict) -> ee_symbol:
         new_ee_symbol = ee_symbol(
             info=ee_symbol_info(
                 name=ee_data_info["name"],
@@ -72,13 +71,13 @@ class easyeda_symbol_importer:
             elif designator == "A":
                 ...  # TODO
             else:
-                print(f"\t[-] Unknow symbol designator : {designator}")
+                logging.warning(f"Unknow symbol designator : {designator}")
 
         return new_ee_symbol
 
     # ---------------------------------------
 
-    def extract_easyeda_pin(self, pin_data: str):
+    def extract_easyeda_pin(self, pin_data: str) -> ee_symbol_pin:
         segments = pin_data.split("^^")
         ee_segments = [seg.split("~") for seg in segments]
 
@@ -112,31 +111,31 @@ class easyeda_symbol_importer:
 
     # ---------------------------------------
 
-    def extract_easyeda_rectangle(self, rectangle_data: str):
+    def extract_easyeda_rectangle(self, rectangle_data: str) -> ee_symbol_rectangle:
         ee_segment = rectangle_data.split("~")
         return ee_symbol_rectangle(
             **dict(zip(ee_symbol_rectangle.__fields__, ee_segment[1:]))
         )
 
-    def extract_easyeda_polyline(self, polyline_data: str):
+    def extract_easyeda_polyline(self, polyline_data: str) -> ee_symbol_polyline:
         ee_segment = polyline_data.split("~")
         return ee_symbol_polyline(
             **dict(zip(ee_symbol_polyline.__fields__, ee_segment[1:]))
         )
 
-    def extract_easyeda_polygon(self, polygon_data: str):
+    def extract_easyeda_polygon(self, polygon_data: str) -> ee_symbol_polygon:
         ee_segment = polygon_data.split("~")
         return ee_symbol_polygon(
             **dict(zip(ee_symbol_polygon.__fields__, ee_segment[1:]))
         )
 
-    def extract_easyeda_path(self, path_data: str):
+    def extract_easyeda_path(self, path_data: str) -> ee_symbol_path:
         ee_segment = path_data.split("~")
         return ee_symbol_path(**dict(zip(ee_symbol_path.__fields__, ee_segment[1:])))
 
     # ---------------------------------------
 
-    def tune_ee_pin(self, pin: ee_symbol_pin):
+    def tune_ee_pin(self, pin: ee_symbol_pin) -> ee_symbol_pin:
         pin.settings.rotation = (
             pin.settings.rotation if pin.settings.rotation != "" else "0"
         )
@@ -149,16 +148,16 @@ class easyeda_symbol_importer:
         pin.name.text = pin.name.text.replace(" ", "")
         return pin
 
-    def tune_ee_rectangle(self, rect: ee_symbol_rectangle):
+    def tune_ee_rectangle(self, rect: ee_symbol_rectangle) -> ee_symbol_rectangle:
         return rect
 
-    def tune_ee_polyline(self, polyline: ee_symbol_polyline):
+    def tune_ee_polyline(self, polyline: ee_symbol_polyline) -> ee_symbol_polyline:
         return polyline
 
-    def tune_ee_polygon(self, polygon: ee_symbol_polygon):
+    def tune_ee_polygon(self, polygon: ee_symbol_polygon) -> ee_symbol_polygon:
         return polygon
 
-    def tune_ee_path(self, path: ee_symbol_path):
+    def tune_ee_path(self, path: ee_symbol_path) -> ee_symbol_path:
         return path
 
     # ---------------------------------------
@@ -167,8 +166,8 @@ class easyeda_symbol_importer:
 # ------------------------------------------------------------------------------
 
 
-class easyeda_footprint_importer:
-    def __init__(self, easyeda_cp_cad_data):
+class EasyedaFootprintImporter:
+    def __init__(self, easyeda_cp_cad_data: dict):
         self.input = easyeda_cp_cad_data
         self.output = self.extract_easyeda_data(
             ee_data_str=self.input["packageDetail"]["dataStr"],
@@ -178,7 +177,7 @@ class easyeda_footprint_importer:
     def get_footprint(self):
         return self.output
 
-    def extract_easyeda_data(self, ee_data_str: str, ee_data_info: str):
+    def extract_easyeda_data(self, ee_data_str: str, ee_data_info: str) -> ee_footprint:
         new_ee_footprint = ee_footprint(
             info=ee_footprint_info(
                 name=ee_data_info["package"],
@@ -233,14 +232,14 @@ class easyeda_footprint_importer:
                 )
                 new_ee_footprint.texts.append(ee_text)
             elif ee_designator == "SVGNODE":
-                new_ee_footprint.model_3d = easyeda_3d_model_importer(
+                new_ee_footprint.model_3d = Easyeda3dModelImporter(
                     easyeda_cp_cad_data=[line]
                 ).output
 
             elif ee_designator == "SOLIDREGION":
                 ...
             else:
-                print(f"\t[-] Unknow footprint designator : {ee_designator}")
+                logging.warning(f"Unknow footprint designator : {ee_designator}")
 
         return new_ee_footprint
 
@@ -248,12 +247,12 @@ class easyeda_footprint_importer:
 # ------------------------------------------------------------------------------
 
 
-class easyeda_3d_model_importer:
+class Easyeda3dModelImporter:
     def __init__(self, easyeda_cp_cad_data):
         self.input = easyeda_cp_cad_data
         self.output = self.create_3d_model()
 
-    def create_3d_model(self):
+    def create_3d_model(self) -> ee_3d_model:
         ee_data = (
             self.input["packageDetail"]["dataStr"]["shape"]
             if isinstance(self.input, dict)
