@@ -1,6 +1,7 @@
 # Global imports
 import logging
 from math import acos, cos, isnan, pi, sin, sqrt
+from typing import Tuple, Union
 
 from easyeda2kicad.easyeda.parameters_easyeda import ee_footprint
 from easyeda2kicad.kicad.parameters_kicad import *
@@ -8,11 +9,11 @@ from easyeda2kicad.kicad.parameters_kicad import *
 # ---------------------------------------
 
 
-def to_radians(n: float):
+def to_radians(n: float) -> float:
     return (n / 180.0) * pi
 
 
-def to_degrees(n: float):
+def to_degrees(n: float) -> float:
     return (n / pi) * 180.0
 
 
@@ -29,7 +30,7 @@ def compute_arc(
     sweep_flag: bool,
     x: float,
     y: float,
-):
+) -> Tuple[float, float, float]:
 
     # Compute the half distance between the current and the final point
     dx2 = (x0 - x) / 2.0
@@ -107,7 +108,7 @@ def compute_arc(
 # ---------------------------------------
 
 
-def fp_to_ki(dim: float):
+def fp_to_ki(dim: float) -> float:
     if dim not in ["", None] and isnan(float(dim)) is False:
         return round(float(dim) * 10 * 0.0254, 2)
     return dim
@@ -118,7 +119,7 @@ def fp_to_ki(dim: float):
 
 def drill_to_ki(
     hole_radius: float, hole_length: float, pad_height: float, pad_width: float
-):
+) -> str:
     if (
         hole_radius > 0
         and hole_length != ""
@@ -143,7 +144,7 @@ def drill_to_ki(
 # ---------------------------------------
 
 
-def angle_to_ki(rotation: float):
+def angle_to_ki(rotation: float) -> Union[float, str]:
     if isnan(rotation) is False:
         return -(360 - rotation) if rotation > 180 else rotation
     return ""
@@ -152,7 +153,7 @@ def angle_to_ki(rotation: float):
 # ---------------------------------------
 
 
-def rotate(x: float, y: float, degrees: float):
+def rotate(x: float, y: float, degrees: float) -> Tuple[float, float]:
     radians = (degrees / 180) * 2 * pi
     new_x = x * cos(radians) - y * sin(radians)
     new_y = x * sin(radians) + y * cos(radians)
@@ -170,7 +171,7 @@ class ExporterFootprintKicad:
         else:
             self.generate_kicad_footprint()
 
-    def generate_kicad_footprint(self):
+    def generate_kicad_footprint(self) -> None:
 
         # Convert dimension from easyeda to kicad
         self.input.bbox.convert_to_mm()
@@ -431,10 +432,10 @@ class ExporterFootprintKicad:
             ki_text.mirror = " mirror" if ki_text.layers[0] == "B" else ""
             self.output.texts.append(ki_text)
 
-    def get_ki_footprint(self):
+    def get_ki_footprint(self) -> ki_footprint:
         return self.output
 
-    def export(self, output_path: str):
+    def export(self, output_path: str) -> None:
         ki = self.output
         ki_lib = ""
 

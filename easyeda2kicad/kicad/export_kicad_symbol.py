@@ -167,7 +167,7 @@ def convert_ee_paths(
     return kicad_polygons, kicad_beziers
 
 
-def convert_to_kicad(ee_symbol: ee_symbol):
+def convert_to_kicad(ee_symbol: ee_symbol) -> KiSymbol:
 
     ki_info = KiSymbolInfo(
         name=ee_symbol.info.name.replace(" ", ""),
@@ -212,6 +212,6 @@ class exporter_symbol_kicad:
             else logging.error("[-] Unknown format")
         )
 
-    def get_kicad_lib(self):
+    def get_kicad_lib(self) -> str:
         # TODO: export for v5 and v6 kicad
         return self.output.export()

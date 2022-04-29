@@ -153,7 +153,7 @@ def id_already_in_symbol_lib(
 
 def delete_component_in_symbol_lib(
     lib_path: str, component_id: str, component_name: str
-):
+) -> None:
     with open(file=lib_path, encoding="utf-8") as f:
         current_lib = f.read()
         new_data = re.sub(

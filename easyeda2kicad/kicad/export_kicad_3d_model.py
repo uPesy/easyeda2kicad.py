@@ -6,7 +6,6 @@ from __future__ import annotations
 
 # Global imports
 import re
-from typing import List
 
 from easyeda2kicad.easyeda.parameters_easyeda import ee_3d_model
 from easyeda2kicad.kicad.parameters_kicad import ki_3d_model
@@ -50,7 +49,7 @@ def get_vertices(obj_data: str) -> list:
     ]
 
 
-def generate_wrl_model(model_3d: ee_3d_model):
+def generate_wrl_model(model_3d: ee_3d_model) -> ki_3d_model:
     materials = get_materials(obj_data=model_3d.raw_obj)
     vertices = get_vertices(obj_data=model_3d.raw_obj)
 
@@ -116,7 +115,7 @@ class exporter_3d_model_kicad:
         self.input = model_3d
         self.output = generate_wrl_model(model_3d=model_3d)
 
-    def export(self, lib_path: str):
+    def export(self, lib_path: str) -> None:
         with open(
             file=f"{lib_path}.3dshapes/{self.output.name}.wrl",
             mode="w",
