@@ -2,7 +2,7 @@
 import itertools
 from dataclasses import dataclass, field, fields
 from enum import Enum
-from typing import List
+from typing import List, Union
 
 # ---------------- CONFIG ----------------
 
@@ -525,7 +525,7 @@ KI_LAYERS = {
 
 
 # Round all float values contained in the dataclass
-def round_float_values(self):
+def round_float_values(self) -> None:
     for _field in fields(self):
         current_value = getattr(self, _field.name)
         if isinstance(current_value, float):
@@ -547,7 +547,7 @@ class ki_footprint_pad:
     orientation: float
     polygon: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         round_float_values(self)
 
 
@@ -569,7 +569,7 @@ class ki_footprint_hole:
     pos_y: float
     size: float
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         round_float_values(self)
 
 
@@ -583,7 +583,7 @@ class ki_footprint_circle:
     layers: str
     stroke_width: float
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         round_float_values(self)
 
 
