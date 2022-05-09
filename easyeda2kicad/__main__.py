@@ -6,17 +6,17 @@ import re
 import sys
 from typing import List
 
-from easyeda2kicad.easyeda.easyeda_api import easyeda_api
+from easyeda2kicad.easyeda.easyeda_api import EasyedaApi
 from easyeda2kicad.easyeda.easyeda_importer import (
     Easyeda3dModelImporter,
     EasyedaFootprintImporter,
     EasyedaSymbolImporter,
 )
-from easyeda2kicad.easyeda.parameters_easyeda import ee_symbol
+from easyeda2kicad.easyeda.parameters_easyeda import EeSymbol
 from easyeda2kicad.helpers import set_logger
-from easyeda2kicad.kicad.export_kicad_3d_model import exporter_3d_model_kicad
+from easyeda2kicad.kicad.export_kicad_3d_model import Exporter3dModelKicad
 from easyeda2kicad.kicad.export_kicad_footprint import ExporterFootprintKicad
-from easyeda2kicad.kicad.export_kicad_symbol import exporter_symbol_kicad
+from easyeda2kicad.kicad.export_kicad_symbol import ExporterSymbolKicad
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -193,13 +193,13 @@ def main(argv: List[str]) -> int:
     print("-- easyeda2kicad.py --")
 
     # Get CAD data of the component using easyeda API
-    api = easyeda_api()
+    api = EasyedaApi()
     cad_data = api.get_cad_data_of_component(lcsc_id=component_id)
 
     # ---------------- SYMBOL ----------------
     if arguments["symbol"]:
         importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data)
-        easyeda_symbol: ee_symbol = importer.get_symbol()
+        easyeda_symbol: EeSymbol = importer.get_symbol()
 
         is_id_already_in_symbol_lib = id_already_in_symbol_lib(
             lib_path=f"{arguments['output']}.lib",
@@ -212,7 +212,7 @@ def main(argv: List[str]) -> int:
 
         logging.info(f"Creating Kicad symbol library for LCSC id : {component_id}")
 
-        exporter = exporter_symbol_kicad(symbol=easyeda_symbol, kicad_version=5)
+        exporter = ExporterSymbolKicad(symbol=easyeda_symbol, kicad_version=5)
         # print(exporter.output)
         kicad_symbol_lib = exporter.get_kicad_lib()
 
@@ -249,7 +249,7 @@ def main(argv: List[str]) -> int:
     # ---------------- 3D MODEL ----------------
     if arguments["3d"]:
         logging.info(f"Creating 3D model for LCSC id : {component_id}")
-        exporter = exporter_3d_model_kicad(
+        exporter = Exporter3dModelKicad(
             model_3d=Easyeda3dModelImporter(easyeda_cp_cad_data=cad_data).output
         ).export(lib_path=arguments["output"])
 

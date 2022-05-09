@@ -187,16 +187,16 @@ class ExporterFootprintKicad:
             for field in fields:
                 field.convert_to_mm()
 
-        ki_info = ki_footprint_info(
+        ki_info = KiFootprintInfo(
             name=self.input.info.name, fp_type=self.input.info.fp_type
         )
 
         if self.input.model_3d is not None:
             self.input.model_3d.convert_to_mm()
 
-            ki_3d_model_info = ki_3d_model(
+            ki_3d_model_info = Ki3dModel(
                 name=self.input.model_3d.name,
-                translation=ki_3d_model_base(
+                translation=Ki3dModelBase(
                     # x=round((self.input.model_3d.translation.x - self.input.bbox.x), 2),
                     # y=-round(
                     #     (self.input.model_3d.translation.y - self.input.bbox.y), 2
@@ -209,11 +209,11 @@ class ExporterFootprintKicad:
         else:
             ki_3d_model_info = None
 
-        self.output = ki_footprint(info=ki_info, model_3d=ki_3d_model_info)
+        self.output = KiFootprint(info=ki_info, model_3d=ki_3d_model_info)
 
         # For pads
         for ee_pad in self.input.pads:
-            ki_pad = ki_footprint_pad(
+            ki_pad = KiFootprintPad(
                 type="thru_hole" if ee_pad.hole_radius > 0 else "smd",
                 shape=KI_PAD_SHAPE[ee_pad.shape]
                 if ee_pad.shape in KI_PAD_SHAPE
@@ -268,7 +268,7 @@ class ExporterFootprintKicad:
 
         # For tracks
         for ee_track in self.input.tracks:
-            ki_track = ki_footprint_track(
+            ki_track = KiFootprintTrack(
                 layers=KI_PAD_LAYER[ee_track.layer_id]
                 if ee_track.layer_id in KI_PAD_LAYER
                 else "F.Fab",
@@ -295,7 +295,7 @@ class ExporterFootprintKicad:
 
         # For holes
         for ee_hole in self.input.holes:
-            ki_hole = ki_footprint_hole(
+            ki_hole = KiFootprintHole(
                 pos_x=ee_hole.center_x - self.input.bbox.x,
                 pos_y=ee_hole.center_y - self.input.bbox.y,
                 size=ee_hole.radius * 2,
@@ -305,7 +305,7 @@ class ExporterFootprintKicad:
 
         # For circles
         for ee_circle in self.input.circles:
-            ki_circle = ki_footprint_circle(
+            ki_circle = KiFootprintCircle(
                 cx=ee_circle.cx - self.input.bbox.x,
                 cy=ee_circle.cy - self.input.bbox.y,
                 end_x=0.0,
@@ -321,7 +321,7 @@ class ExporterFootprintKicad:
 
         # For rectangles
         for ee_rectangle in self.input.rectangles:
-            ki_rectangle = ki_footprint_rectangle(
+            ki_rectangle = KiFootprintRectangle(
                 layers=KI_PAD_LAYER[ee_rectangle.layer_id]
                 if ee_rectangle.layer_id in KI_PAD_LAYER
                 else "F.Fab",
@@ -396,7 +396,7 @@ class ExporterFootprintKicad:
                 cy = 0.0
                 extent = 0.0
 
-            ki_arc = ki_footprint_arc(
+            ki_arc = KiFootprintArc(
                 start_x=cx,
                 start_y=cy,
                 end_x=end_x,
@@ -411,7 +411,7 @@ class ExporterFootprintKicad:
 
         # For texts
         for ee_text in self.input.texts:
-            ki_text = ki_footprint_text(
+            ki_text = KiFootprintText(
                 pos_x=ee_text.center_x - self.input.bbox.x,
                 pos_y=ee_text.center_y - self.input.bbox.y,
                 orientation=angle_to_ki(ee_text.rotation),
@@ -432,7 +432,7 @@ class ExporterFootprintKicad:
             ki_text.mirror = " mirror" if ki_text.layers[0] == "B" else ""
             self.output.texts.append(ki_text)
 
-    def get_ki_footprint(self) -> ki_footprint:
+    def get_ki_footprint(self) -> KiFootprint:
         return self.output
 
     def export(self, output_path: str) -> None:

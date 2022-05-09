@@ -8,7 +8,7 @@ ENDPOINT_3D_MODEL = "https://easyeda.com/analyzer/api/3dmodel/{uuid}"
 # ------------------------------------------------------------
 
 
-class easyeda_api:
+class EasyedaApi:
     def __init__(self) -> None:
         self.headers = {
             "Accept-Encoding": "gzip, deflate",

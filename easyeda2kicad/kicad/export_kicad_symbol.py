@@ -3,13 +3,13 @@ import logging
 from typing import List, Tuple, Union
 
 from easyeda2kicad.easyeda.parameters_easyeda import (
-    ee_symbol,
-    ee_symbol_bbox,
-    ee_symbol_path,
-    ee_symbol_pin,
-    ee_symbol_polygon,
-    ee_symbol_polyline,
-    ee_symbol_rectangle,
+    EeSymbol,
+    EeSymbolBbox,
+    EeSymbolPath,
+    EeSymbolPin,
+    EeSymbolPolygon,
+    EeSymbolPolyline,
+    EeSymbolRectangle,
 )
 from easyeda2kicad.kicad.parameters_kicad import *
 
@@ -19,7 +19,7 @@ def px_to_mil(dim: int):
 
 
 def convert_ee_pins(
-    ee_pins: List[ee_symbol_pin], ee_bbox: ee_symbol_bbox
+    ee_pins: List[EeSymbolPin], ee_bbox: EeSymbolBbox
 ) -> List[KiSymbolPin]:
     kicad_pins = []
     for ee_pin in ee_pins:
@@ -59,7 +59,7 @@ def convert_ee_pins(
 
 
 def convert_ee_rectangles(
-    ee_rectangles: List[ee_symbol_rectangle], ee_bbox: ee_symbol_bbox
+    ee_rectangles: List[EeSymbolRectangle], ee_bbox: EeSymbolBbox
 ) -> List[KiSymbolRectangle]:
     kicad_rectangles = []
     for ee_rectangle in ee_rectangles:
@@ -86,8 +86,8 @@ def convert_ee_arcs():
 
 
 def convert_ee_polylines(
-    ee_polylines: List[Union[ee_symbol_polyline, ee_symbol_polygon]],
-    ee_bbox: ee_symbol_bbox,
+    ee_polylines: List[Union[EeSymbolPolyline, EeSymbolPolygon]],
+    ee_bbox: EeSymbolBbox,
 ) -> List[KiSymbolPolygon]:
     kicad_polygons = []
     for ee_polyline in ee_polylines:
@@ -101,7 +101,7 @@ def convert_ee_polylines(
             -px_to_mil(int(float(raw_pts[i])) - int(ee_bbox.y))
             for i in range(1, len(raw_pts), 2)
         ]
-        if isinstance(ee_polyline, ee_symbol_polygon):
+        if isinstance(ee_polyline, EeSymbolPolygon):
             x_points.append(x_points[0])
             y_points.append(y_points[0])
 
@@ -123,13 +123,13 @@ def convert_ee_polylines(
 
 
 def convert_ee_polygons(
-    ee_polygons: List[ee_symbol_polygon], ee_bbox: ee_symbol_bbox
+    ee_polygons: List[EeSymbolPolygon], ee_bbox: EeSymbolBbox
 ) -> List[KiSymbolPolygon]:
     return convert_ee_polylines(ee_polylines=ee_polygons, ee_bbox=ee_bbox)
 
 
 def convert_ee_paths(
-    ee_paths: List[ee_symbol_path], ee_bbox: ee_symbol_bbox
+    ee_paths: List[EeSymbolPath], ee_bbox: EeSymbolBbox
 ) -> Tuple[List[KiSymbolPolygon], List[KiSymbolPolygon]]:
     kicad_polygons = []
     kicad_beziers = []
@@ -167,7 +167,7 @@ def convert_ee_paths(
     return kicad_polygons, kicad_beziers
 
 
-def convert_to_kicad(ee_symbol: ee_symbol) -> KiSymbol:
+def convert_to_kicad(ee_symbol: EeSymbol) -> KiSymbol:
 
     ki_info = KiSymbolInfo(
         name=ee_symbol.info.name.replace(" ", ""),
@@ -202,13 +202,13 @@ def convert_to_kicad(ee_symbol: ee_symbol) -> KiSymbol:
     return kicad_symbol
 
 
-class exporter_symbol_kicad:
+class ExporterSymbolKicad:
     def __init__(self, symbol, kicad_version):
-        self.input: ee_symbol = symbol
+        self.input: EeSymbol = symbol
         self.version = kicad_version
         self.output = (
             convert_to_kicad(ee_symbol=self.input)
-            if isinstance(self.input, ee_symbol)
+            if isinstance(self.input, EeSymbol)
             else logging.error("[-] Unknown format")
         )
 
