@@ -17,6 +17,7 @@ from easyeda2kicad.helpers import set_logger
 from easyeda2kicad.kicad.export_kicad_3d_model import Exporter3dModelKicad
 from easyeda2kicad.kicad.export_kicad_footprint import ExporterFootprintKicad
 from easyeda2kicad.kicad.export_kicad_symbol import ExporterSymbolKicad
+from easyeda2kicad.kicad.parameters_kicad import KicadVersion
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -212,9 +213,12 @@ def main(argv: List[str]) -> int:
 
         logging.info(f"Creating Kicad symbol library for LCSC id : {component_id}")
 
-        exporter = ExporterSymbolKicad(symbol=easyeda_symbol, kicad_version=5)
+        exporter = ExporterSymbolKicad(
+            symbol=easyeda_symbol, kicad_version=KicadVersion.v5_x
+        )
         # print(exporter.output)
         kicad_symbol_lib = exporter.get_kicad_lib()
+        print(kicad_symbol_lib)
 
         if is_id_already_in_symbol_lib:
             delete_component_in_symbol_lib(

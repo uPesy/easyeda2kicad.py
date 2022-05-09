@@ -203,15 +203,15 @@ def convert_to_kicad(ee_symbol: EeSymbol) -> KiSymbol:
 
 
 class ExporterSymbolKicad:
-    def __init__(self, symbol, kicad_version):
+    def __init__(self, symbol, kicad_version: KicadVersion):
         self.input: EeSymbol = symbol
         self.version = kicad_version
         self.output = (
             convert_to_kicad(ee_symbol=self.input)
             if isinstance(self.input, EeSymbol)
-            else logging.error("[-] Unknown format")
+            else logging.error("Unknown input symbol format")
         )
 
     def get_kicad_lib(self) -> str:
         # TODO: export for v5 and v6 kicad
-        return self.output.export()
+        return self.output.export(kicad_version=self.version)

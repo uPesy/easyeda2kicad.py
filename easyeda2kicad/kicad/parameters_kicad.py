@@ -1,7 +1,7 @@
 # Global imports
 import itertools
 from dataclasses import dataclass, field, fields
-from enum import Enum
+from enum import Enum, auto
 from typing import List
 
 # ---------------- CONFIG ----------------
@@ -183,10 +183,33 @@ class KicadPinOrientation(Enum):
     bottom = 270
 
 
+class KicadVersion(Enum):
+    v5_x = auto()
+    v6_x = auto()
+    v6_99 = auto()
+
+
 # ---------------------------- SYMBOL PART ----------------------------
+@dataclass
+class KiSymbolBase:
+    def export_v5(self) -> str:
+        ...
+
+    def export_v6(self) -> str:
+        ...
+
+    def export(self, kicad_version: KicadVersion) -> str:
+        if kicad_version == KicadVersion.v5_x:
+            return self.export_v5()
+        elif kicad_version == KicadVersion.v6_x:
+            return self.export_v6()
+
+        return ""
+
+
 # ---------------- INFO HEADER ----------------
 @dataclass
-class KiSymbolInfo:
+class KiSymbolInfo(KiSymbolBase):
     name: str
     prefix: str
     package: str
@@ -197,7 +220,7 @@ class KiSymbolInfo:
     y_low: int = 0
     y_high: int = 0
 
-    def export(self) -> str:
+    def export_v5(self) -> str:
         return "\n".join(
             (
                 f"#\n# {self.name}\n#",
@@ -258,10 +281,13 @@ class KiSymbolInfo:
             )
         ).replace("\n\n", "\n")
 
+    def export_v6(self) -> str:
+        ...
+
 
 # ---------------- PIN ----------------
 @dataclass
-class KiSymbolPin:
+class KiSymbolPin(KiSymbolBase):
     name: str
     number: str
     style: str
@@ -270,7 +296,7 @@ class KiSymbolPin:
     pos_x: int
     pos_y: int
 
-    def export(self) -> str:
+    def export_v5(self) -> str:
         return (
             "X {name} {num} {x} {y} {length} {orientation} {num_sz} {name_sz}"
             " {unit_num} 1 {pin_type} {pin_style}\n".format(
@@ -288,16 +314,19 @@ class KiSymbolPin:
             )
         )
 
+    def export_v6(self) -> str:
+        ...
+
 
 # ---------------- RECTANGLE ----------------
 @dataclass
-class KiSymbolRectangle:
+class KiSymbolRectangle(KiSymbolBase):
     pos_x0: int = 0
     pos_y0: int = 0
     pos_x1: int = 0
     pos_y1: int = 0
 
-    def export(self) -> str:
+    def export_v5(self) -> str:
         return "S {x0} {y0} {x1} {y1} {unit_num} 1 {line_width} {fill}\n".format(
             x0=int(round(self.pos_x0 / 50.0)) * 50,
             y0=int(round(self.pos_y0 / 50.0)) * 50,
@@ -308,15 +337,18 @@ class KiSymbolRectangle:
             fill=KI_BOX_FILLS["bg_fill"],
         )
 
+    def export_v6(self) -> str:
+        ...
+
 
 # ---------------- POLYGON ----------------
 @dataclass
-class KiSymbolPolygon:
+class KiSymbolPolygon(KiSymbolBase):
     points: List[List[int]] = field(default_factory=List[List[int]])
     points_number: int = 0
     is_closed: bool = False
 
-    def export(self) -> str:
+    def export_v5(self) -> str:
         return (
             "P {points_number} {unit_num} 1 {line_width} {coordinate} {fill}\n".format(
                 points_number=self.points_number,
@@ -329,15 +361,18 @@ class KiSymbolPolygon:
             )
         )
 
+    def export_v6(self) -> str:
+        ...
+
 
 # ---------------- CIRCLE ----------------
 @dataclass
-class KiSymbolCircle:
+class KiSymbolCircle(KiSymbolBase):
     pos_x: int = 0
     pos_y: int = 0
     radius: int = 0
 
-    def export(self) -> str:
+    def export_v5(self) -> str:
         return "C {pos_x} {pos_y} {radius} {unit_num} 1 {line_width} {fill}\n".format(
             pos_x=self.pos_x,
             pos_y=self.pos_y,
@@ -347,10 +382,13 @@ class KiSymbolCircle:
             fill=KI_BOX_FILLS["bg_fill"],
         )
 
+    def export_v6(self) -> str:
+        ...
+
 
 # ---------------- ARC ----------------
 @dataclass
-class KiSymbolArc:
+class KiSymbolArc(KiSymbolBase):
     pos_x: int = 0
     pos_y: int = 0
     radius: int = 0
@@ -361,7 +399,7 @@ class KiSymbolArc:
     end_x: int = 0
     end_y: int = 0
 
-    def export(self) -> str:
+    def export_v5(self) -> str:
         return (
             "C {pos_x} {pos_y} {radius} {angle_start} {angle_end} {unit_num} 1"
             " {line_width} {fill} {start_x} {start_y} {end_x} {end_y}\n".format(
@@ -382,15 +420,18 @@ class KiSymbolArc:
             )
         )
 
+    def export_v6(self) -> str:
+        ...
+
 
 # ---------------- BEZIER CURVE ----------------
 @dataclass
-class KiSymbolBezier:
+class KiSymbolBezier(KiSymbolBase):
     points: List[List[int]] = field(default_factory=List[List[int]])
     points_number: int = 0
     is_closed: bool = False
 
-    def export(self) -> str:
+    def export_v5(self) -> str:
         return (
             "B {points_number} {unit_num} 1 {line_width} {coordinate} {fill}\n".format(
                 points_number=self.points_number,
@@ -402,6 +443,9 @@ class KiSymbolBezier:
                 else KI_BOX_FILLS["no_fill"],
             )
         )
+
+    def export_v6(self) -> str:
+        ...
 
 
 # ---------------- SYMBOL ----------------
@@ -415,7 +459,7 @@ class KiSymbol:
     polygons: List[KiSymbolPolygon] = field(default_factory=lambda: [])
     beziers: List[KiSymbolBezier] = field(default_factory=lambda: [])
 
-    def export(self) -> str:
+    def export(self, kicad_version: KicadVersion) -> str:
         lib_output = ""
         # Get y_min and y_max to put component info
         self.info.y_low = min(pin.pos_y for pin in self.pins) if self.pins else 0
@@ -425,9 +469,9 @@ class KiSymbol:
             shapes = getattr(self, _field.name)
             if isinstance(shapes, list):
                 for sub_symbol in shapes:
-                    lib_output += sub_symbol.export()
+                    lib_output += sub_symbol.export(kicad_version=kicad_version)
             else:
-                lib_output += shapes.export()
+                lib_output += shapes.export(kicad_version=kicad_version)
 
         lib_output += "ENDDRAW\n" + "ENDDEF\n"
 
