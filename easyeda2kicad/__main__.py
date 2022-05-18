@@ -4,6 +4,8 @@ import logging
 import os
 import re
 import sys
+from datetime import datetime
+from textwrap import dedent
 from typing import List
 
 from easyeda2kicad.easyeda.easyeda_api import EasyedaApi
@@ -13,11 +15,16 @@ from easyeda2kicad.easyeda.easyeda_importer import (
     EasyedaSymbolImporter,
 )
 from easyeda2kicad.easyeda.parameters_easyeda import EeSymbol
-from easyeda2kicad.helpers import set_logger
+from easyeda2kicad.helpers import (
+    add_component_in_symbol_lib_file,
+    id_already_in_symbol_lib,
+    set_logger,
+    update_component_in_symbol_lib_file,
+)
 from easyeda2kicad.kicad.export_kicad_3d_model import Exporter3dModelKicad
 from easyeda2kicad.kicad.export_kicad_footprint import ExporterFootprintKicad
 from easyeda2kicad.kicad.export_kicad_symbol import ExporterSymbolKicad
-from easyeda2kicad.kicad.parameters_kicad import KicadVersion
+from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -75,6 +82,13 @@ def get_parser() -> argparse.ArgumentParser:
         action="store_true",
     )
 
+    parser.add_argument(
+        "--v5",
+        required=False,
+        help="Convert library in legacy format for KiCad 5.x",
+        action="store_true",
+    )
+
     return parser
 
 
@@ -95,27 +109,37 @@ def valid_arguments(arguments: dict) -> bool:
         )
         return False
 
+    kicad_version = KicadVersion.v5 if arguments.get("v5") else KicadVersion.v6
+    arguments["kicad_version"] = kicad_version
+
     if arguments["output"]:
         base_folder = "/".join(arguments["output"].replace("\\", "/").split("/")[:-1])
         lib_name = (
-            arguments["output"].replace("\\", "/").split("/")[-1].split(".lib")[0]
+            arguments["output"]
+            .replace("\\", "/")
+            .split("/")[-1]
+            .split(".lib")[0]
+            .split(".kicad_sym")[0]
         )
-        # Check input
+
         if not os.path.isdir(base_folder):
             logging.error("Can't find the folder")
             return False
     else:
         default_folder = os.path.join(
-            os.path.expanduser("~"), "Documents", "Kicad", "easyeda2kicad"
+            os.path.expanduser("~"),
+            "Documents",
+            "Kicad",
+            "easyeda2kicad",
         )
         if not os.path.isdir(default_folder):
             os.mkdir(default_folder)
 
         base_folder = default_folder
         lib_name = "easyeda2kicad"
-
     arguments["output"] = f"{base_folder}/{lib_name}"
-    # Create new lib files if they don't exist
+
+    # Create new footprint folder if it does not exist
     if not os.path.isdir(f"{arguments['output']}.pretty"):
         os.mkdir(f"{arguments['output']}.pretty")
         logging.info(f"Create {lib_name}.pretty footprint folder in {base_folder}")
@@ -125,31 +149,26 @@ def valid_arguments(arguments: dict) -> bool:
         os.mkdir(f"{arguments['output']}.3dshapes")
         logging.info(f"Create {lib_name}.3dshapes 3D model folder in {base_folder}")
 
-    if not os.path.isfile(f"{arguments['output']}.lib"):
+    lib_extension = "kicad_sym" if kicad_version == KicadVersion.v6 else "lib"
+    if not os.path.isfile(f"{arguments['output']}.{lib_extension}"):
         with open(
-            file=f"{arguments['output']}.lib", mode="w+", encoding="utf-8"
+            file=f"{arguments['output']}.{lib_extension}", mode="w+", encoding="utf-8"
         ) as my_lib:
-            my_lib.write("EESchema-LIBRARY Version 2.4\n#encoding utf-8\n")
-        logging.info(f"Create {lib_name}.lib symbol lib in {base_folder}")
+            my_lib.write(
+                dedent(
+                    """\
+                (kicad_symbol_lib
+                  (version 20211014)
+                  (generator https://github.com/uPesy/easyeda2kicad.py)
+                )
+                """
+                )
+                if kicad_version == KicadVersion.v6
+                else "EESchema-LIBRARY Version 2.4\n#encoding utf-8\n"
+            )
+        logging.info(f"Create {lib_name}.{lib_extension} symbol lib in {base_folder}")
 
     return True
-
-
-def id_already_in_symbol_lib(
-    lib_path: str, component_id: str, component_name: str
-) -> bool:
-    with open(lib_path, encoding="utf-8") as lib_file:
-        current_lib = lib_file.read()
-        component = re.findall(
-            rf'(#\n# {component_name}\n#\n.*?F6 "{component_id}".*?ENDDEF)',
-            current_lib,
-            flags=re.DOTALL,
-        )
-
-        if component != []:
-            logging.warning(f"This id is already in {lib_path}")
-            return True
-    return False
 
 
 def delete_component_in_symbol_lib(
@@ -190,8 +209,10 @@ def main(argv: List[str]) -> int:
     if not valid_arguments(arguments=arguments):
         return 1
 
-    component_id = arguments["lcsc_id"]
     print("-- easyeda2kicad.py --")
+    component_id = arguments["lcsc_id"]
+    kicad_version = arguments["kicad_version"]
+    sym_lib_ext = "kicad_sym" if kicad_version == KicadVersion.v6 else "lib"
 
     # Get CAD data of the component using easyeda API
     api = EasyedaApi()
@@ -203,10 +224,11 @@ def main(argv: List[str]) -> int:
         easyeda_symbol: EeSymbol = importer.get_symbol()
 
         is_id_already_in_symbol_lib = id_already_in_symbol_lib(
-            lib_path=f"{arguments['output']}.lib",
-            component_id=easyeda_symbol.info.lcsc_id,
+            lib_path=f"{arguments['output']}.{sym_lib_ext}",
             component_name=easyeda_symbol.info.name,
+            kicad_version=kicad_version,
         )
+
         if not arguments["overwrite"] and is_id_already_in_symbol_lib:
             logging.error("Use --overwrite to update the older symbol lib")
             return 1
@@ -214,23 +236,25 @@ def main(argv: List[str]) -> int:
         logging.info(f"Creating Kicad symbol library for LCSC id : {component_id}")
 
         exporter = ExporterSymbolKicad(
-            symbol=easyeda_symbol, kicad_version=KicadVersion.v5_x
+            symbol=easyeda_symbol, kicad_version=kicad_version
         )
         # print(exporter.output)
         kicad_symbol_lib = exporter.get_kicad_lib()
-        print(kicad_symbol_lib)
+        # print(kicad_symbol_lib)
 
         if is_id_already_in_symbol_lib:
-            delete_component_in_symbol_lib(
-                lib_path=f"{arguments['output']}.lib",
-                component_id=easyeda_symbol.info.lcsc_id,
+            update_component_in_symbol_lib_file(
+                lib_path=f"{arguments['output']}.{sym_lib_ext}",
                 component_name=easyeda_symbol.info.name,
+                component_content=kicad_symbol_lib,
+                kicad_version=kicad_version,
             )
-
-        with open(
-            file=f"{arguments['output']}.lib", mode="a+", encoding="utf-8"
-        ) as my_lib:
-            my_lib.write(kicad_symbol_lib)
+        else:
+            add_component_in_symbol_lib_file(
+                lib_path=f"{arguments['output']}.{sym_lib_ext}",
+                component_content=kicad_symbol_lib,
+                kicad_version=kicad_version,
+            )
 
     # ---------------- FOOTPRINT ----------------
     if arguments["footprint"]:

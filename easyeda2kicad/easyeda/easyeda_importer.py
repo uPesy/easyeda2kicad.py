@@ -134,16 +134,6 @@ class EasyedaSymbolImporter:
     # ---------------------------------------
 
     def tune_ee_pin(self, pin: EeSymbolPin) -> EeSymbolPin:
-        pin.settings.rotation = (
-            pin.settings.rotation if pin.settings.rotation != "" else "0"
-        )
-        pin.settings.type = (
-            EasyedaPinType(int(pin.settings.type)).name
-            if pin.settings.type != ""
-            else "unspecified"
-        )
-        pin.pin_path.path = pin.pin_path.path.replace("v", "h")
-        pin.name.text = pin.name.text.replace(" ", "")
         return pin
 
     def tune_ee_rectangle(self, rect: EeSymbolRectangle) -> EeSymbolRectangle:

@@ -4,7 +4,7 @@ from math import acos, cos, isnan, pi, sin, sqrt
 from typing import Tuple, Union
 
 from easyeda2kicad.easyeda.parameters_easyeda import ee_footprint
-from easyeda2kicad.kicad.parameters_kicad import *
+from easyeda2kicad.kicad.parameters_kicad_footprint import *
 
 # ---------------------------------------
 
