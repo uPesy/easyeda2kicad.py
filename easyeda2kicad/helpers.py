@@ -1,7 +1,6 @@
 # Global imports
 import logging
 import re
-from ctypes import sizeof
 
 from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion
 
