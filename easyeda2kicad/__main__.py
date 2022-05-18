@@ -4,7 +4,6 @@ import logging
 import os
 import re
 import sys
-from datetime import datetime
 from textwrap import dedent
 from typing import List
 
