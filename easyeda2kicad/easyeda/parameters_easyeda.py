@@ -7,11 +7,11 @@ from pydantic import BaseModel, validator
 
 
 class EasyedaPinType(Enum):
-    unspecified = 0
-    input = 1
-    output = 2
-    bidirectional = 3
-    power = 4
+    _unspecified = 0
+    _input = 1
+    _output = 2
+    _bidirectional = 3
+    _power = 4
 
 
 # ------------------------- Symbol -------------------------
@@ -23,7 +23,7 @@ class EeSymbolBbox(BaseModel):
 # ---------------- PIN ----------------
 class EeSymbolPinSettings(BaseModel):
     is_displayed: bool
-    type: str
+    type: EasyedaPinType
     spice_pin_number: str
     pos_x: float
     pos_y: float
@@ -43,16 +43,27 @@ class EeSymbolPinSettings(BaseModel):
     def empty_str_rotation(cls, rotation: str) -> str:
         return rotation or 0.0
 
+    @validator("type", pre=True)
+    def convert_pin_type(cls, field: str) -> str:
+        return (
+            EasyedaPinType(int(field or 0))
+            if int(field or 0) in EasyedaPinType._value2member_map_
+            else EasyedaPinType._unspecified
+        )
+
 
 class EeSymbolPinDot(BaseModel):
     dot_x: float
     dot_y: float
 
 
-@dataclass
-class EeSymbolPinPath:
+class EeSymbolPinPath(BaseModel):
     path: str
     color: str
+
+    @validator("path", pre=True)
+    def tune_path(cls, field: str) -> str:
+        return field.replace("v", "h")
 
 
 class EeSymbolPinName(BaseModel):
@@ -382,12 +393,6 @@ class EeFootprintText(BaseModel):
 
 
 # ---------------- FOOTPRINT ----------------
-
-
-@dataclass
-class EeSymbolPinPath:
-    path: str
-    color: str
 
 
 @dataclass
