@@ -15,17 +15,17 @@ class KicadVersion(Enum):
 
 class KiPinType(Enum):
     _input = auto()
-    _output = auto()
-    _bidirectional = auto()
-    _tri_state = auto()
-    _passive = auto()
-    _free = auto()
-    _unspecified = auto()
-    _power_in = auto()
-    _power_out = auto()
-    _open_collector = auto()
-    _open_emitter = auto()
-    _no_connect = auto()
+    output = auto()
+    bidirectional = auto()
+    tri_state = auto()
+    passive = auto()
+    free = auto()
+    unspecified = auto()
+    power_in = auto()
+    power_out = auto()
+    open_collector = auto()
+    open_emitter = auto()
+    no_connect = auto()
 
 
 class KiPinStyle(Enum):
@@ -61,30 +61,30 @@ class KiExportConfigV5(Enum):
 
 
 ki_pin_type_v5_format = {
-    "input": "I",
-    "output": "O",
-    "bidirectional": "B",
-    "tri_state": "T",
-    "passive": "P",
-    "free": "U",
-    "unspecified": "U",
-    "power_in": "W",
-    "power_out": "W",
-    "open_collector": "C",
-    "open_emitter": "E",
-    "no_connect": "N",
+    KiPinType._input: "I",
+    KiPinType.output: "O",
+    KiPinType.bidirectional: "B",
+    KiPinType.tri_state: "T",
+    KiPinType.passive: "P",
+    KiPinType.free: "U",
+    KiPinType.unspecified: "U",
+    KiPinType.power_in: "W",
+    KiPinType.power_out: "W",
+    KiPinType.open_collector: "C",
+    KiPinType.open_emitter: "E",
+    KiPinType.no_connect: "N",
 }
 
 ki_pin_style_v5_format = {
-    "line": "",
-    "inverted": "I",
-    "clock": "C",
-    "inverted_clock": "F",
-    "input_low": "L",
-    "clock_low": "CL",
-    "output_low": "V",
-    "edge_clock_high": "C",
-    "non_logic": "X",
+    KiPinStyle.line: "",
+    KiPinStyle.inverted: "I",
+    KiPinStyle.clock: "C",
+    KiPinStyle.inverted_clock: "F",
+    KiPinStyle.input_low: "L",
+    KiPinStyle.clock_low: "CL",
+    KiPinStyle.output_low: "V",
+    KiPinStyle.edge_clock_high: "C",
+    KiPinStyle.non_logic: "X",
 }
 
 ki_pin_orientation_v5_format = {"0": "L", "90": "D", "180": "R", "270": "U"}
@@ -320,8 +320,8 @@ class KiSymbolPin:
                 num_sz=KiExportConfigV5.PIN_NUM_SIZE.value,
                 name_sz=KiExportConfigV5.PIN_NAME_SIZE.value,
                 unit_num=1,
-                pin_type=ki_pin_type_v5_format[self.type.name[1:]],
-                pin_style=ki_pin_style_v5_format[self.style.name],
+                pin_type=ki_pin_type_v5_format[self.type],
+                pin_style=ki_pin_style_v5_format[self.style],
             )
         )
 
@@ -333,7 +333,7 @@ class KiSymbolPin:
               (name "{pin_name}" (effects (font (size {name_size} {name_size}))))
               (number "{pin_num}" (effects (font (size {num_size} {num_size}))))
             )""".format(
-            pin_type=self.type.name[1:],
+            pin_type=self.type.name.replace("_", ""),
             pin_style=self.style.name,
             x=self.pos_x,
             y=self.pos_y,

@@ -3,6 +3,7 @@ import logging
 from typing import Callable, List, Tuple, Union
 
 from easyeda2kicad.easyeda.parameters_easyeda import (
+    EasyedaPinType,
     EeSymbol,
     EeSymbolBbox,
     EeSymbolPath,
@@ -14,11 +15,11 @@ from easyeda2kicad.easyeda.parameters_easyeda import (
 from easyeda2kicad.kicad.parameters_kicad_symbol import *
 
 ee_pin_type_to_ki_pin_type = {
-    "_unspecified": KiPinType._unspecified,
-    "_input": KiPinType._input,
-    "_output": KiPinType._output,
-    "_bidirectional": KiPinType._bidirectional,
-    "_power": KiPinType._power_in,
+    EasyedaPinType.unspecified: KiPinType.unspecified,
+    EasyedaPinType._input: KiPinType._input,
+    EasyedaPinType.output: KiPinType.output,
+    EasyedaPinType.bidirectional: KiPinType.bidirectional,
+    EasyedaPinType.power: KiPinType.power_in,
 }
 
 
@@ -47,7 +48,7 @@ def convert_ee_pins(
             name=ee_pin.name.text.replace(" ", ""),
             number=ee_pin.settings.spice_pin_number.replace(" ", ""),
             style=KiPinStyle.line,
-            type=ee_pin_type_to_ki_pin_type[ee_pin.settings.type.name],
+            type=ee_pin_type_to_ki_pin_type[ee_pin.settings.type],
             orientation=ee_pin.settings.rotation,
             pos_x=to_ki(int(ee_pin.settings.pos_x) - int(ee_bbox.x)),
             pos_y=-to_ki(int(ee_pin.settings.pos_y) - int(ee_bbox.y)),
