@@ -5,10 +5,13 @@ with open("README.md") as fh:
 
 setup(
     name="easyeda2kicad",
-    description="A Python script that convert any electronic components from LCSC or EasyEDA to a Kicad library",
+    description=(
+        "A Python script that convert any electronic components from LCSC or EasyEDA to"
+        " a Kicad library"
+    ),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version="0.2.1",
+    version="0.3.0",
     author="uPesy",
     author_email="contact@upesy.com",
     url="https://github.com/uPesy/easyeda2kicad.py",

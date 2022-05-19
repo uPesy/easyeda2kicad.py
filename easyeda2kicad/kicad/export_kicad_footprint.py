@@ -1,18 +1,19 @@
 # Global imports
-from itertools import chain
+import logging
 from math import acos, cos, isnan, pi, sin, sqrt
+from typing import Tuple, Union
 
 from easyeda2kicad.easyeda.parameters_easyeda import ee_footprint
-from easyeda2kicad.kicad.parameters_kicad import *
+from easyeda2kicad.kicad.parameters_kicad_footprint import *
 
 # ---------------------------------------
 
 
-def to_radians(n: float):
+def to_radians(n: float) -> float:
     return (n / 180.0) * pi
 
 
-def to_degrees(n: float):
+def to_degrees(n: float) -> float:
     return (n / pi) * 180.0
 
 
@@ -25,11 +26,11 @@ def compute_arc(
     rx: float,
     ry: float,
     angle: float,
-    largeArcFlag: bool,
-    sweepFlag: bool,
+    large_arc_flag: bool,
+    sweep_flag: bool,
     x: float,
     y: float,
-):
+) -> Tuple[float, float, float]:
 
     # Compute the half distance between the current and the final point
     dx2 = (x0 - x) / 2.0
@@ -37,12 +38,12 @@ def compute_arc(
 
     # Convert angle from degrees to radians
     angle = to_radians(angle % 360.0)
-    cosAngle = cos(angle)
-    sinAngle = sin(angle)
+    cos_angle = cos(angle)
+    sin_angle = sin(angle)
 
     # Step 1 : Compute (x1, y1)
-    x1 = cosAngle * dx2 + sinAngle * dy2
-    y1 = -sinAngle * dx2 + cosAngle * dy2
+    x1 = cos_angle * dx2 + sin_angle * dy2
+    y1 = -sin_angle * dx2 + cos_angle * dy2
 
     # Ensure radii are large enough
     rx = abs(rx)
@@ -62,7 +63,7 @@ def compute_arc(
         Pry = ry * ry
 
     # Step 2 : Compute (cx1, cy1)
-    sign = -1 if largeArcFlag == sweepFlag else 1
+    sign = -1 if large_arc_flag == sweep_flag else 1
     sq = 0
     if Prx * Py1 + Pry * Px1 > 0:
         sq = (Prx * Pry - Prx * Py1 - Pry * Px1) / (Prx * Py1 + Pry * Px1)
@@ -75,10 +76,10 @@ def compute_arc(
     sx2 = (x0 + x) / 2.0
     sy2 = (y0 + y) / 2.0
     # print(x0, x)
-    cx = sx2 + (cosAngle * cx1 - sinAngle * cy1)
-    cy = sy2 + (sinAngle * cx1 + cosAngle * cy1)
+    cx = sx2 + (cos_angle * cx1 - sin_angle * cy1)
+    cy = sy2 + (sin_angle * cx1 + cos_angle * cy1)
 
-    # Step 4 : Compute the angleExtent (dangle)
+    # Step 4 : Compute the angle_extent (dangle)
     ux = (x1 - cx1) / rx if rx != 0 else 0
     uy = (y1 - cy1) / ry if ry != 0 else 0
     vx = (-x1 - cx1) / rx if rx != 0 else 0
@@ -89,27 +90,28 @@ def compute_arc(
     p = ux * vx + uy * vy
     sign = -1 if (ux * vy - uy * vx) < 0 else 1
     if n != 0:
-        angleExtent = to_degrees(sign * acos(p / n)) if abs(p / n) < 1 else 360 + 359
+        angle_extent = to_degrees(sign * acos(p / n)) if abs(p / n) < 1 else 360 + 359
     else:
-        angleExtent = 360 + 359
-    if not (sweepFlag) and angleExtent > 0:
-        angleExtent -= 360
-    elif sweepFlag and angleExtent < 0:
-        angleExtent += 360
+        angle_extent = 360 + 359
+    if not (sweep_flag) and angle_extent > 0:
+        angle_extent -= 360
+    elif sweep_flag and angle_extent < 0:
+        angle_extent += 360
 
-    angleExtent_sign = 1 if angleExtent < 0 else -1
-    angleExtent = (abs(angleExtent) % 360) * angleExtent_sign
-    # angleExtent %= 360
+    angleExtent_sign = 1 if angle_extent < 0 else -1
+    angle_extent = (abs(angle_extent) % 360) * angleExtent_sign
+    # angle_extent %= 360
 
-    return cx, cy, angleExtent
+    return cx, cy, angle_extent
 
 
 # ---------------------------------------
 
 
-def fp_to_ki(dim: float):
+def fp_to_ki(dim: float) -> float:
     if dim not in ["", None] and isnan(float(dim)) is False:
         return round(float(dim) * 10 * 0.0254, 2)
+    return dim
 
 
 # ---------------------------------------
@@ -117,7 +119,7 @@ def fp_to_ki(dim: float):
 
 def drill_to_ki(
     hole_radius: float, hole_length: float, pad_height: float, pad_width: float
-):
+) -> str:
     if (
         hole_radius > 0
         and hole_length != ""
@@ -142,7 +144,7 @@ def drill_to_ki(
 # ---------------------------------------
 
 
-def angle_to_ki(rotation: float):
+def angle_to_ki(rotation: float) -> Union[float, str]:
     if isnan(rotation) is False:
         return -(360 - rotation) if rotation > 180 else rotation
     return ""
@@ -151,7 +153,7 @@ def angle_to_ki(rotation: float):
 # ---------------------------------------
 
 
-def rotate(x: float, y: float, degrees: float):
+def rotate(x: float, y: float, degrees: float) -> Tuple[float, float]:
     radians = (degrees / 180) * 2 * pi
     new_x = x * cos(radians) - y * sin(radians)
     new_y = x * sin(radians) + y * cos(radians)
@@ -161,15 +163,15 @@ def rotate(x: float, y: float, degrees: float):
 # ---------------------------------------
 
 
-class exporter_footprint_kicad:
+class ExporterFootprintKicad:
     def __init__(self, footprint: ee_footprint):
         self.input = footprint
-        if type(self.input) is not ee_footprint:
-            print("Unsupported conversion")
+        if not isinstance(self.input, ee_footprint):
+            logging.error("Unsupported conversion")
         else:
             self.generate_kicad_footprint()
 
-    def generate_kicad_footprint(self):
+    def generate_kicad_footprint(self) -> None:
 
         # Convert dimension from easyeda to kicad
         self.input.bbox.convert_to_mm()
@@ -185,16 +187,16 @@ class exporter_footprint_kicad:
             for field in fields:
                 field.convert_to_mm()
 
-        ki_info = ki_footprint_info(
+        ki_info = KiFootprintInfo(
             name=self.input.info.name, fp_type=self.input.info.fp_type
         )
 
         if self.input.model_3d is not None:
             self.input.model_3d.convert_to_mm()
 
-            ki_3d_model_info = ki_3d_model(
+            ki_3d_model_info = Ki3dModel(
                 name=self.input.model_3d.name,
-                translation=ki_3d_model_base(
+                translation=Ki3dModelBase(
                     # x=round((self.input.model_3d.translation.x - self.input.bbox.x), 2),
                     # y=-round(
                     #     (self.input.model_3d.translation.y - self.input.bbox.y), 2
@@ -207,11 +209,11 @@ class exporter_footprint_kicad:
         else:
             ki_3d_model_info = None
 
-        self.output = ki_footprint(info=ki_info, model_3d=ki_3d_model_info)
+        self.output = KiFootprint(info=ki_info, model_3d=ki_3d_model_info)
 
         # For pads
         for ee_pad in self.input.pads:
-            ki_pad = ki_footprint_pad(
+            ki_pad = KiFootprintPad(
                 type="thru_hole" if ee_pad.hole_radius > 0 else "smd",
                 shape=KI_PAD_SHAPE[ee_pad.shape]
                 if ee_pad.shape in KI_PAD_SHAPE
@@ -239,7 +241,7 @@ class exporter_footprint_kicad:
             point_list = [fp_to_ki(point) for point in ee_pad.points.split(" ")]
             if is_custom_shape:
                 if len(point_list) <= 0:
-                    print(
+                    logging.warning(
                         "PAD ${id} is a polygon, but has no points defined".format(
                             id=ee_pad.id
                         )
@@ -257,13 +259,16 @@ class exporter_footprint_kicad:
                         )
                         for i in range(0, len(point_list), 2)
                     )
-                    ki_pad.polygon = f"\n\t\t(primitives \n\t\t\t(gr_poly \n\t\t\t\t(pts {path}\n\t\t\t\t) \n\t\t\t\t(width 0.1) \n\t\t\t)\n\t\t)\n\t"
+                    ki_pad.polygon = (
+                        "\n\t\t(primitives \n\t\t\t(gr_poly \n\t\t\t\t(pts"
+                        f" {path}\n\t\t\t\t) \n\t\t\t\t(width 0.1) \n\t\t\t)\n\t\t)\n\t"
+                    )
 
             self.output.pads.append(ki_pad)
 
         # For tracks
         for ee_track in self.input.tracks:
-            ki_track = ki_footprint_track(
+            ki_track = KiFootprintTrack(
                 layers=KI_PAD_LAYER[ee_track.layer_id]
                 if ee_track.layer_id in KI_PAD_LAYER
                 else "F.Fab",
@@ -290,7 +295,7 @@ class exporter_footprint_kicad:
 
         # For holes
         for ee_hole in self.input.holes:
-            ki_hole = ki_footprint_hole(
+            ki_hole = KiFootprintHole(
                 pos_x=ee_hole.center_x - self.input.bbox.x,
                 pos_y=ee_hole.center_y - self.input.bbox.y,
                 size=ee_hole.radius * 2,
@@ -300,7 +305,7 @@ class exporter_footprint_kicad:
 
         # For circles
         for ee_circle in self.input.circles:
-            ki_circle = ki_footprint_circle(
+            ki_circle = KiFootprintCircle(
                 cx=ee_circle.cx - self.input.bbox.x,
                 cy=ee_circle.cy - self.input.bbox.y,
                 end_x=0.0,
@@ -316,7 +321,7 @@ class exporter_footprint_kicad:
 
         # For rectangles
         for ee_rectangle in self.input.rectangles:
-            ki_rectangle = ki_footprint_rectangle(
+            ki_rectangle = KiFootprintRectangle(
                 layers=KI_PAD_LAYER[ee_rectangle.layer_id]
                 if ee_rectangle.layer_id in KI_PAD_LAYER
                 else "F.Fab",
@@ -364,8 +369,8 @@ class exporter_footprint_kicad:
             (
                 svg_rx,
                 svg_ry,
-                xAxisRotation,
-                largeArc,
+                x_axis_rotation,
+                large_arc,
                 sweep,
                 end_x,
                 end_y,
@@ -380,8 +385,8 @@ class exporter_footprint_kicad:
                     start_y,
                     rx,
                     ry,
-                    float(xAxisRotation),
-                    largeArc == "1",
+                    float(x_axis_rotation),
+                    large_arc == "1",
                     sweep == "1",
                     end_x,
                     end_y,
@@ -391,7 +396,7 @@ class exporter_footprint_kicad:
                 cy = 0.0
                 extent = 0.0
 
-            ki_arc = ki_footprint_arc(
+            ki_arc = KiFootprintArc(
                 start_x=cx,
                 start_y=cy,
                 end_x=end_x,
@@ -406,7 +411,7 @@ class exporter_footprint_kicad:
 
         # For texts
         for ee_text in self.input.texts:
-            ki_text = ki_footprint_text(
+            ki_text = KiFootprintText(
                 pos_x=ee_text.center_x - self.input.bbox.x,
                 pos_y=ee_text.center_y - self.input.bbox.y,
                 orientation=angle_to_ki(ee_text.rotation),
@@ -427,10 +432,10 @@ class exporter_footprint_kicad:
             ki_text.mirror = " mirror" if ki_text.layers[0] == "B" else ""
             self.output.texts.append(ki_text)
 
-    def get_ki_footprint(self):
+    def get_ki_footprint(self) -> KiFootprint:
         return self.output
 
-    def export(self, output_path: str):
+    def export(self, output_path: str) -> None:
         ki = self.output
         ki_lib = ""
 

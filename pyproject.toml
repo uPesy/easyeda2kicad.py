@@ -1,5 +1,6 @@
 [tool.black]
 line-length = 88
+preview = true
 
 [tool.isort]
 profile = "black"
@@ -12,3 +13,38 @@ import_heading_localfolder="Local imports"
 [tool.pycln]
 include=".*\\.py$"
 exclude="(.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env|)/"
+
+# https://mypy.readthedocs.io/en/stable/config_file.html
+[tool.mypy]
+python_version = 3.8
+ignore_missing_imports = true
+check_untyped_defs = true
+disallow_any_expr = false
+disallow_untyped_calls = false
+ignore_errors = false
+show_error_codes = true
+pretty = true
+
+[tool.pylint.master]
+output-format = "colorized"
+extension-pkg-whitelist = [
+    "pydantic"
+]
+ignore="(.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env|)/"
+
+[tool.pylint.format]
+max-line-length = 88
+
+[tool.pylint.messages_control]
+disable = [
+    "wrong-import-order",
+    "method-hidden",
+    "too-many-lines",
+    "wildcard-import",
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "logging-fstring-interpolation",
+
+
+]
