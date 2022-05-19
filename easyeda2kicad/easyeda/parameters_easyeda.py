@@ -7,11 +7,11 @@ from pydantic import BaseModel, validator
 
 
 class EasyedaPinType(Enum):
-    _unspecified = 0
+    unspecified = 0
     _input = 1
-    _output = 2
-    _bidirectional = 3
-    _power = 4
+    output = 2
+    bidirectional = 3
+    power = 4
 
 
 # ------------------------- Symbol -------------------------

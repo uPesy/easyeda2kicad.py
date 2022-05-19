@@ -148,8 +148,6 @@ class EasyedaSymbolImporter:
     def tune_ee_path(self, path: EeSymbolPath) -> EeSymbolPath:
         return path
 
-    # ---------------------------------------
-
 
 # ------------------------------------------------------------------------------
 
