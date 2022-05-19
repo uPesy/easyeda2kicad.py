@@ -170,7 +170,7 @@ class EasyedaFootprintImporter:
             info=EeFootprintInfo(
                 name=ee_data_info["package"],
                 fp_type="smd" if "SMT" in ee_data_info else "tht",
-                model_3d_name=ee_data_info["3DModel"],
+                model_3d_name=ee_data_info.get("3DModel"),
             ),
             bbox=EeFootprintBbox(
                 x=float(ee_data_str["head"]["x"]),
@@ -240,17 +240,20 @@ class Easyeda3dModelImporter:
         self.input = easyeda_cp_cad_data
         self.output = self.create_3d_model()
 
-    def create_3d_model(self) -> Ee3dModel:
+    def create_3d_model(self) -> Union[Ee3dModel, None]:
         ee_data = (
             self.input["packageDetail"]["dataStr"]["shape"]
             if isinstance(self.input, dict)
             else self.input
         )
-        model_3d: Ee3dModel = self.parse_3d_model_info(
-            info=self.get_3d_model_info(ee_data=ee_data)
-        )
-        model_3d.raw_obj = EasyedaApi().get_raw_3d_model_obj(uuid=model_3d.uuid)
-        return model_3d
+
+        if model_3d_info := self.get_3d_model_info(ee_data=ee_data):
+            model_3d: Ee3dModel = self.parse_3d_model_info(info=model_3d_info)
+            model_3d.raw_obj = EasyedaApi().get_raw_3d_model_obj(uuid=model_3d.uuid)
+            return model_3d
+
+        logging.warning("There is no 3D model for this component")
+        return None
 
     def get_3d_model_info(self, ee_data: str) -> dict:
         for line in ee_data:

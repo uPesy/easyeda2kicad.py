@@ -11,7 +11,7 @@ _________________
 _________________
 
 
-A Python script that convert any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a Kicad library including **3D model** in color. **It supports Kicad v6.x and Kicad v5.x library format.**
+A Python script that convert any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a Kicad library including **3D model** in color. **It supports library format for both Kicad v6.x and Kicad v5.x.**
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/demo_symbol.png" width="500">
