@@ -11,7 +11,7 @@ _________________
 _________________
 
 
-A Python script that convert any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a Kicad library including **3D model in color**.
+A Python script that convert any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a Kicad library including **3D model** in color. **It supports Kicad v6.x and Kicad v5.x library format.**
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/demo_symbol.png" width="500">
@@ -42,10 +42,13 @@ easyeda2kicad --symbol --lcsc_id=C2040
 easyeda2kicad --footprint --lcsc_id=C2040
 # For 3d model only
 easyeda2kicad --3d --lcsc_id=C2040
+# For symbol in Kicad v5.x legacy format
+easyeda2kicad --symbol --lcsc_id=C2040 --v5
 ```
 
 By default, all librairies are saved in `C:/Users/your_name/Documents/Kicad/easyeda2kicad/`, with :
-- `easyeda2kicad.lib` for symbol library
+- `easyeda2kicad.kicad_sym` for Kicad v6.x symbol library
+- `easyeda2kicad.lib` for Kicad v5.x legacy symbol library
 - `easyeda2kicad.pretty/` for footprint libraries
 - `easyeda2kicad.3dshapes/` for 3d models
 
@@ -56,7 +59,7 @@ easyeda2kicad --full --lcsc_id=C2040 --output ~/libs/my_lib
 ```
 
 This command will save:
-- the symbol in `~/libs/my_lib.lib` file for symbol library. The file will be created if it doesn't exist.
+- the symbol in `~/libs/my_lib.kicad_sym` file for symbol library. The file will be created if it doesn't exist.
 - the footprint in `~/libs/my_lib.pretty/` folder for footprint libraries. The folder will be created if it doesn't exist.
 - the 3d models in `~/libs/my_lib.3dshapes/` folder for 3d models. The folder will be created if it doesn't exist.
 
@@ -64,6 +67,12 @@ You can use the option `--overwrite` to update a component symbol/footprint that
 
 ```bash
 easyeda2kicad --symbol --footprint --lcsc_id=C2040 --output ~/libs/my_lib --overwrite
+```
+
+By default, easyeda2kicad will generate a symbol library for Kicad v6.x (.kicad_sym). You can generate a symbol lib in legacy format for Kicad v5.x (.lib) using `--v5` argument.
+
+```bash
+easyeda2kicad --symbol --lcsc_id=C2040 --v5
 ```
 
 ## Add libraries in Kicad
@@ -78,13 +87,6 @@ easyeda2kicad --symbol --footprint --lcsc_id=C2040
 - In KiCad, Go to Preferences > Configure Paths, and add the environment variables `EASYEDA2KICAD` :
   - Windows : `C:/Users/your_username/Documents/Kicad/easyeda2kicad/`,
   - Linux : `/home/your_username/Documents/Kicad/easyeda2kicad/`
-- Go to Preferences > Manage Symbol Libraries, and Add the global library `easyeda2kicad` : `${EASYEDA2KICAD}/easyeda2kicad.lib`
+- Go to Preferences > Manage Symbol Libraries, and Add the global library `easyeda2kicad` : `${EASYEDA2KICAD}/easyeda2kicad.kicad_sym`
 - Go to Preferences > Manage Footprint Libraries, and Add the global library `easyeda2kicad` : `${EASYEDA2KICAD}/easyeda2kicad.pretty`
 - Enjoy :wink:
-
-
-## Inspirations
-
-- [KiPart](https://github.com/devbisme/KiPart) - A utility that generates single
-and multi-unit symbols from a CSV file containing all the pin information for
-one or more parts.
