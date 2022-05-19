@@ -193,7 +193,7 @@ def fp_already_in_footprint_lib(lib_path: str, package_name: str) -> bool:
     return False
 
 
-def main(argv: List[str]) -> int:
+def main(argv: List[str] = sys.argv[1:]) -> int:
 
     set_logger(log_file=None, log_level=logging.INFO)
 
