@@ -97,7 +97,7 @@ def generate_wrl_model(model_3d: Ee3dModel) -> Ki3dModel:
                             {(", ").join(points)}
                         ]
                     }}
-                    coord_index [
+                    coordIndex [
                         {"".join(coord_index)}
                     ]
                 }}
