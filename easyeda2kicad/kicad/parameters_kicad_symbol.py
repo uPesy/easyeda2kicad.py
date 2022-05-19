@@ -6,8 +6,6 @@ from dataclasses import dataclass, field, fields
 from enum import Enum, auto
 from typing import List, Union
 
-# ---------------- CONFIG ----------------
-
 
 class KicadVersion(Enum):
     v5 = auto()
