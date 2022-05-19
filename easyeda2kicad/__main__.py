@@ -68,7 +68,6 @@ def get_parser() -> argparse.ArgumentParser:
         metavar="file.lib",
         help="Output file",
         type=str,
-        # default=
     )
 
     parser.add_argument(
