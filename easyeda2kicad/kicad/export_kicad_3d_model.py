@@ -6,6 +6,7 @@ from __future__ import annotations
 
 # Global imports
 import re
+import textwrap
 
 from easyeda2kicad.easyeda.parameters_easyeda import Ee3dModel
 from easyeda2kicad.kicad.parameters_kicad_footprint import Ki3dModel
@@ -78,7 +79,8 @@ def generate_wrl_model(model_3d: Ee3dModel) -> Ki3dModel:
                 coord_index.append(",".join(face_index) + ",")
         points.insert(-1, points[-1])
 
-        shape_str = f"""
+        shape_str = textwrap.dedent(
+            f"""
             Shape{{
                 appearance Appearance {{
                     material  Material 	{{
@@ -102,6 +104,7 @@ def generate_wrl_model(model_3d: Ee3dModel) -> Ki3dModel:
                     ]
                 }}
             }}"""
+        )
 
         raw_wrl += shape_str
 
