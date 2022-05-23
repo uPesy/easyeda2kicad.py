@@ -1,4 +1,4 @@
-# easyeda2kicad v0.3.3
+# easyeda2kicad v0.3.4
 
 _________________
 [![PyPI version](https://badge.fury.io/py/easyeda2kicad.svg)](https://badge.fury.io/py/easyeda2kicad)
@@ -21,13 +21,13 @@ A Python script that convert any electronic components from [EasyEDA](https://ea
 </div>
 
 
-## Installation
+## 💾 Installation
 
 ```bash
 pip install easyeda2kicad
 ```
 
-## Usage
+## 💻 Usage
 
 ```bash
 # For symbol + footprint + 3d model (with --full argument)
@@ -75,7 +75,7 @@ By default, easyeda2kicad will generate a symbol library for Kicad v6.x (.kicad_
 easyeda2kicad --symbol --lcsc_id=C2040 --v5
 ```
 
-## Add libraries in Kicad
+## 🔗 Add libraries in Kicad
 
 **These are the instructions to add the default easyeda2kicad libraries in Kicad.**
 Before configuring KiCad, run at least once time the script to create lib files. For example :
@@ -90,3 +90,12 @@ easyeda2kicad --symbol --footprint --lcsc_id=C2040
 - Go to Preferences > Manage Symbol Libraries, and Add the global library `easyeda2kicad` : `${EASYEDA2KICAD}/easyeda2kicad.kicad_sym`
 - Go to Preferences > Manage Footprint Libraries, and Add the global library `easyeda2kicad` : `${EASYEDA2KICAD}/easyeda2kicad.pretty`
 - Enjoy :wink:
+
+## 🔥 Important Notes
+### WARRANTY
+The correctness of the symbols and footprints converted by easyeda2kicad can't be garanteed. Easyeda2kicad speed up custom library design process, but you should kept careful and always double check the footprints and symbols generated.
+
+### Usage
+
+- We FORBID the illegal use of converting others files and libraries with the distribution of this program.
+- We FORBID the use that is outside the EasyEDA Terms of Use with the distribution of this program.

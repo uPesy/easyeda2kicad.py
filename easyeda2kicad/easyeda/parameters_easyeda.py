@@ -192,6 +192,23 @@ class EeSymbolPath(BaseModel):
     #     return paths.replace("M", "").replace("C","")
 
 
+class EeSymbolEllipse(BaseModel):
+    center_x: float
+    center_y: float
+    radius_x: float
+    radius_y: float
+    stroke_color: str
+    stroke_width: str
+    stroke_style: str
+    fill_color: str
+    id: str
+    is_locked: bool
+
+    @validator("is_locked", pre=True)
+    def empty_str_lock(cls, field: str) -> str:
+        return field or False
+
+
 # ---------------- SYMBOL ----------------
 @dataclass
 class EeSymbolInfo:
