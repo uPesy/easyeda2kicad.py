@@ -84,20 +84,16 @@ def update_component_in_symbol_lib_file(
 def add_component_in_symbol_lib_file(
     lib_path: str, component_content: str, kicad_version: KicadVersion
 ) -> None:
-    lib_header = textwrap.dedent(
-        """
-        )"""
-    )
 
     if kicad_version == KicadVersion.v5:
         with open(file=lib_path, mode="a+", encoding="utf-8") as lib_file:
             lib_file.write(component_content)
     elif kicad_version == KicadVersion.v6:
         with open(file=lib_path, mode="rb+") as lib_file:
-            lib_file.seek(-len(lib_header), 2)
+            lib_file.seek(-2, 2)
             lib_file.truncate()
             lib_file.write(component_content.encode(encoding="utf-8"))
-            lib_file.write(lib_header.encode(encoding="utf-8"))
+            lib_file.write("\n)".encode(encoding="utf-8"))
 
         with open(file=lib_path, encoding="utf-8") as lib_file:
             new_lib_data = lib_file.read()
