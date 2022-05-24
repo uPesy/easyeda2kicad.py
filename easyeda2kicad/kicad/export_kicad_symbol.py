@@ -31,6 +31,10 @@ def px_to_mm(dim: int) -> float:
     return 10.0 * dim * 0.0254
 
 
+def sanitize_fields(name: str) -> str:
+    return name.replace(" ", "").replace("/", "_")
+
+
 def convert_ee_pins(
     ee_pins: List[EeSymbolPin], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
 ) -> List[KiSymbolPin]:
@@ -202,8 +206,8 @@ def convert_ee_paths(
 def convert_to_kicad(ee_symbol: EeSymbol, kicad_version: KicadVersion) -> KiSymbol:
 
     ki_info = KiSymbolInfo(
-        name=ee_symbol.info.name.replace(" ", ""),
-        prefix=ee_symbol.info.prefix.replace(" ", ""),
+        name=sanitize_fields(ee_symbol.info.name),
+        prefix=sanitize_fields(ee_symbol.info.prefix),
         package=ee_symbol.info.package,
         manufacturer=ee_symbol.info.manufacturer,
         datasheet=ee_symbol.info.datasheet,
