@@ -96,6 +96,10 @@ ki_box_fill_v5_format = {
 }
 
 
+def sanitize_fields(name: str) -> str:
+    return name.replace(" ", "").replace("/", "_")
+
+
 # Config V6
 # Dimensions are in mm
 class KiExportConfigV6(Enum):
@@ -127,7 +131,7 @@ class KiSymbolInfo:
         header: List[str] = [
             "DEF {name} {ref} 0 {pin_name_offset} {show_pin_number} {show_pin_name}"
             " {num_units} L N".format(
-                name=self.name,
+                name=sanitize_fields(self.name),
                 ref=self.prefix,
                 pin_name_offset=KiExportConfigV5.PIN_NAME_OFFSET.value,
                 show_pin_number="Y",
@@ -414,9 +418,7 @@ class KiSymbolPolygon:
               (stroke (width {line_width}) (type default) (color 0 0 0 0))
               (fill (type {fill}))
             )""".format(
-            polyline_path="\n".join(
-                [f"    (xy {pts[0]} {pts[1]})" for pts in self.points]
-            ),
+            polyline_path=" ".join([f"(xy {pts[0]} {pts[1]})" for pts in self.points]),
             line_width=KiExportConfigV6.DEFAULT_BOX_LINE_WIDTH.value,
             fill=KiBoxFill.background.name if self.is_closed else KiBoxFill.none.name,
         )
@@ -540,9 +542,7 @@ class KiSymbolBezier:
               (stroke (width {line_width}) (type default) (color 0 0 0 0))
               (fill (type {fill}))
             )""".format(
-            polyline_path="\n".join(
-                [f"    (xy {pts[0]} {pts[1]})" for pts in self.points]
-            ),
+            polyline_path="".join([f" (xy {pts[0]} {pts[1]})" for pts in self.points]),
             line_width=KiExportConfigV6.DEFAULT_BOX_LINE_WIDTH.value,
             fill=KiBoxFill.background.name if self.is_closed else KiBoxFill.none.name,
         )
@@ -586,7 +586,7 @@ class KiSymbol:
 
         return (
             "#\n#"
-            f" {self.info.name}\n#\n{sym_info}{''.join(sym_graphic_items)}ENDDRAW\nENDDEF\n"
+            f" {sanitize_fields(self.info.name)}\n#\n{sym_info}{''.join(sym_graphic_items)}ENDDRAW\nENDDEF\n"
         )
 
     def export_v6(self):
@@ -610,7 +610,7 @@ class KiSymbol:
             ),
             "  ",
         ).format(
-            library_id=self.info.name,
+            library_id=sanitize_fields(self.info.name),
             symbol_properties=textwrap.indent(
                 textwrap.dedent("".join(sym_info)), "  " * 2
             ),

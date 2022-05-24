@@ -2,7 +2,7 @@
 import logging
 import re
 
-from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion
+from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion, sanitize_fields
 
 sym_lib_regex_pattern = {
     "v5": r"(#\n# {component_name}\n#\n.*?ENDDEF\n)",
@@ -43,7 +43,7 @@ def id_already_in_symbol_lib(
         current_lib = lib_file.read()
         component = re.findall(
             sym_lib_regex_pattern[kicad_version.name].format(
-                component_name=component_name
+                component_name=sanitize_fields(component_name)
             ),
             current_lib,
             flags=re.DOTALL,
@@ -83,6 +83,7 @@ def update_component_in_symbol_lib_file(
 def add_component_in_symbol_lib_file(
     lib_path: str, component_content: str, kicad_version: KicadVersion
 ) -> None:
+
     if kicad_version == KicadVersion.v5:
         with open(file=lib_path, mode="a+", encoding="utf-8") as lib_file:
             lib_file.write(component_content)
