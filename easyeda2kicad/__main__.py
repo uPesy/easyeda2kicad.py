@@ -275,7 +275,9 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     if arguments["3d"]:
         logging.info(f"Creating 3D model for LCSC id : {component_id}")
         exporter = Exporter3dModelKicad(
-            model_3d=Easyeda3dModelImporter(easyeda_cp_cad_data=cad_data).output
+            model_3d=Easyeda3dModelImporter(
+                easyeda_cp_cad_data=cad_data, download_raw_3d_model=True
+            ).output
         ).export(lib_path=arguments["output"])
 
     return 0

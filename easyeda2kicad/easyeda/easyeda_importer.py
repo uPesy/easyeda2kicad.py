@@ -219,7 +219,7 @@ class EasyedaFootprintImporter:
                 new_ee_footprint.texts.append(ee_text)
             elif ee_designator == "SVGNODE":
                 new_ee_footprint.model_3d = Easyeda3dModelImporter(
-                    easyeda_cp_cad_data=[line]
+                    easyeda_cp_cad_data=[line], download_raw_3d_model=False
                 ).output
 
             elif ee_designator == "SOLIDREGION":
@@ -234,8 +234,9 @@ class EasyedaFootprintImporter:
 
 
 class Easyeda3dModelImporter:
-    def __init__(self, easyeda_cp_cad_data):
+    def __init__(self, easyeda_cp_cad_data, download_raw_3d_model: bool):
         self.input = easyeda_cp_cad_data
+        self.download_raw_3d_model = download_raw_3d_model
         self.output = self.create_3d_model()
 
     def create_3d_model(self) -> Union[Ee3dModel, None]:
@@ -247,10 +248,11 @@ class Easyeda3dModelImporter:
 
         if model_3d_info := self.get_3d_model_info(ee_data=ee_data):
             model_3d: Ee3dModel = self.parse_3d_model_info(info=model_3d_info)
-            model_3d.raw_obj = EasyedaApi().get_raw_3d_model_obj(uuid=model_3d.uuid)
+            if self.download_raw_3d_model:
+                model_3d.raw_obj = EasyedaApi().get_raw_3d_model_obj(uuid=model_3d.uuid)
             return model_3d
 
-        logging.warning("There is no 3D model for this component")
+        logging.warning("There is no 3D model data for this component")
         return None
 
     def get_3d_model_info(self, ee_data: str) -> dict:
