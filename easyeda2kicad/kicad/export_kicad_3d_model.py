@@ -116,7 +116,9 @@ def generate_wrl_model(model_3d: Ee3dModel) -> Ki3dModel:
 class Exporter3dModelKicad:
     def __init__(self, model_3d: Ee3dModel):
         self.input = model_3d
-        self.output = generate_wrl_model(model_3d=model_3d) if model_3d else None
+        self.output = (
+            generate_wrl_model(model_3d=model_3d) if model_3d.raw_obj else None
+        )
 
     def export(self, lib_path: str) -> None:
         if self.output:
