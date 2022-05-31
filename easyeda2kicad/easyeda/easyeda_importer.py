@@ -234,10 +234,10 @@ class EasyedaFootprintImporter:
 
 
 class Easyeda3dModelImporter:
-    def __init__(self, easyeda_cp_cad_data, download_raw_3d_model:bool):
+    def __init__(self, easyeda_cp_cad_data, download_raw_3d_model: bool):
         self.input = easyeda_cp_cad_data
         self.download_raw_3d_model = download_raw_3d_model
-        self.output = self.create_3d_model()        
+        self.output = self.create_3d_model()
 
     def create_3d_model(self) -> Union[Ee3dModel, None]:
         ee_data = (
