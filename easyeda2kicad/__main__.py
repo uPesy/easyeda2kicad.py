@@ -7,6 +7,7 @@ import sys
 from textwrap import dedent
 from typing import List
 
+from easyeda2kicad import __version__
 from easyeda2kicad.easyeda.easyeda_api import EasyedaApi
 from easyeda2kicad.easyeda.easyeda_importer import (
     Easyeda3dModelImporter,
@@ -192,6 +193,7 @@ def fp_already_in_footprint_lib(lib_path: str, package_name: str) -> bool:
 
 
 def main(argv: List[str] = sys.argv[1:]) -> int:
+    print(f"-- easyeda2kicad.py v{__version__} --")
 
     set_logger(log_file=None, log_level=logging.INFO)
 
@@ -206,7 +208,6 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     if not valid_arguments(arguments=arguments):
         return 1
 
-    print("-- easyeda2kicad.py --")
     component_id = arguments["lcsc_id"]
     kicad_version = arguments["kicad_version"]
     sym_lib_ext = "kicad_sym" if kicad_version == KicadVersion.v6 else "lib"
