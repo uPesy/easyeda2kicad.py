@@ -18,7 +18,6 @@ class EasyedaApi:
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "User-Agent": f"easyeda2kicad v{__version__}",
         }
-        print(self.headers)
 
     def get_info_from_easyeda_api(self, lcsc_id: str) -> dict:
         r = requests.get(url=API_ENDPOINT.format(lcsc_id=lcsc_id), headers=self.headers)
