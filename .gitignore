@@ -3,6 +3,7 @@ output_lib/*
 scripts/*
 .vscode/*
 *.sqlite3
+TODO
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
