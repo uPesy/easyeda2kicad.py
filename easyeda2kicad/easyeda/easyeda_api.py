@@ -3,6 +3,8 @@ import logging
 
 import requests
 
+from easyeda2kicad import __version__
+
 API_ENDPOINT = "https://easyeda.com/api/products/{lcsc_id}/components?version=6.4.19.5"
 ENDPOINT_3D_MODEL = "https://easyeda.com/analyzer/api/3dmodel/{uuid}"
 # ------------------------------------------------------------
@@ -14,10 +16,7 @@ class EasyedaApi:
             "Accept-Encoding": "gzip, deflate",
             "Accept": "application/json, text/javascript, */*; q=0.01",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,"
-                " like Gecko) Chrome/91.0.4472.114 Safari/537.36"
-            ),
+            "User-Agent": f"easyeda2kicad v{__version__}",
         }
 
     def get_info_from_easyeda_api(self, lcsc_id: str) -> dict:
@@ -44,6 +43,6 @@ class EasyedaApi:
             headers={"User-Agent": self.headers["User-Agent"]},
         )
         if r.status_code != requests.codes.ok:
-            logging.warning(f"No 3D model found for uuid:{uuid}")
+            logging.error(f"No 3D model data found for uuid:{uuid} on easyeda")
             return None
         return r.content.decode()
