@@ -252,7 +252,7 @@ class Easyeda3dModelImporter:
                 model_3d.raw_obj = EasyedaApi().get_raw_3d_model_obj(uuid=model_3d.uuid)
             return model_3d
 
-        logging.warning("There is no 3D model data for this component")
+        logging.warning("No 3D model available for this component")
         return None
 
     def get_3d_model_info(self, ee_data: str) -> dict:
