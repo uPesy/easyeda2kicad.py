@@ -229,6 +229,15 @@ class KiSymbolInfo:
                 style="",
                 hide="",
             ),
+            property_template.format(
+                key="MPN",
+                value=self.name,
+                id_=7,
+                pos_y=self.y_low - field_offset_y,
+                font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
+                style="",
+                hide="true",
+            ),
         ]
         if self.package:
             field_offset_y += KiExportConfigV6.FIELD_OFFSET_INCREMENT.value
