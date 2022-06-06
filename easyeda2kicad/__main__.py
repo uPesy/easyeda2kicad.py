@@ -232,10 +232,11 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     # Get CAD data of the component using easyeda API
     api = EasyedaApi()
     cad_data = api.get_cad_data_of_component(lcsc_id=component_id)
+    comp_details = api.get_details_of_component(lcsc_id=cad_data['lcsc']['id'])
 
     # ---------------- SYMBOL ----------------
     if arguments["symbol"]:
-        importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data)
+        importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data, easyeda_cp_details=comp_details)
         easyeda_symbol: EeSymbol = importer.get_symbol()
 
         is_id_already_in_symbol_lib = id_already_in_symbol_lib(

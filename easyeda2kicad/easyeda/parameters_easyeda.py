@@ -215,6 +215,7 @@ class EeSymbolInfo:
     name: str = ""
     prefix: str = ""
     package: str = ""
+    description: str = ""
     manufacturer: str = ""
     datasheet: str = ""
     lcsc_id: str = ""
