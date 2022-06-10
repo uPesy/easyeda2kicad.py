@@ -17,6 +17,7 @@ from easyeda2kicad.easyeda.easyeda_importer import (
 from easyeda2kicad.easyeda.parameters_easyeda import EeSymbol
 from easyeda2kicad.helpers import (
     add_component_in_symbol_lib_file,
+    get_local_config,
     id_already_in_symbol_lib,
     set_logger,
     update_component_in_symbol_lib_file,
@@ -66,7 +67,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output",
         required=False,
-        metavar="file.lib",
+        metavar="file.kicad_sym",
         help="Output file",
         type=str,
     )
@@ -85,6 +86,13 @@ def get_parser() -> argparse.ArgumentParser:
         "--v5",
         required=False,
         help="Convert library in legacy format for KiCad 5.x",
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--project-relative",
+        required=False,
+        help="Sets the 3D file path stored relative to the project",
         action="store_true",
     )
 
@@ -111,6 +119,16 @@ def valid_arguments(arguments: dict) -> bool:
     kicad_version = KicadVersion.v5 if arguments.get("v5") else KicadVersion.v6
     arguments["kicad_version"] = kicad_version
 
+    if arguments["project_relative"] and not arguments["output"]:
+        logging.error(
+            "A project specific library path should be given with --output option when"
+            " using --project-relative option\nFor example: easyeda2kicad"
+            " --lcsc_id=C2040 --full"
+            " --output=C:/Users/your_username/Documents/Kicad/6.0/projects/my_project"
+            " --project-relative"
+        )
+        return False
+
     if arguments["output"]:
         base_folder = "/".join(arguments["output"].replace("\\", "/").split("/")[:-1])
         lib_name = (
@@ -122,7 +140,7 @@ def valid_arguments(arguments: dict) -> bool:
         )
 
         if not os.path.isdir(base_folder):
-            logging.error("Can't find the folder")
+            logging.error(f"Can't find the folder : {base_folder}")
             return False
     else:
         default_folder = os.path.join(
@@ -208,6 +226,8 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     if not valid_arguments(arguments=arguments):
         return 1
 
+    # conf = get_local_config()
+
     component_id = arguments["lcsc_id"]
     kicad_version = arguments["kicad_version"]
     sym_lib_ext = "kicad_sym" if kicad_version == KicadVersion.v6 else "lib"
@@ -215,6 +235,11 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     # Get CAD data of the component using easyeda API
     api = EasyedaApi()
     cad_data = api.get_cad_data_of_component(lcsc_id=component_id)
+
+    # API returned no data
+    if not cad_data:
+        logging.error(f"Failed to fetch data from EasyEDA API for part {component_id}")
+        return 1
 
     # ---------------- SYMBOL ----------------
     if arguments["symbol"]:
@@ -269,7 +294,8 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
 
         logging.info(f"Creating Kicad footprint library for LCSC id : {component_id}")
         ExporterFootprintKicad(footprint=easyeda_footprint).export(
-            output_path=arguments["output"]
+            output_path=arguments["output"],
+            is_project_relative=arguments["project_relative"],
         )
 
     # ---------------- 3D MODEL ----------------
