@@ -1,7 +1,11 @@
 # Global imports
+import json
 import logging
+import os
 import re
+from datetime import datetime
 
+from easyeda2kicad import __version__
 from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion, sanitize_fields
 
 sym_lib_regex_pattern = {
@@ -104,3 +108,20 @@ def add_component_in_symbol_lib_file(
                     "(generator https://github.com/uPesy/easyeda2kicad.py)",
                 )
             )
+
+
+def get_local_config() -> dict:
+    if not os.path.isfile("easyeda2kicad_config.json"):
+        with open(file="easyeda2kicad_config.json", mode="w", encoding="utf-8") as conf:
+            json.dump(
+                {"updated_at": datetime.utcnow().timestamp(), "version": __version__},
+                conf,
+                indent=4,
+                ensure_ascii=False,
+            )
+        logging.info("Create easyeda2kicad_config.json config file")
+
+    with open(file="easyeda2kicad_config.json", encoding="utf-8") as conf:
+        local_conf: dict = json.load(conf)
+
+    return local_conf
