@@ -121,7 +121,7 @@ def valid_arguments(arguments: dict) -> bool:
 
     if arguments["project_relative"] and not arguments["output"]:
         logging.error(
-            "A project specific library path should be given with --ouput option when"
+            "A project specific library path should be given with --output option when"
             " using --project-relative option\nFor example: easyeda2kicad"
             " --lcsc_id=C2040 --full"
             " --output=C:/Users/your_username/Documents/Kicad/6.0/projects/my_project"
