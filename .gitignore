@@ -4,6 +4,7 @@ scripts/*
 .vscode/*
 *.sqlite3
 TODO
+easyeda2kicad_config.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
