@@ -218,7 +218,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
 
     # API returned no data
     if not cad_data:
-        logging.error(f"Failed to fetch data from LCSC API for part {component_id}")
+        logging.error(f"Failed to fetch data from EasyEDA API for part {component_id}")
         return 1
 
     # ---------------- SYMBOL ----------------
