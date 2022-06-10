@@ -236,6 +236,11 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     api = EasyedaApi()
     cad_data = api.get_cad_data_of_component(lcsc_id=component_id)
 
+    # API returned no data
+    if not cad_data:
+        logging.error(f"Failed to fetch data from EasyEDA API for part {component_id}")
+        return 1
+
     # ---------------- SYMBOL ----------------
     if arguments["symbol"]:
         importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data)
