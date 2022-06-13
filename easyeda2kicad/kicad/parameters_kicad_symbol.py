@@ -435,7 +435,7 @@ class KiSymbolCircle:
         return "C {pos_x} {pos_y} {radius} {unit_num} 1 {line_width} {fill}\n".format(
             pos_x=self.pos_x,
             pos_y=self.pos_y,
-            radius=self.radius,
+            radius=int(self.radius),
             unit_num=1,
             line_width=KiExportConfigV5.DEFAULT_BOX_LINE_WIDTH.value,
             fill=ki_box_fill_v5_format[KiBoxFill.background],

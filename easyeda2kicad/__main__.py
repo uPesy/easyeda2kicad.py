@@ -96,6 +96,14 @@ def get_parser() -> argparse.ArgumentParser:
         action="store_true",
     )
 
+    parser.add_argument(
+        "--debug",
+        help="set the logging level to debug",
+        required=False,
+        default=False,
+        action="store_true",
+    )
+
     return parser
 
 
@@ -213,8 +221,6 @@ def fp_already_in_footprint_lib(lib_path: str, package_name: str) -> bool:
 def main(argv: List[str] = sys.argv[1:]) -> int:
     print(f"-- easyeda2kicad.py v{__version__} --")
 
-    set_logger(log_file=None, log_level=logging.INFO)
-
     # cli interface
     parser = get_parser()
     try:
@@ -222,6 +228,11 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     except SystemExit as err:
         return err.code
     arguments = vars(args)
+
+    if arguments["debug"]:
+        set_logger(log_file=None, log_level=logging.DEBUG)
+    else:
+        set_logger(log_file=None, log_level=logging.INFO)
 
     if not valid_arguments(arguments=arguments):
         return 1
