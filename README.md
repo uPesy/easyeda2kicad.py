@@ -11,7 +11,7 @@ _________________
 _________________
 
 
-A Python script that convert any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a Kicad library including **3D model** in color. **It supports library format for both Kicad v6.x and Kicad v5.x.**
+A Python script that convert any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a Kicad library including **3D model** in color. This tool will speed up your PCB design workflow especially when using [JLCPCB SMT assembly services](https://jlcpcb.com/caa). **It supports library format for both Kicad v6.x and Kicad v5.x.**
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/demo_symbol.png" width="500">
@@ -19,6 +19,26 @@ A Python script that convert any electronic components from [EasyEDA](https://ea
 <div align="center">
   <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/demo_footprint.png" width="500">
 </div>
+
+
+## 🎆 Sponsor and Support
+A big thanks to [JLCPCB](https://jlcpcb.com/caa) for sponsoring this project !
+
+<!-- <div align="center">
+  <a href="https://jlcpcb.com/caa"><img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/jlcpcb_banner.png" width="750"></a>
+</div> -->
+
+<div align="center">
+  <a href="https://jlcpcb.com/caa"><img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/jlcpcb_banner.png" width="750"></a>
+</div>
+
+If this tool save you a lot of time when designing a PCB, please consider to support the project by :
+- using my link on your first order on JLCPCB : https://jlcpcb.com/caa
+- buying me a coffee :
+
+  <a href="https://www.buymeacoffee.com/upesy" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" height="30px"/></a>
+  <a href="https://ko-fi.com/upesy" target="_blank"><img src="https://ko-fi.com/img/githubbutton_sm.svg" height="30px"/></a>
+  <a href="https://github.com/sponsors/uPesy" target="_blank"><img src="https://img.shields.io/badge/-Github Sponsor-fafbfc?style=flat&logo=GitHub%20Sponsors" height="30px"/></a>
 
 
 ## 💾 Installation
