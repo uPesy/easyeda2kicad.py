@@ -113,7 +113,7 @@ easyeda2kicad --symbol --footprint --lcsc_id=C2040
 
 ## 🔥 Important Notes
 ### WARRANTY
-The correctness of the symbols and footprints converted by easyeda2kicad can't be garanteed. Easyeda2kicad speed up custom library design process, but you should kept careful and always double check the footprints and symbols generated.
+The correctness of the symbols and footprints converted by easyeda2kicad can't be guaranteed. Easyeda2kicad speed up custom library design process, but you should kept careful and always double check the footprints and symbols generated.
 
 ### Usage
 
