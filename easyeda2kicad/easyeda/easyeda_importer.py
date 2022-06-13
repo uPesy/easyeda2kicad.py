@@ -6,6 +6,105 @@ from easyeda2kicad.easyeda.easyeda_api import EasyedaApi
 from easyeda2kicad.easyeda.parameters_easyeda import *
 
 
+def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
+    segments = pin_data.split("^^")
+    ee_segments = [seg.split("~") for seg in segments]
+
+    pin_settings = EeSymbolPinSettings(
+        **dict(zip(EeSymbolPinSettings.__fields__, ee_segments[0][1:]))
+    )
+    pin_dot = EeSymbolPinDot(
+        dot_x=float(ee_segments[1][0]), dot_y=float(ee_segments[1][1])
+    )
+    pin_path = EeSymbolPinPath(path=ee_segments[2][0], color=ee_segments[2][1])
+    pin_name = EeSymbolPinName(
+        **dict(zip(EeSymbolPinName.__fields__, ee_segments[3][:]))
+    )
+
+    pin_dot_bis = EeSymbolPinDotBis(
+        is_displayed=ee_segments[5][0],
+        circle_x=float(ee_segments[5][1]),
+        circle_y=float(ee_segments[5][2]),
+    )
+    pin_clock = EeSymbolPinClock(is_displayed=ee_segments[6][0], path=ee_segments[6][1])
+
+    ee_symbol.pins.append(
+        EeSymbolPin(
+            settings=pin_settings,
+            pin_dot=pin_dot,
+            pin_path=pin_path,
+            name=pin_name,
+            dot=pin_dot_bis,
+            clock=pin_clock,
+        )
+    )
+
+
+def add_easyeda_rectangle(rectangle_data: str, ee_symbol: EeSymbol):
+    ee_symbol.rectangles.append(
+        EeSymbolRectangle(
+            **dict(zip(EeSymbolRectangle.__fields__, rectangle_data.split("~")[1:]))
+        )
+    )
+
+
+def add_easyeda_polyline(polyline_data: str, ee_symbol: EeSymbol):
+    ee_symbol.polylines.append(
+        EeSymbolPolyline(
+            **dict(zip(EeSymbolPolyline.__fields__, polyline_data.split("~")[1:]))
+        )
+    )
+
+
+def add_easyeda_polygon(polygon_data: str, ee_symbol: EeSymbol):
+    ee_symbol.polygons.append(
+        EeSymbolPolygon(
+            **dict(zip(EeSymbolPolygon.__fields__, polygon_data.split("~")[1:]))
+        )
+    )
+
+
+def add_easyeda_path(path_data: str, ee_symbol: EeSymbol):
+    ee_symbol.paths.append(
+        EeSymbolPath(**dict(zip(EeSymbolPath.__fields__, path_data.split("~")[1:])))
+    )
+
+
+def add_easyeda_circle(circle_data: str, ee_symbol: EeSymbol):
+    ee_symbol.circles.append(
+        EeSymbolCircle(
+            **dict(zip(EeSymbolCircle.__fields__, circle_data.split("~")[1:]))
+        )
+    )
+
+
+def add_easyeda_ellipse(ellipse_data: str, ee_symbol: EeSymbol):
+    ee_symbol.ellipses.append(
+        EeSymbolEllipse(
+            **dict(zip(EeSymbolEllipse.__fields__, ellipse_data.split("~")[1:]))
+        )
+    )
+
+
+def add_easyeda_arc(arc_data: str, ee_symbol: EeSymbol):
+    ee_symbol.arcs.append(
+        EeSymbolArc(**dict(zip(EeSymbolArc.__fields__, arc_data.split("~")[1:])))
+    )
+
+
+easyeda_handlers = {
+    "P": add_easyeda_pin,
+    "R": add_easyeda_rectangle,
+    "E": add_easyeda_ellipse,
+    "C": add_easyeda_circle,
+    "A": add_easyeda_arc,
+    "PL": add_easyeda_polyline,
+    "PG": add_easyeda_polygon,
+    "PT": add_easyeda_path,
+    # "PI" : Pie, Elliptical arc seems to be not supported in Kicad
+}
+
+
 class EasyedaSymbolImporter:
     def __init__(self, easyeda_cp_cad_data: dict):
         self.input = easyeda_cp_cad_data
@@ -36,120 +135,12 @@ class EasyedaSymbolImporter:
 
         for line in ee_data["dataStr"]["shape"]:
             designator = line.split("~")[0]
-            # For pins
-            if designator == "P":
-                ee_pin = self.extract_easyeda_pin(pin_data=line)
-                new_ee_symbol.pins.append(self.tune_ee_pin(pin=ee_pin))
-            # For rectangles
-            elif designator == "R":
-                ee_rectangle = self.extract_easyeda_rectangle(rectangle_data=line)
-                new_ee_symbol.rectangles.append(
-                    self.tune_ee_rectangle(rect=ee_rectangle)
-                )
-            # For polylines
-            elif designator == "PL":
-                ee_polyline = self.extract_easyeda_polyline(polyline_data=line)
-                new_ee_symbol.polylines.append(
-                    self.tune_ee_polyline(polyline=ee_polyline)
-                )
-            # For polygons
-            elif designator == "PG":
-                ee_polygon = self.extract_easyeda_polygon(polygon_data=line)
-                new_ee_symbol.polygons.append(self.tune_ee_polygon(polygon=ee_polygon))
-            # For paths
-            elif designator == "PT":
-                ee_path = self.extract_easyeda_path(path_data=line)
-                new_ee_symbol.paths.append(self.tune_ee_path(path=ee_path))
-            # For Pie
-            elif designator == "PI":
-                # Elliptical arc seems to be not supported in Kicad
-                ...
-            # For ellipse
-            elif designator == "E":
-                ...  # Ellipse seems to be not supported in Kicad
-            # For arcs
-            elif designator == "A":
-                ...  # TODO
+            if designator in easyeda_handlers:
+                easyeda_handlers[designator](line, new_ee_symbol)
             else:
                 logging.warning(f"Unknow symbol designator : {designator}")
 
         return new_ee_symbol
-
-    # ---------------------------------------
-
-    def extract_easyeda_pin(self, pin_data: str) -> EeSymbolPin:
-        segments = pin_data.split("^^")
-        ee_segments = [seg.split("~") for seg in segments]
-
-        pin_settings = EeSymbolPinSettings(
-            **dict(zip(EeSymbolPinSettings.__fields__, ee_segments[0][1:]))
-        )
-        pin_dot = EeSymbolPinDot(
-            dot_x=float(ee_segments[1][0]), dot_y=float(ee_segments[1][1])
-        )
-        pin_path = EeSymbolPinPath(path=ee_segments[2][0], color=ee_segments[2][1])
-        pin_name = EeSymbolPinName(
-            **dict(zip(EeSymbolPinName.__fields__, ee_segments[3][:]))
-        )
-
-        pin_dot_bis = EeSymbolPinDotBis(
-            is_displayed=ee_segments[5][0],
-            circle_x=float(ee_segments[5][1]),
-            circle_y=float(ee_segments[5][2]),
-        )
-        pin_clock = EeSymbolPinClock(
-            is_displayed=ee_segments[6][0], path=ee_segments[6][1]
-        )
-        return EeSymbolPin(
-            settings=pin_settings,
-            pin_dot=pin_dot,
-            pin_path=pin_path,
-            name=pin_name,
-            dot=pin_dot_bis,
-            clock=pin_clock,
-        )
-
-    # ---------------------------------------
-
-    def extract_easyeda_rectangle(self, rectangle_data: str) -> EeSymbolRectangle:
-        ee_segment = rectangle_data.split("~")
-        return EeSymbolRectangle(
-            **dict(zip(EeSymbolRectangle.__fields__, ee_segment[1:]))
-        )
-
-    def extract_easyeda_polyline(self, polyline_data: str) -> EeSymbolPolyline:
-        ee_segment = polyline_data.split("~")
-        return EeSymbolPolyline(
-            **dict(zip(EeSymbolPolyline.__fields__, ee_segment[1:]))
-        )
-
-    def extract_easyeda_polygon(self, polygon_data: str) -> EeSymbolPolygon:
-        ee_segment = polygon_data.split("~")
-        return EeSymbolPolygon(**dict(zip(EeSymbolPolygon.__fields__, ee_segment[1:])))
-
-    def extract_easyeda_path(self, path_data: str) -> EeSymbolPath:
-        ee_segment = path_data.split("~")
-        return EeSymbolPath(**dict(zip(EeSymbolPath.__fields__, ee_segment[1:])))
-
-    # ---------------------------------------
-
-    def tune_ee_pin(self, pin: EeSymbolPin) -> EeSymbolPin:
-        return pin
-
-    def tune_ee_rectangle(self, rect: EeSymbolRectangle) -> EeSymbolRectangle:
-        return rect
-
-    def tune_ee_polyline(self, polyline: EeSymbolPolyline) -> EeSymbolPolyline:
-        return polyline
-
-    def tune_ee_polygon(self, polygon: EeSymbolPolygon) -> EeSymbolPolygon:
-        return polygon
-
-    def tune_ee_path(self, path: EeSymbolPath) -> EeSymbolPath:
-        return path
-
-
-# ------------------------------------------------------------------------------
 
 
 class EasyedaFootprintImporter:

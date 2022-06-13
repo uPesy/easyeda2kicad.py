@@ -142,12 +142,52 @@ class EeSymbolRectangle(BaseModel):
 
 # ---------------- CIRCLE ----------------
 class EeSymbolCircle(BaseModel):
-    ...  # TODO
+    center_x: float
+    center_y: float
+    radius: float
+    stroke_color: str
+    stroke_width: str
+    stroke_style: str
+    fill_color: str
+    id: str
+    is_locked: bool
+
+    @validator("is_locked", pre=True)
+    def empty_str_lock(cls, field: str) -> str:
+        return field or False
 
 
 # ---------------- ARC ----------------
 class EeSymbolArc(BaseModel):
-    ...  # TODO
+    paths: str
+    helper_dots: List[float]
+    stroke_color: str
+    stroke_width: str
+    stroke_style: str
+    fill_color: str
+    id: str
+    is_locked: bool
+
+    @validator("is_locked", pre=True)
+    def empty_str_lock(cls, field: str) -> str:
+        return field or False
+
+
+class EeSymbolEllipse(BaseModel):
+    center_x: float
+    center_y: float
+    radius_x: float
+    radius_y: float
+    stroke_color: str
+    stroke_width: str
+    stroke_style: str
+    fill_color: str
+    id: str
+    is_locked: bool
+
+    @validator("is_locked", pre=True)
+    def empty_str_lock(cls, field: str) -> str:
+        return field or False
 
 
 # ---------------- POLYLINE ----------------
@@ -192,23 +232,6 @@ class EeSymbolPath(BaseModel):
     #     return paths.replace("M", "").replace("C","")
 
 
-class EeSymbolEllipse(BaseModel):
-    center_x: float
-    center_y: float
-    radius_x: float
-    radius_y: float
-    stroke_color: str
-    stroke_width: str
-    stroke_style: str
-    fill_color: str
-    id: str
-    is_locked: bool
-
-    @validator("is_locked", pre=True)
-    def empty_str_lock(cls, field: str) -> str:
-        return field or False
-
-
 # ---------------- SYMBOL ----------------
 @dataclass
 class EeSymbolInfo:
@@ -227,6 +250,9 @@ class EeSymbol:
     bbox: EeSymbolBbox
     pins: List[EeSymbolPin] = field(default_factory=list)
     rectangles: List[EeSymbolRectangle] = field(default_factory=list)
+    circles: List[EeSymbolCircle] = field(default_factory=list)
+    arcs: List[EeSymbolArc] = field(default_factory=list)
+    ellipses: List[EeSymbolEllipse] = field(default_factory=list)
     polylines: List[EeSymbolPolyline] = field(default_factory=list)
     polygons: List[EeSymbolPolygon] = field(default_factory=list)
     paths: List[EeSymbolPath] = field(default_factory=list)

@@ -6,6 +6,8 @@ from easyeda2kicad.easyeda.parameters_easyeda import (
     EasyedaPinType,
     EeSymbol,
     EeSymbolBbox,
+    EeSymbolCircle,
+    EeSymbolEllipse,
     EeSymbolPath,
     EeSymbolPin,
     EeSymbolPolygon,
@@ -99,9 +101,38 @@ def convert_ee_rectangles(
     return kicad_rectangles
 
 
-def convert_ee_circles(kicad_version: KicadVersion):
-    # TODO
-    return []
+def convert_ee_circles(
+    ee_circles: List[EeSymbolCircle], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
+):
+    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
+
+    return [
+        KiSymbolCircle(
+            pos_x=to_ki(int(ee_circle.center_x) - int(ee_bbox.x)),
+            pos_y=-to_ki(int(ee_circle.center_y) - int(ee_bbox.y)),
+            radius=to_ki(ee_circle.radius),
+        )
+        for ee_circle in ee_circles
+    ]
+
+
+def convert_ee_ellipses(
+    ee_ellipses: List[EeSymbolEllipse],
+    ee_bbox: EeSymbolBbox,
+    kicad_version: KicadVersion,
+) -> List[KiSymbolCircle]:
+    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
+
+    # Ellipses are not supported in Kicad -> If it's not a real ellipse, but just a circle
+    return [
+        KiSymbolCircle(
+            pos_x=to_ki(int(ee_ellipses.center_x) - int(ee_bbox.x)),
+            pos_y=-to_ki(int(ee_ellipses.center_y) - int(ee_bbox.y)),
+            radius=to_ki(ee_ellipses.radius_x),
+        )
+        for ee_ellipses in ee_ellipses
+        if ee_ellipses.radius_x == ee_ellipses.radius_y
+    ]
 
 
 def convert_ee_arcs(kicad_version: KicadVersion):
@@ -221,8 +252,17 @@ def convert_to_kicad(ee_symbol: EeSymbol, kicad_version: KicadVersion) -> KiSymb
             ee_bbox=ee_symbol.bbox,
             kicad_version=kicad_version,
         ),
-        circles=convert_ee_circles(kicad_version=kicad_version),
+        circles=convert_ee_circles(
+            ee_circles=ee_symbol.circles,
+            ee_bbox=ee_symbol.bbox,
+            kicad_version=kicad_version,
+        ),
         arcs=convert_ee_arcs(kicad_version=kicad_version),
+    )
+    kicad_symbol.circles += convert_ee_ellipses(
+        ee_ellipses=ee_symbol.ellipses,
+        ee_bbox=ee_symbol.bbox,
+        kicad_version=kicad_version,
     )
 
     kicad_symbol.polygons, kicad_symbol.beziers = convert_ee_paths(
