@@ -430,6 +430,7 @@ class KiSymbolCircle:
     pos_x: int = 0
     pos_y: int = 0
     radius: int = 0
+    background_filling: bool = False
 
     def export_v5(self) -> str:
         return "C {pos_x} {pos_y} {radius} {unit_num} 1 {line_width} {fill}\n".format(
@@ -438,7 +439,9 @@ class KiSymbolCircle:
             radius=int(self.radius),
             unit_num=1,
             line_width=KiExportConfigV5.DEFAULT_BOX_LINE_WIDTH.value,
-            fill=ki_box_fill_v5_format[KiBoxFill.background],
+            fill=ki_box_fill_v5_format[KiBoxFill.background]
+            if self.background_filling
+            else ki_box_fill_v5_format[KiBoxFill.none],
         )
 
     def export_v6(self) -> str:
@@ -453,7 +456,9 @@ class KiSymbolCircle:
             pos_y=self.pos_y,
             radius=self.radius,
             line_width=KiExportConfigV6.DEFAULT_BOX_LINE_WIDTH.value,
-            fill=KiBoxFill.background.name,
+            fill=KiBoxFill.background.name
+            if self.background_filling
+            else KiBoxFill.none.name,
         )
 
 
