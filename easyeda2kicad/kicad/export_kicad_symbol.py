@@ -111,6 +111,7 @@ def convert_ee_circles(
             pos_x=to_ki(int(ee_circle.center_x) - int(ee_bbox.x)),
             pos_y=-to_ki(int(ee_circle.center_y) - int(ee_bbox.y)),
             radius=to_ki(ee_circle.radius),
+            background_filling=ee_circle.fill_color,
         )
         for ee_circle in ee_circles
     ]
@@ -159,12 +160,10 @@ def convert_ee_polylines(
             -to_ki(int(float(raw_pts[i])) - int(ee_bbox.y))
             for i in range(1, len(raw_pts), 2)
         ]
-        if isinstance(ee_polyline, EeSymbolPolygon):
+
+        if isinstance(ee_polyline, EeSymbolPolygon) or ee_polyline.fill_color:
             x_points.append(x_points[0])
             y_points.append(y_points[0])
-
-        # print(x_points, y_points)
-        # print(ee_bbox.x, ee_bbox.y)
 
         kicad_polygon = KiSymbolPolygon(
             points=[
@@ -204,7 +203,8 @@ def convert_ee_paths(
         y_points = []
 
         # Small svg path parser : doc -> https://www.w3.org/TR/SVG11/paths.html#PathElement
-        for i in range(len(raw_pts) - 1):
+
+        for i in range(len(raw_pts)):
             if raw_pts[i] in ["M", "L"]:
                 x_points.append(to_ki(int(float(raw_pts[i + 1])) - int(ee_bbox.x)))
                 y_points.append(-to_ki(int(float(raw_pts[i + 2])) - int(ee_bbox.y)))
@@ -215,6 +215,10 @@ def convert_ee_paths(
             elif raw_pts[i] == "C":
                 ...
                 # TODO : Add bezier support
+
+        # if ee_path.fill_color:
+        #     x_points.append(x_points[0])
+        #     y_points.append(y_points[0])
 
         ki_polygon = KiSymbolPolygon(
             points=[

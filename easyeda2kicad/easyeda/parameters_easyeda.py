@@ -148,13 +148,17 @@ class EeSymbolCircle(BaseModel):
     stroke_color: str
     stroke_width: str
     stroke_style: str
-    fill_color: str
+    fill_color: bool
     id: str
     is_locked: bool
 
     @validator("is_locked", pre=True)
     def empty_str_lock(cls, field: str) -> str:
         return field or False
+
+    @validator("fill_color", pre=True)
+    def parse_background_filling(cls, fill_color: str) -> str:
+        return bool(fill_color and fill_color.lower() != "none")
 
 
 # ---------------- ARC ----------------
@@ -164,13 +168,17 @@ class EeSymbolArc(BaseModel):
     stroke_color: str
     stroke_width: str
     stroke_style: str
-    fill_color: str
+    fill_color: bool
     id: str
     is_locked: bool
 
     @validator("is_locked", pre=True)
     def empty_str_lock(cls, field: str) -> str:
         return field or False
+
+    @validator("fill_color", pre=True)
+    def parse_background_filling(cls, fill_color: str) -> str:
+        return bool(fill_color and fill_color.lower() != "none")
 
 
 class EeSymbolEllipse(BaseModel):
@@ -181,13 +189,17 @@ class EeSymbolEllipse(BaseModel):
     stroke_color: str
     stroke_width: str
     stroke_style: str
-    fill_color: str
+    fill_color: bool
     id: str
     is_locked: bool
 
     @validator("is_locked", pre=True)
     def empty_str_lock(cls, field: str) -> str:
         return field or False
+
+    @validator("fill_color", pre=True)
+    def parse_background_filling(cls, fill_color: str) -> str:
+        return bool(fill_color and fill_color.lower() != "none")
 
 
 # ---------------- POLYLINE ----------------
@@ -196,13 +208,17 @@ class EeSymbolPolyline(BaseModel):
     stroke_color: str
     stroke_width: str
     stroke_style: str
-    fill_color: str
+    fill_color: bool
     id: str
     is_locked: bool
 
     @validator("is_locked", pre=True)
     def empty_str_lock(cls, field: str) -> str:
         return field or False
+
+    @validator("fill_color", pre=True)
+    def parse_background_filling(cls, fill_color: str) -> str:
+        return bool(fill_color and fill_color.lower() != "none")
 
 
 # ---------------- POLYGON ----------------
@@ -219,13 +235,17 @@ class EeSymbolPath(BaseModel):
     stroke_color: str
     stroke_width: str
     stroke_style: str
-    fill_color: str
+    fill_color: bool
     id: str
     is_locked: bool
 
     @validator("is_locked", pre=True)
     def empty_str_lock(cls, field: str) -> str:
         return field or False
+
+    @validator("fill_color", pre=True)
+    def parse_background_filling(cls, fill_color: str) -> str:
+        return bool(fill_color and fill_color.lower() != "none")
 
     # @validator("paths", pre=True)
     # def clean_svg_path(cls, paths:str):
