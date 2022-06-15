@@ -1,4 +1,4 @@
-# easyeda2kicad v0.4.1
+# easyeda2kicad v0.4.2
 
 _________________
 [![PyPI version](https://badge.fury.io/py/easyeda2kicad.svg)](https://badge.fury.io/py/easyeda2kicad)
