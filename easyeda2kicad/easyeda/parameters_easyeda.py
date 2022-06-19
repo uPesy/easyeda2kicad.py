@@ -5,6 +5,8 @@ from typing import List, Union
 
 from pydantic import BaseModel, validator
 
+from easyeda2kicad.easyeda.svg_path_parser import parse_svg_path
+
 
 class EasyedaPinType(Enum):
     unspecified = 0
@@ -163,8 +165,8 @@ class EeSymbolCircle(BaseModel):
 
 # ---------------- ARC ----------------
 class EeSymbolArc(BaseModel):
-    paths: str
-    helper_dots: List[float]
+    path: list
+    helper_dots: str
     stroke_color: str
     stroke_width: str
     stroke_style: str
@@ -179,6 +181,10 @@ class EeSymbolArc(BaseModel):
     @validator("fill_color", pre=True)
     def parse_background_filling(cls, fill_color: str) -> str:
         return bool(fill_color and fill_color.lower() != "none")
+
+    @validator("path", pre=True)
+    def convert_svg_path(cls, path: str) -> list:
+        return parse_svg_path(svg_path=path)
 
 
 class EeSymbolEllipse(BaseModel):

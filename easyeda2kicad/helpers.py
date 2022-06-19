@@ -1,6 +1,7 @@
 # Global imports
 import json
 import logging
+import math
 import os
 import re
 from datetime import datetime
@@ -125,3 +126,39 @@ def get_local_config() -> dict:
         local_conf: dict = json.load(conf)
 
     return local_conf
+
+
+def get_arc_center(start_x, start_y, end_x, end_y, rotation_direction, radius):
+    arc_distance = math.sqrt(
+        (end_x - start_x) * (end_x - start_x) + (end_y - start_y) * (end_y - start_y)
+    )
+
+    m_x = (start_x + end_x) / 2
+    m_y = (start_y + end_y) / 2
+    u = (end_x - start_x) / arc_distance
+    v = (end_y - start_y) / arc_distance
+    h = math.sqrt(radius * radius - (arc_distance * arc_distance) / 4)
+
+    center_x = m_x - rotation_direction * h * v
+    center_y = m_y + rotation_direction * h * u
+
+    return center_x, center_y
+
+
+def get_arc_angle_end(
+    center_x: float, end_x: float, radius: float, flag_large_arc: bool
+):
+    theta = math.acos((end_x - center_x) / radius) * 180 / math.pi
+    return 180 + theta if flag_large_arc else 180 + theta
+
+
+def get_middle_arc_pos(
+    center_x: float,
+    center_y: float,
+    radius: float,
+    angle_start: float,
+    angle_end: float,
+):
+    middle_x = center_x + radius * math.cos((angle_start + angle_end) / 2)
+    middle_y = center_y + radius * math.sin((angle_start + angle_end) / 2)
+    return middle_x, middle_y
