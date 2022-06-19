@@ -5,6 +5,7 @@ from typing import Callable, List, Tuple, Union
 from easyeda2kicad.easyeda.parameters_easyeda import (
     EasyedaPinType,
     EeSymbol,
+    EeSymbolArc,
     EeSymbolBbox,
     EeSymbolCircle,
     EeSymbolEllipse,
@@ -14,6 +15,9 @@ from easyeda2kicad.easyeda.parameters_easyeda import (
     EeSymbolPolyline,
     EeSymbolRectangle,
 )
+from easyeda2kicad.easyeda.svg_path_parser import SvgPathEllipticalArc, SvgPathMoveTo
+from easyeda2kicad.helpers import get_middle_arc_pos
+from easyeda2kicad.kicad.export_kicad_footprint import compute_arc
 from easyeda2kicad.kicad.parameters_kicad_symbol import *
 
 ee_pin_type_to_ki_pin_type = {
@@ -136,9 +140,65 @@ def convert_ee_ellipses(
     ]
 
 
-def convert_ee_arcs(kicad_version: KicadVersion):
-    # TODO
-    return []
+def convert_ee_arcs(
+    ee_arcs: List[EeSymbolArc], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
+) -> List[KiSymbolArc]:
+    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
+
+    kicad_arcs = []
+    for ee_arc in ee_arcs:
+        if not (
+            isinstance(ee_arc.path[0], SvgPathMoveTo)
+            or isinstance(ee_arc.path[1], SvgPathEllipticalArc)
+        ):
+            logging.error("Can't convert this arc")
+        else:
+            ki_arc = KiSymbolArc(
+                radius=to_ki(
+                    max(ee_arc.path[1].radius_x, ee_arc.path[1].radius_y)
+                ),  # doesn't support elliptical arc
+                angle_start=ee_arc.path[1].x_axis_rotation,
+                start_x=to_ki(ee_arc.path[0].start_x - ee_bbox.x),
+                start_y=to_ki(ee_arc.path[0].start_y - ee_bbox.y),
+                end_x=to_ki(ee_arc.path[1].end_x - ee_bbox.x),
+                end_y=to_ki(ee_arc.path[1].end_y - ee_bbox.y),
+            )
+
+            center_x, center_y, angle_end = compute_arc(
+                start_x=ki_arc.start_x,
+                start_y=ki_arc.start_y,
+                radius_x=to_ki(ee_arc.path[1].radius_x),
+                radius_y=to_ki(ee_arc.path[1].radius_y),
+                angle=ki_arc.angle_start,
+                large_arc_flag=ee_arc.path[1].flag_large_arc,
+                sweep_flag=ee_arc.path[1].flag_sweep,
+                end_x=ki_arc.end_x,
+                end_y=ki_arc.end_y,
+            )
+            ki_arc.center_x = center_x
+            ki_arc.center_y = center_y if ee_arc.path[1].flag_large_arc else -center_y
+            ki_arc.angle_end = (
+                (360 - angle_end) if ee_arc.path[1].flag_large_arc else angle_end
+            )
+
+            ki_arc.middle_x, ki_arc.middle_y = get_middle_arc_pos(
+                center_x=ki_arc.center_x,
+                center_y=ki_arc.center_y,
+                radius=ki_arc.radius,
+                angle_start=ki_arc.angle_start,
+                angle_end=ki_arc.angle_end,
+            )
+
+            ki_arc.start_y = (
+                ki_arc.start_y if ee_arc.path[1].flag_large_arc else -ki_arc.start_y
+            )
+            ki_arc.end_y = (
+                ki_arc.end_y if ee_arc.path[1].flag_large_arc else -ki_arc.end_y
+            )
+
+            kicad_arcs.append(ki_arc)
+
+    return kicad_arcs
 
 
 def convert_ee_polylines(
@@ -261,7 +321,9 @@ def convert_to_kicad(ee_symbol: EeSymbol, kicad_version: KicadVersion) -> KiSymb
             ee_bbox=ee_symbol.bbox,
             kicad_version=kicad_version,
         ),
-        arcs=convert_ee_arcs(kicad_version=kicad_version),
+        arcs=convert_ee_arcs(
+            ee_arcs=ee_symbol.arcs, ee_bbox=ee_symbol.bbox, kicad_version=kicad_version
+        ),
     )
     kicad_symbol.circles += convert_ee_ellipses(
         ee_ellipses=ee_symbol.ellipses,

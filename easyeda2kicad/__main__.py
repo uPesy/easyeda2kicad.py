@@ -256,6 +256,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     if arguments["symbol"]:
         importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data)
         easyeda_symbol: EeSymbol = importer.get_symbol()
+        # print(easyeda_symbol)
 
         is_id_already_in_symbol_lib = id_already_in_symbol_lib(
             lib_path=f"{arguments['output']}.{sym_lib_ext}",

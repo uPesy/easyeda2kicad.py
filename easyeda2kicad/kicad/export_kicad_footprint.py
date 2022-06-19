@@ -18,23 +18,24 @@ def to_degrees(n: float) -> float:
 
 
 # Elliptical arc implementation based on the SVG specification notes
+# https://www.w3.org/TR/SVG11/implnote.html#ArcConversionEndpointToCenter
 
 
 def compute_arc(
-    x0: float,
-    y0: float,
-    rx: float,
-    ry: float,
+    start_x: float,
+    start_y: float,
+    radius_x: float,
+    radius_y: float,
     angle: float,
     large_arc_flag: bool,
     sweep_flag: bool,
-    x: float,
-    y: float,
+    end_x: float,
+    end_y: float,
 ) -> Tuple[float, float, float]:
 
     # Compute the half distance between the current and the final point
-    dx2 = (x0 - x) / 2.0
-    dy2 = (y0 - y) / 2.0
+    dx2 = (start_x - end_x) / 2.0
+    dy2 = (start_y - end_y) / 2.0
 
     # Convert angle from degrees to radians
     angle = to_radians(angle % 360.0)
@@ -46,44 +47,48 @@ def compute_arc(
     y1 = -sin_angle * dx2 + cos_angle * dy2
 
     # Ensure radii are large enough
-    rx = abs(rx)
-    ry = abs(ry)
-    Prx = rx * rx
-    Pry = ry * ry
+    radius_x = abs(radius_x)
+    radius_y = abs(radius_y)
+    Pradius_x = radius_x * radius_x
+    Pradius_y = radius_y * radius_y
     Px1 = x1 * x1
     Py1 = y1 * y1
 
     # check that radii are large enough
 
-    radiiCheck = Px1 / Prx + Py1 / Pry if Prx != 0 and Pry != 0 else 0
+    radiiCheck = (
+        Px1 / Pradius_x + Py1 / Pradius_y if Pradius_x != 0 and Pradius_y != 0 else 0
+    )
     if radiiCheck > 1:
-        rx = sqrt(radiiCheck) * rx
-        ry = sqrt(radiiCheck) * ry
-        Prx = rx * rx
-        Pry = ry * ry
+        radius_x = sqrt(radiiCheck) * radius_x
+        radius_y = sqrt(radiiCheck) * radius_y
+        Pradius_x = radius_x * radius_x
+        Pradius_y = radius_y * radius_y
 
     # Step 2 : Compute (cx1, cy1)
     sign = -1 if large_arc_flag == sweep_flag else 1
     sq = 0
-    if Prx * Py1 + Pry * Px1 > 0:
-        sq = (Prx * Pry - Prx * Py1 - Pry * Px1) / (Prx * Py1 + Pry * Px1)
+    if Pradius_x * Py1 + Pradius_y * Px1 > 0:
+        sq = (Pradius_x * Pradius_y - Pradius_x * Py1 - Pradius_y * Px1) / (
+            Pradius_x * Py1 + Pradius_y * Px1
+        )
     sq = max(sq, 0)
     coef = sign * sqrt(sq)
-    cx1 = coef * ((rx * y1) / ry)
-    cy1 = coef * -((ry * x1) / rx) if rx != 0 else 0
+    cx1 = coef * ((radius_x * y1) / radius_y)
+    cy1 = coef * -((radius_y * x1) / radius_x) if radius_x != 0 else 0
 
     # Step 3 : Compute (cx, cy) from (cx1, cy1)
-    sx2 = (x0 + x) / 2.0
-    sy2 = (y0 + y) / 2.0
-    # print(x0, x)
+    sx2 = (start_x + end_x) / 2.0
+    sy2 = (start_y + end_y) / 2.0
+    # print(start_x, end_x)
     cx = sx2 + (cos_angle * cx1 - sin_angle * cy1)
     cy = sy2 + (sin_angle * cx1 + cos_angle * cy1)
 
     # Step 4 : Compute the angle_extent (dangle)
-    ux = (x1 - cx1) / rx if rx != 0 else 0
-    uy = (y1 - cy1) / ry if ry != 0 else 0
-    vx = (-x1 - cx1) / rx if rx != 0 else 0
-    vy = (-y1 - cy1) / ry if ry != 0 else 0
+    ux = (x1 - cx1) / radius_x if radius_x != 0 else 0
+    uy = (y1 - cy1) / radius_y if radius_y != 0 else 0
+    vx = (-x1 - cx1) / radius_x if radius_x != 0 else 0
+    vy = (-y1 - cy1) / radius_y if radius_y != 0 else 0
 
     # Compute the angle extent
     n = sqrt((ux * ux + uy * uy) * (vx * vx + vy * vy))
@@ -100,7 +105,6 @@ def compute_arc(
 
     angleExtent_sign = 1 if angle_extent < 0 else -1
     angle_extent = (abs(angle_extent) % 360) * angleExtent_sign
-    # angle_extent %= 360
 
     return cx, cy, angle_extent
 

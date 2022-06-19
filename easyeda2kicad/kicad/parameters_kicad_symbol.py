@@ -465,25 +465,28 @@ class KiSymbolCircle:
 # ---------------- ARC ----------------
 @dataclass
 class KiSymbolArc:
-    pos_x: int = 0
-    pos_y: int = 0
-    radius: int = 0
+    center_x: float = 0
+    center_y: float = 0
+    radius: float = 0
     angle_start: float = 0.0
     angle_end: float = 0.0
-    start_x: int = 0
-    start_y: int = 0
-    end_x: int = 0
-    end_y: int = 0
+    start_x: float = 0
+    start_y: float = 0
+    middle_x: float = 0
+    middle_y: float = 0
+    end_x: float = 0
+    end_y: float = 0
 
     def export_v5(self) -> str:
         return (
-            "C {pos_x} {pos_y} {radius} {angle_start} {angle_end} {unit_num} 1"
-            " {line_width} {fill} {start_x} {start_y} {end_x} {end_y}\n".format(
-                pos_x=self.pos_x,
-                pos_y=self.pos_y,
+            "A {center_x:.0f} {center_y:.0f} {radius:.0f} {angle_start:.0f}"
+            " {angle_end:.0f} {unit_num} 1 {line_width} {fill} {start_x:.0f}"
+            " {start_y:.0f} {end_x:.0f} {end_y:.0f}\n".format(
+                center_x=self.center_x,
+                center_y=self.center_y,
                 radius=self.radius,
-                angle_start=self.angle_start,
-                angle_end=self.angle_end,
+                angle_start=self.angle_start * 10,
+                angle_end=self.angle_end * 10,
                 unit_num=1,
                 line_width=KiExportConfigV5.DEFAULT_BOX_LINE_WIDTH.value,
                 fill=ki_box_fill_v5_format[KiBoxFill.background]
@@ -500,15 +503,15 @@ class KiSymbolArc:
         return """
             (arc
               (start {start_x:.2f} {start_y:.2f})
-              (mid {pos_x:.2f} {pos_y:.2f})
+              (mid {middle_x:.2f} {middle_y:.2f})
               (end {end_x:.2f} {end_y:.2f})
               (stroke (width {line_width}) (type default) (color 0 0 0 0))
               (fill (type {fill}))
             )""".format(
             start_x=self.start_x,
             start_y=self.start_y,
-            pos_x=self.pos_x,
-            pos_y=self.pos_y,
+            middle_x=self.middle_x,
+            middle_y=self.middle_y,
             end_x=self.end_x,
             end_y=self.end_y,
             line_width=KiExportConfigV6.DEFAULT_BOX_LINE_WIDTH.value,
