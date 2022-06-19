@@ -227,7 +227,7 @@ def convert_ee_polylines(
 
         kicad_polygon = KiSymbolPolygon(
             points=[
-                [str(x_points[i]), str(y_points[i])]
+                [x_points[i], y_points[i]]
                 for i in range(min(len(x_points), len(y_points)))
             ],
             points_number=min(len(x_points), len(y_points)),
@@ -282,7 +282,7 @@ def convert_ee_paths(
 
         ki_polygon = KiSymbolPolygon(
             points=[
-                [str(x_points[i]), str(y_points[i])]
+                [x_points[i], y_points[i]]
                 for i in range(min(len(x_points), len(y_points)))
             ],
             points_number=min(len(x_points), len(y_points)),
