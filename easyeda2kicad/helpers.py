@@ -41,6 +41,10 @@ def set_logger(log_file: str, log_level: int) -> None:
     root_log.addHandler(stream_handler)
 
 
+def sanitize_for_regex(field: str):
+    return sanitize_fields(field).replace("(", r"\(").replace(")", r"\)")
+
+
 def id_already_in_symbol_lib(
     lib_path: str, component_name: str, kicad_version: KicadVersion
 ) -> bool:
@@ -48,7 +52,7 @@ def id_already_in_symbol_lib(
         current_lib = lib_file.read()
         component = re.findall(
             sym_lib_regex_pattern[kicad_version.name].format(
-                component_name=sanitize_fields(component_name)
+                component_name=sanitize_for_regex(component_name)
             ),
             current_lib,
             flags=re.DOTALL,
@@ -69,7 +73,7 @@ def update_component_in_symbol_lib_file(
         current_lib = lib_file.read()
         new_lib = re.sub(
             sym_lib_regex_pattern[kicad_version.name].format(
-                component_name=sanitize_fields(component_name)
+                component_name=sanitize_for_regex(component_name)
             ),
             component_content,
             current_lib,
