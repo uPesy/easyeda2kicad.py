@@ -275,7 +275,6 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         )
         # print(exporter.output)
         kicad_symbol_lib = exporter.get_kicad_lib()
-        # print(kicad_symbol_lib)
 
         if is_id_already_in_symbol_lib:
             update_component_in_symbol_lib_file(
