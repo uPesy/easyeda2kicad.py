@@ -69,7 +69,7 @@ def update_component_in_symbol_lib_file(
         current_lib = lib_file.read()
         new_lib = re.sub(
             sym_lib_regex_pattern[kicad_version.name].format(
-                component_name=component_name
+                component_name=sanitize_fields(component_name)
             ),
             component_content,
             current_lib,
