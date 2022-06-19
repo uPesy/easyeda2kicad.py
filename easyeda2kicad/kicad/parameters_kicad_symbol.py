@@ -418,7 +418,9 @@ class KiSymbolPolygon:
               (stroke (width {line_width}) (type default) (color 0 0 0 0))
               (fill (type {fill}))
             )""".format(
-            polyline_path=" ".join([f"(xy {pts[0]} {pts[1]})" for pts in self.points]),
+            polyline_path=" ".join(
+                [f"(xy {pts[0]:.2f} {pts[1]:.2f})" for pts in self.points]
+            ),
             line_width=KiExportConfigV6.DEFAULT_BOX_LINE_WIDTH.value,
             fill=KiBoxFill.background.name if self.is_closed else KiBoxFill.none.name,
         )
