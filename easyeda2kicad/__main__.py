@@ -274,7 +274,10 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             symbol=easyeda_symbol, kicad_version=kicad_version
         )
         # print(exporter.output)
-        kicad_symbol_lib = exporter.get_kicad_lib()
+        kicad_symbol_lib = exporter.export(
+            is_project_relative=arguments["project_relative"],
+            footprint_lib_name=arguments["output"].split("/")[-1].split(".")[0],
+        )
 
         if is_id_already_in_symbol_lib:
             update_component_in_symbol_lib_file(

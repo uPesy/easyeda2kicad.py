@@ -392,7 +392,7 @@ class KiSymbolRectangle:
 # ---------------- POLYGON ----------------
 @dataclass
 class KiSymbolPolygon:
-    points: List[List[str]] = field(default_factory=List[List[str]])
+    points: List[List[float]] = field(default_factory=List[List[float]])
     points_number: int = 0
     is_closed: bool = False
 
@@ -402,7 +402,9 @@ class KiSymbolPolygon:
                 points_number=self.points_number,
                 unit_num=1,
                 line_width=KiExportConfigV5.DEFAULT_BOX_LINE_WIDTH.value,
-                coordinate=" ".join(list(itertools.chain.from_iterable(self.points))),
+                coordinate=" ".join(
+                    map(str, list(itertools.chain.from_iterable(self.points)))
+                ),
                 fill=ki_box_fill_v5_format[KiBoxFill.background]
                 if self.is_closed
                 else ki_box_fill_v5_format[KiBoxFill.none],
@@ -526,7 +528,7 @@ class KiSymbolArc:
 # ---------------- BEZIER CURVE ----------------
 @dataclass
 class KiSymbolBezier:
-    points: List[List[str]] = field(default_factory=List[List[str]])
+    points: List[List[float]] = field(default_factory=List[List[float]])
     points_number: int = 0
     is_closed: bool = False
 
@@ -536,7 +538,9 @@ class KiSymbolBezier:
                 points_number=self.points_number,
                 unit_num=1,
                 line_width=KiExportConfigV5.DEFAULT_BOX_LINE_WIDTH.value,
-                coordinate=" ".join(list(itertools.chain.from_iterable(self.points))),
+                coordinate=" ".join(
+                    map(str, list(itertools.chain.from_iterable(self.points)))
+                ),
                 fill=ki_box_fill_v5_format[KiBoxFill.background]
                 if self.is_closed
                 else ki_box_fill_v5_format[KiBoxFill.none],
