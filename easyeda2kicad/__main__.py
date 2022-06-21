@@ -268,7 +268,11 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             logging.error("Use --overwrite to update the older symbol lib")
             return 1
 
-        logging.info(f"Creating Kicad symbol library for LCSC id : {component_id}")
+        logging.info(f"Creating Kicad symbol for LCSC id: {component_id}")
+        logging.info(
+            f"Symbol library: {arguments['output']}.kicad_sym, symbol name:"
+            f" {easyeda_symbol.info.name}"
+        )
 
         exporter = ExporterSymbolKicad(
             symbol=easyeda_symbol, kicad_version=kicad_version
@@ -306,7 +310,14 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             logging.error("Use --overwrite to replace the older footprint lib")
             return 1
 
-        logging.info(f"Creating Kicad footprint library for LCSC id : {component_id}")
+        logging.info(f"Creating Kicad footprint for LCSC id : {component_id}")
+        filename = f"{easyeda_footprint.info.name}.kicad_mod"
+        lib_path = f"{arguments['output']}.pretty"
+        logging.info(
+            f"Footprint library: {os.path.join(lib_path, filename)}, footprint name:"
+            f" {easyeda_footprint.info.name}"
+        )
+
         ExporterFootprintKicad(footprint=easyeda_footprint).export(
             output_path=arguments["output"],
             is_project_relative=arguments["project_relative"],
@@ -319,7 +330,12 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             model_3d=Easyeda3dModelImporter(
                 easyeda_cp_cad_data=cad_data, download_raw_3d_model=True
             ).output
-        ).export(lib_path=arguments["output"])
+        )
+
+        exporter.export(lib_path=arguments["output"])
+        filename = f"{exporter.output.name}.wrl"
+        lib_path = f"{arguments['output']}.3dshapes"
+        logging.info(f"3D model: {os.path.join(lib_path, filename)}")
 
     return 0
 
