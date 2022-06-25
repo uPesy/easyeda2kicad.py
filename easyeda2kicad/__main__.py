@@ -332,14 +332,15 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             ).output
         )
         exporter.export(lib_path=arguments["output"])
-        filename = f"{exporter.output.name}.wrl"
-        lib_path = f"{arguments['output']}.3dshapes"
+        if exporter.output:
+            filename = f"{exporter.output.name}.wrl"
+            lib_path = f"{arguments['output']}.3dshapes"
 
-        logging.info(
-            f"Created 3D model for ID: {component_id}\n"
-            f"       3D model name: {exporter.output.name}\n"
-            f"       3D model path: {os.path.join(lib_path, filename)}"
-        )
+            logging.info(
+                f"Created 3D model for ID: {component_id}\n"
+                f"       3D model name: {exporter.output.name}\n"
+                f"       3D model path: {os.path.join(lib_path, filename)}"
+            )
 
         # logging.info(f"3D model: {os.path.join(lib_path, filename)}")
 
