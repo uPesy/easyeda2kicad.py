@@ -198,8 +198,8 @@ class ExporterFootprintKicad:
         if self.input.model_3d is not None:
             self.input.model_3d.convert_to_mm()
 
-            if self.input.model_3d.translation.z != 0:
-                self.input.model_3d.translation.z -= 1
+            # if self.input.model_3d.translation.z != 0:
+            #     self.input.model_3d.translation.z -= 1
             print(self.input.bbox)
             ki_3d_model_info = Ki3dModel(
                 name=self.input.model_3d.name,
