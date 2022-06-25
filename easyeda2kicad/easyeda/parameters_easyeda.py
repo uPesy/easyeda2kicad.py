@@ -480,7 +480,7 @@ class Ee3dModelBase(BaseModel):
     def convert_to_mm(self) -> None:
         self.x = convert_to_mm(self.x)
         self.y = convert_to_mm(self.y)
-        # self.z = convert_to_mm(self.z)
+        self.z = convert_to_mm(self.z)
 
 
 @dataclass
