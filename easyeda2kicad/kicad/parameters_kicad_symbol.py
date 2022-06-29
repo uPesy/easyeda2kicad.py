@@ -392,7 +392,7 @@ class KiSymbolRectangle:
 # ---------------- POLYGON ----------------
 @dataclass
 class KiSymbolPolygon:
-    points: List[List[str]] = field(default_factory=List[List[str]])
+    points: List[List[float]] = field(default_factory=List[List[float]])
     points_number: int = 0
     is_closed: bool = False
 
@@ -402,7 +402,9 @@ class KiSymbolPolygon:
                 points_number=self.points_number,
                 unit_num=1,
                 line_width=KiExportConfigV5.DEFAULT_BOX_LINE_WIDTH.value,
-                coordinate=" ".join(list(itertools.chain.from_iterable(self.points))),
+                coordinate=" ".join(
+                    map(str, list(itertools.chain.from_iterable(self.points)))
+                ),
                 fill=ki_box_fill_v5_format[KiBoxFill.background]
                 if self.is_closed
                 else ki_box_fill_v5_format[KiBoxFill.none],
@@ -418,7 +420,9 @@ class KiSymbolPolygon:
               (stroke (width {line_width}) (type default) (color 0 0 0 0))
               (fill (type {fill}))
             )""".format(
-            polyline_path=" ".join([f"(xy {pts[0]} {pts[1]})" for pts in self.points]),
+            polyline_path=" ".join(
+                [f"(xy {pts[0]:.2f} {pts[1]:.2f})" for pts in self.points]
+            ),
             line_width=KiExportConfigV6.DEFAULT_BOX_LINE_WIDTH.value,
             fill=KiBoxFill.background.name if self.is_closed else KiBoxFill.none.name,
         )
@@ -430,6 +434,7 @@ class KiSymbolCircle:
     pos_x: int = 0
     pos_y: int = 0
     radius: int = 0
+    background_filling: bool = False
 
     def export_v5(self) -> str:
         return "C {pos_x} {pos_y} {radius} {unit_num} 1 {line_width} {fill}\n".format(
@@ -438,7 +443,9 @@ class KiSymbolCircle:
             radius=int(self.radius),
             unit_num=1,
             line_width=KiExportConfigV5.DEFAULT_BOX_LINE_WIDTH.value,
-            fill=ki_box_fill_v5_format[KiBoxFill.background],
+            fill=ki_box_fill_v5_format[KiBoxFill.background]
+            if self.background_filling
+            else ki_box_fill_v5_format[KiBoxFill.none],
         )
 
     def export_v6(self) -> str:
@@ -453,32 +460,37 @@ class KiSymbolCircle:
             pos_y=self.pos_y,
             radius=self.radius,
             line_width=KiExportConfigV6.DEFAULT_BOX_LINE_WIDTH.value,
-            fill=KiBoxFill.background.name,
+            fill=KiBoxFill.background.name
+            if self.background_filling
+            else KiBoxFill.none.name,
         )
 
 
 # ---------------- ARC ----------------
 @dataclass
 class KiSymbolArc:
-    pos_x: int = 0
-    pos_y: int = 0
-    radius: int = 0
+    center_x: float = 0
+    center_y: float = 0
+    radius: float = 0
     angle_start: float = 0.0
     angle_end: float = 0.0
-    start_x: int = 0
-    start_y: int = 0
-    end_x: int = 0
-    end_y: int = 0
+    start_x: float = 0
+    start_y: float = 0
+    middle_x: float = 0
+    middle_y: float = 0
+    end_x: float = 0
+    end_y: float = 0
 
     def export_v5(self) -> str:
         return (
-            "C {pos_x} {pos_y} {radius} {angle_start} {angle_end} {unit_num} 1"
-            " {line_width} {fill} {start_x} {start_y} {end_x} {end_y}\n".format(
-                pos_x=self.pos_x,
-                pos_y=self.pos_y,
+            "A {center_x:.0f} {center_y:.0f} {radius:.0f} {angle_start:.0f}"
+            " {angle_end:.0f} {unit_num} 1 {line_width} {fill} {start_x:.0f}"
+            " {start_y:.0f} {end_x:.0f} {end_y:.0f}\n".format(
+                center_x=self.center_x,
+                center_y=self.center_y,
                 radius=self.radius,
-                angle_start=self.angle_start,
-                angle_end=self.angle_end,
+                angle_start=self.angle_start * 10,
+                angle_end=self.angle_end * 10,
                 unit_num=1,
                 line_width=KiExportConfigV5.DEFAULT_BOX_LINE_WIDTH.value,
                 fill=ki_box_fill_v5_format[KiBoxFill.background]
@@ -495,15 +507,15 @@ class KiSymbolArc:
         return """
             (arc
               (start {start_x:.2f} {start_y:.2f})
-              (mid {pos_x:.2f} {pos_y:.2f})
+              (mid {middle_x:.2f} {middle_y:.2f})
               (end {end_x:.2f} {end_y:.2f})
               (stroke (width {line_width}) (type default) (color 0 0 0 0))
               (fill (type {fill}))
             )""".format(
             start_x=self.start_x,
             start_y=self.start_y,
-            pos_x=self.pos_x,
-            pos_y=self.pos_y,
+            middle_x=self.middle_x,
+            middle_y=self.middle_y,
             end_x=self.end_x,
             end_y=self.end_y,
             line_width=KiExportConfigV6.DEFAULT_BOX_LINE_WIDTH.value,
@@ -516,7 +528,7 @@ class KiSymbolArc:
 # ---------------- BEZIER CURVE ----------------
 @dataclass
 class KiSymbolBezier:
-    points: List[List[str]] = field(default_factory=List[List[str]])
+    points: List[List[float]] = field(default_factory=List[List[float]])
     points_number: int = 0
     is_closed: bool = False
 
@@ -526,7 +538,9 @@ class KiSymbolBezier:
                 points_number=self.points_number,
                 unit_num=1,
                 line_width=KiExportConfigV5.DEFAULT_BOX_LINE_WIDTH.value,
-                coordinate=" ".join(list(itertools.chain.from_iterable(self.points))),
+                coordinate=" ".join(
+                    map(str, list(itertools.chain.from_iterable(self.points)))
+                ),
                 fill=ki_box_fill_v5_format[KiBoxFill.background]
                 if self.is_closed
                 else ki_box_fill_v5_format[KiBoxFill.none],

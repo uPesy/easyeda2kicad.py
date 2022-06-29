@@ -48,3 +48,7 @@ disable = [
 
 
 ]
+
+[tool.bandit]
+# tests = ["B201", "B301"]
+skips = []

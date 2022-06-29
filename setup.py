@@ -3,6 +3,15 @@ from setuptools import find_packages, setup
 with open("README.md") as fh:
     long_description = fh.read()
 
+production_dependencies = ["pydantic>=1.5", "requests>2.0.0"]
+
+development_dependencies = [
+    "pre-commit>=2.17.0",
+]
+
+with open("requirements.txt", "w", encoding="utf-8") as f:
+    f.write("\n".join(production_dependencies + development_dependencies))
+
 setup(
     name="easyeda2kicad",
     description=(
@@ -11,7 +20,7 @@ setup(
     ),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version="0.4.1",
+    version="0.5.4",
     author="uPesy",
     author_email="contact@upesy.com",
     url="https://github.com/uPesy/easyeda2kicad.py",
@@ -26,8 +35,8 @@ setup(
     package_dir={"easyeda2kicad": "easyeda2kicad"},
     entry_points={"console_scripts": ["easyeda2kicad = easyeda2kicad.__main__:main"]},
     python_requires=">=3.6",
-    install_requires=["pydantic", "requests"],
-    extras_require={"dev": ["pre-commit"]},
+    install_requires=production_dependencies,
+    extras_require={"dev": development_dependencies},
     zip_safe=False,
     keywords="easyeda kicad library conversion",
     classifiers=[
