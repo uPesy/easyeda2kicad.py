@@ -256,6 +256,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     if arguments["symbol"]:
         importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data)
         easyeda_symbol: EeSymbol = importer.get_symbol()
+        # print(easyeda_symbol)
 
         is_id_already_in_symbol_lib = id_already_in_symbol_lib(
             lib_path=f"{arguments['output']}.{sym_lib_ext}",
@@ -267,14 +268,14 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             logging.error("Use --overwrite to update the older symbol lib")
             return 1
 
-        logging.info(f"Creating Kicad symbol library for LCSC id : {component_id}")
-
         exporter = ExporterSymbolKicad(
             symbol=easyeda_symbol, kicad_version=kicad_version
         )
         # print(exporter.output)
-        kicad_symbol_lib = exporter.get_kicad_lib()
-        # print(kicad_symbol_lib)
+        kicad_symbol_lib = exporter.export(
+            is_project_relative=arguments["project_relative"],
+            footprint_lib_name=arguments["output"].split("/")[-1].split(".")[0],
+        )
 
         if is_id_already_in_symbol_lib:
             update_component_in_symbol_lib_file(
@@ -290,6 +291,12 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
                 kicad_version=kicad_version,
             )
 
+        logging.info(
+            f"Created Kicad symbol for ID : {component_id}\n"
+            f"       Symbol name : {easyeda_symbol.info.name}\n"
+            f"       Library path : {arguments['output']}.{sym_lib_ext}"
+        )
+
     # ---------------- FOOTPRINT ----------------
     if arguments["footprint"]:
         importer = EasyedaFootprintImporter(easyeda_cp_cad_data=cad_data)
@@ -303,20 +310,39 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             logging.error("Use --overwrite to replace the older footprint lib")
             return 1
 
-        logging.info(f"Creating Kicad footprint library for LCSC id : {component_id}")
+        filename = f"{easyeda_footprint.info.name}.kicad_mod"
+        lib_path = f"{arguments['output']}.pretty"
+
         ExporterFootprintKicad(footprint=easyeda_footprint).export(
             output_path=arguments["output"],
             is_project_relative=arguments["project_relative"],
         )
 
+        logging.info(
+            f"Created Kicad footprint for ID: {component_id}\n"
+            f"       Footprint name: {easyeda_footprint.info.name}\n"
+            f"       Footprint path: {os.path.join(lib_path, filename)}"
+        )
+
     # ---------------- 3D MODEL ----------------
     if arguments["3d"]:
-        logging.info(f"Creating 3D model for LCSC id : {component_id}")
         exporter = Exporter3dModelKicad(
             model_3d=Easyeda3dModelImporter(
                 easyeda_cp_cad_data=cad_data, download_raw_3d_model=True
             ).output
-        ).export(lib_path=arguments["output"])
+        )
+        exporter.export(lib_path=arguments["output"])
+        if exporter.output:
+            filename = f"{exporter.output.name}.wrl"
+            lib_path = f"{arguments['output']}.3dshapes"
+
+            logging.info(
+                f"Created 3D model for ID: {component_id}\n"
+                f"       3D model name: {exporter.output.name}\n"
+                f"       3D model path: {os.path.join(lib_path, filename)}"
+            )
+
+        # logging.info(f"3D model: {os.path.join(lib_path, filename)}")
 
     return 0
 
