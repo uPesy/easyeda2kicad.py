@@ -12,7 +12,7 @@ _________________
 _________________
 
 
-A Python script that convert any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a Kicad library including **3D model** in color. This tool will speed up your PCB design workflow especially when using [JLCPCB SMT assembly services](https://jlcpcb.com/caa). **It supports library format for both Kicad v6.x and Kicad v5.x.**
+A Python script that converts any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a Kicad library including **3D model** in color. This tool will speed up your PCB design workflow especially when using [JLCPCB SMT assembly services](https://jlcpcb.com/caa). **It supports library formats for both Kicad v6.x and Kicad v5.x.**
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/demo_symbol.png" width="500">
@@ -33,7 +33,7 @@ A big thanks to [JLCPCB](https://jlcpcb.com/caa) for sponsoring this project !
   <a href="https://jlcpcb.com/caa"><img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/jlcpcb_banner.png" width="750"></a>
 </div>
 
-If this tool save you a lot of time when designing a PCB, please consider to support the project by :
+If this tool has saved you a lot of time when designing a PCB, please consider to support the project by :
 - using my link on your first order on JLCPCB : https://jlcpcb.com/caa
 - buying me a coffee :
 
@@ -99,7 +99,7 @@ easyeda2kicad --symbol --lcsc_id=C2040 --v5
 ## 🔗 Add libraries in Kicad
 
 **These are the instructions to add the default easyeda2kicad libraries in Kicad.**
-Before configuring KiCad, run at least once time the script to create lib files. For example :
+Before configuring KiCad, run the script at least once to create lib files. For example :
 
 ```bash
 easyeda2kicad --symbol --footprint --lcsc_id=C2040
@@ -114,9 +114,9 @@ easyeda2kicad --symbol --footprint --lcsc_id=C2040
 
 ## 🔥 Important Notes
 ### WARRANTY
-The correctness of the symbols and footprints converted by easyeda2kicad can't be guaranteed. Easyeda2kicad speed up custom library design process, but you should kept careful and always double check the footprints and symbols generated.
+The correctness of the symbols and footprints converted by easyeda2kicad can't be guaranteed. Easyeda2kicad speeds up custom library design process, but you should reamain careful and always double check the footprints and symbols generated.
 
 ### Usage
 
 - We FORBID the illegal use of converting others files and libraries with the distribution of this program.
-- We FORBID the use that is outside the EasyEDA Terms of Use with the distribution of this program.
+- We FORBID any use that is outside the EasyEDA Terms of Use with the distribution of this program.
