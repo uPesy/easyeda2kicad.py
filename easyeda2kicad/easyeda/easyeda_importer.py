@@ -106,9 +106,10 @@ easyeda_handlers = {
 
 
 class EasyedaSymbolImporter:
-    def __init__(self, easyeda_cp_cad_data: dict):
+    def __init__(self, easyeda_cp_cad_data: dict, easyeda_cp_details: dict):
         self.input = easyeda_cp_cad_data
         self.output: EeSymbol = self.extract_easyeda_data(
+            ee_details=easyeda_cp_details,
             ee_data=easyeda_cp_cad_data,
             ee_data_info=easyeda_cp_cad_data["dataStr"]["head"]["c_para"],
         )
@@ -116,12 +117,13 @@ class EasyedaSymbolImporter:
     def get_symbol(self) -> EeSymbol:
         return self.output
 
-    def extract_easyeda_data(self, ee_data: dict, ee_data_info: dict) -> EeSymbol:
+    def extract_easyeda_data(self, ee_data: dict, ee_data_info: dict, ee_details: dict) -> EeSymbol:
         new_ee_symbol = EeSymbol(
             info=EeSymbolInfo(
                 name=ee_data_info["name"],
                 prefix=ee_data_info["pre"],
                 package=ee_data_info.get("package", None),
+                description=ee_details['data']['describe'],
                 manufacturer=ee_data_info.get("BOM_Manufacturer", None),
                 datasheet=ee_data["lcsc"].get("url", None),
                 lcsc_id=ee_data["lcsc"].get("number", None),

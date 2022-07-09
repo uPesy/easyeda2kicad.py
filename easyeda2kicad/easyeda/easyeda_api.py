@@ -7,6 +7,7 @@ from easyeda2kicad import __version__
 
 API_ENDPOINT = "https://easyeda.com/api/products/{lcsc_id}/components?version=6.4.19.5"
 ENDPOINT_3D_MODEL = "https://easyeda.com/analyzer/api/3dmodel/{uuid}"
+ENDPOINT_DETAILS = "https://jlcpcb.com/shoppingCart/smtGood/getComponentDetail?componentLcscId={lcsc_id}"
 # ------------------------------------------------------------
 
 
@@ -36,6 +37,16 @@ class EasyedaApi:
         if cp_cad_info == {}:
             return {}
         return cp_cad_info["result"]
+
+    def get_details_of_component(self, lcsc_id: str) -> str:
+        r = requests.get(
+            url=ENDPOINT_DETAILS.format(lcsc_id=lcsc_id),
+            headers={"User-Agent": self.headers["User-Agent"]},
+        )
+        if r.status_code != requests.codes.ok:
+            logging.error(f"No data found for lcsc id:{lcsc_id} on easyeda")
+            return None
+        return r.json()
 
     def get_raw_3d_model_obj(self, uuid: str) -> str:
         r = requests.get(
