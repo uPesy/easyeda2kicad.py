@@ -29,11 +29,11 @@ ee_pin_type_to_ki_pin_type = {
 }
 
 
-def px_to_mil(dim: int) -> int:
-    return 10 * dim
+def px_to_mil(dim: Union[int, float]) -> int:
+    return int(10 * dim)
 
 
-def px_to_mm(dim: int) -> float:
+def px_to_mm(dim: Union[int, float]) -> float:
     return 10.0 * dim * 0.0254
 
 
@@ -42,18 +42,21 @@ def convert_ee_pins(
 ) -> List[KiSymbolPin]:
 
     to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
-    pin_spacing = (
-        KiExportConfigV5.PIN_SPACING.value
-        if kicad_version == KicadVersion.v5
-        else KiExportConfigV6.PIN_SPACING.value
-    )
+    # pin_spacing = (
+    #     KiExportConfigV5.PIN_SPACING.value
+    #     if kicad_version == KicadVersion.v5
+    #     else KiExportConfigV6.PIN_SPACING.value
+    # )
 
     kicad_pins = []
     for ee_pin in ee_pins:
+        pin_length = abs(int(float(ee_pin.pin_path.path.split("h")[-1])))
+
         ki_pin = KiSymbolPin(
             name=ee_pin.name.text.replace(" ", ""),
             number=ee_pin.settings.spice_pin_number.replace(" ", ""),
             style=KiPinStyle.line,
+            length=to_ki(pin_length),
             type=ee_pin_type_to_ki_pin_type[ee_pin.settings.type],
             orientation=ee_pin.settings.rotation,
             pos_x=to_ki(int(ee_pin.settings.pos_x) - int(ee_bbox.x)),
@@ -67,16 +70,15 @@ def convert_ee_pins(
         elif ee_pin.clock.is_displayed:
             ki_pin.style = KiPinStyle.clock
 
-        pin_length = abs(int(float(ee_pin.pin_path.path.split("h")[-1])))
         # Deal with different pin length
-        if ee_pin.settings.rotation == 0:
-            ki_pin.pos_x -= to_ki(pin_length) - pin_spacing
-        elif ee_pin.settings.rotation == 180:
-            ki_pin.pos_x += to_ki(pin_length) - pin_spacing
-        elif ee_pin.settings.rotation == 90:
-            ki_pin.pos_y -= to_ki(pin_length) - pin_spacing
-        elif ee_pin.settings.rotation == 270:
-            ki_pin.pos_y += to_ki(pin_length) - pin_spacing
+        # if ee_pin.settings.rotation == 0:
+        #     ki_pin.pos_x -= to_ki(pin_length) - pin_spacing
+        # elif ee_pin.settings.rotation == 180:
+        #     ki_pin.pos_x += to_ki(pin_length) - pin_spacing
+        # elif ee_pin.settings.rotation == 90:
+        #     ki_pin.pos_y -= to_ki(pin_length) - pin_spacing
+        # elif ee_pin.settings.rotation == 270:
+        #     ki_pin.pos_y += to_ki(pin_length) - pin_spacing
 
         kicad_pins.append(ki_pin)
 
