@@ -200,7 +200,6 @@ class ExporterFootprintKicad:
 
             # if self.input.model_3d.translation.z != 0:
             #     self.input.model_3d.translation.z -= 1
-            print(self.input.bbox)
             ki_3d_model_info = Ki3dModel(
                 name=self.input.model_3d.name,
                 translation=Ki3dModelBase(
@@ -217,7 +216,7 @@ class ExporterFootprintKicad:
                 ),
                 raw_wrl=None,
             )
-            print(ki_3d_model_info)
+            # print(ki_3d_model_info)
         else:
             ki_3d_model_info = None
 

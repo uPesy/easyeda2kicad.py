@@ -193,7 +193,7 @@ class KiSymbolInfo:
 
         return "\n".join(header)
 
-    def export_v6(self) -> str:
+    def export_v6(self) -> List[str]:
         property_template = textwrap.indent(
             textwrap.dedent(
                 """
@@ -304,6 +304,7 @@ class KiSymbolPin:
     name: str
     number: str
     style: KiPinStyle
+    length: float
     type: KiPinType
     orientation: float
     pos_x: Union[int, float]
@@ -311,13 +312,13 @@ class KiSymbolPin:
 
     def export_v5(self) -> str:
         return (
-            "X {name} {num} {x} {y} {length} {orientation} {num_sz} {name_sz}"
+            "X {name} {num} {x} {y} {length:.0f} {orientation} {num_sz} {name_sz}"
             " {unit_num} 1 {pin_type} {pin_style}\n".format(
                 name=self.name.replace(" ", ""),
                 num=self.number,
                 x=self.pos_x,
                 y=self.pos_y,
-                length=KiExportConfigV5.PIN_LENGTH.value,
+                length=self.length,
                 orientation=ki_pin_orientation_v5_format[f"{self.orientation}"]
                 if f"{self.orientation}" in ki_pin_orientation_v5_format
                 else ki_pin_orientation_v5_format["0"],
@@ -342,7 +343,8 @@ class KiSymbolPin:
             x=self.pos_x,
             y=self.pos_y,
             orientation=(180 + self.orientation) % 360,  # TODO: 360 - ?
-            pin_length=KiExportConfigV6.PIN_LENGTH.value,
+            pin_length=self.length,
+            # pin_length=KiExportConfigV6.PIN_LENGTH.value,
             pin_name=self.name.replace(" ", ""),
             name_size=KiExportConfigV6.PIN_NAME_SIZE.value,
             pin_num=self.number,
@@ -431,21 +433,24 @@ class KiSymbolPolygon:
 # ---------------- CIRCLE ----------------
 @dataclass
 class KiSymbolCircle:
-    pos_x: int = 0
-    pos_y: int = 0
-    radius: int = 0
+    pos_x: Union[int, float] = 0
+    pos_y: Union[int, float] = 0
+    radius: Union[int, float] = 0
     background_filling: bool = False
 
     def export_v5(self) -> str:
-        return "C {pos_x} {pos_y} {radius} {unit_num} 1 {line_width} {fill}\n".format(
-            pos_x=self.pos_x,
-            pos_y=self.pos_y,
-            radius=int(self.radius),
-            unit_num=1,
-            line_width=KiExportConfigV5.DEFAULT_BOX_LINE_WIDTH.value,
-            fill=ki_box_fill_v5_format[KiBoxFill.background]
-            if self.background_filling
-            else ki_box_fill_v5_format[KiBoxFill.none],
+        return (
+            "C {pos_x:.0f} {pos_y:.0f} {radius:.0f} {unit_num} 1 {line_width} {fill}\n"
+            .format(
+                pos_x=self.pos_x,
+                pos_y=self.pos_y,
+                radius=int(self.radius),
+                unit_num=1,
+                line_width=KiExportConfigV5.DEFAULT_BOX_LINE_WIDTH.value,
+                fill=ki_box_fill_v5_format[KiBoxFill.background]
+                if self.background_filling
+                else ki_box_fill_v5_format[KiBoxFill.none],
+            )
         )
 
     def export_v6(self) -> str:
