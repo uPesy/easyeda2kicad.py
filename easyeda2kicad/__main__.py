@@ -162,6 +162,8 @@ def valid_arguments(arguments: dict) -> bool:
 
         base_folder = default_folder
         lib_name = "easyeda2kicad"
+        arguments["use_default_folder"] = True
+
     arguments["output"] = f"{base_folder}/{lib_name}"
 
     # Create new footprint folder if it does not exist
@@ -273,7 +275,6 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         )
         # print(exporter.output)
         kicad_symbol_lib = exporter.export(
-            is_project_relative=arguments["project_relative"],
             footprint_lib_name=arguments["output"].split("/")[-1].split(".")[0],
         )
 
@@ -310,18 +311,27 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             logging.error("Use --overwrite to replace the older footprint lib")
             return 1
 
-        filename = f"{easyeda_footprint.info.name}.kicad_mod"
-        lib_path = f"{arguments['output']}.pretty"
+        ki_footprint = ExporterFootprintKicad(footprint=easyeda_footprint)
+        footprint_filename = f"{easyeda_footprint.info.name}.kicad_mod"
+        footprint_path = f"{arguments['output']}.pretty"
+        model_3d_path = f"{arguments['output']}.3dshapes".replace("\\", "/").replace(
+            "./", "/"
+        )
 
-        ExporterFootprintKicad(footprint=easyeda_footprint).export(
-            output_path=arguments["output"],
-            is_project_relative=arguments["project_relative"],
+        if arguments.get("use_default_folder"):
+            model_3d_path = "${EASYEDA2KICAD}/easyeda2kicad.3dshapes"
+        if arguments["project_relative"]:
+            model_3d_path = "${KIPRJMOD}" + model_3d_path
+
+        ki_footprint.export(
+            footprint_full_path=f"{footprint_path}/{footprint_filename}",
+            model_3d_path=model_3d_path,
         )
 
         logging.info(
             f"Created Kicad footprint for ID: {component_id}\n"
             f"       Footprint name: {easyeda_footprint.info.name}\n"
-            f"       Footprint path: {os.path.join(lib_path, filename)}"
+            f"       Footprint path: {os.path.join(footprint_path, footprint_filename)}"
         )
 
     # ---------------- 3D MODEL ----------------

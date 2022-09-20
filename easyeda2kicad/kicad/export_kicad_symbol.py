@@ -300,7 +300,7 @@ def convert_to_kicad(ee_symbol: EeSymbol, kicad_version: KicadVersion) -> KiSymb
 
     ki_info = KiSymbolInfo(
         name=ee_symbol.info.name,
-        prefix=ee_symbol.info.prefix,
+        prefix=ee_symbol.info.prefix.replace("?", ""),
         package=ee_symbol.info.package,
         manufacturer=ee_symbol.info.manufacturer,
         datasheet=ee_symbol.info.datasheet,
@@ -350,12 +350,8 @@ def convert_to_kicad(ee_symbol: EeSymbol, kicad_version: KicadVersion) -> KiSymb
     return kicad_symbol
 
 
-def tune_footprint_ref_path(
-    ki_symbol: KiSymbol, is_project_relative: bool, footprint_lib_name: str
-):
+def tune_footprint_ref_path(ki_symbol: KiSymbol, footprint_lib_name: str):
     ki_symbol.info.package = f"{footprint_lib_name}:{ki_symbol.info.package}"
-    if is_project_relative:
-        ki_symbol.info.package = "${KIPRJMOD}:" + ki_symbol.info.package
 
 
 class ExporterSymbolKicad:
@@ -368,10 +364,10 @@ class ExporterSymbolKicad:
             else logging.error("Unknown input symbol format")
         )
 
-    def export(self, is_project_relative: bool, footprint_lib_name: str) -> str:
+    def export(self, footprint_lib_name: str) -> str:
+
         tune_footprint_ref_path(
             ki_symbol=self.output,
-            is_project_relative=is_project_relative,
             footprint_lib_name=footprint_lib_name,
         )
         return self.output.export(kicad_version=self.version)
