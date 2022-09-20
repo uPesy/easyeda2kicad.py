@@ -338,7 +338,9 @@ class KiSymbolPin:
               (name "{pin_name}" (effects (font (size {name_size} {name_size}))))
               (number "{pin_num}" (effects (font (size {num_size} {num_size}))))
             )""".format(
-            pin_type=self.type.name.replace("_", ""),
+            pin_type=self.type.name[1:]
+            if self.type.name.startswith("_")
+            else self.type.name,
             pin_style=self.style.name,
             x=self.pos_x,
             y=self.pos_y,

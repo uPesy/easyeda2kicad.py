@@ -5,6 +5,7 @@ import math
 import os
 import re
 from datetime import datetime
+from glob import escape
 
 from easyeda2kicad import __version__
 from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion, sanitize_fields
@@ -42,7 +43,11 @@ def set_logger(log_file: str, log_level: int) -> None:
 
 
 def sanitize_for_regex(field: str):
-    return sanitize_fields(field).replace("(", r"\(").replace(")", r"\)")
+    field = sanitize_fields(field)
+    chars_to_escape = r"(){}[],;.|\+-?*#^:$"
+    for char in chars_to_escape:
+        field = field.replace(char, rf"\{char}")
+    return field
 
 
 def id_already_in_symbol_lib(
