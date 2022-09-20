@@ -200,7 +200,6 @@ class ExporterFootprintKicad:
 
             # if self.input.model_3d.translation.z != 0:
             #     self.input.model_3d.translation.z -= 1
-            print(self.input.bbox)
             ki_3d_model_info = Ki3dModel(
                 name=self.input.model_3d.name,
                 translation=Ki3dModelBase(
@@ -217,7 +216,7 @@ class ExporterFootprintKicad:
                 ),
                 raw_wrl=None,
             )
-            print(ki_3d_model_info)
+            # print(ki_3d_model_info)
         else:
             ki_3d_model_info = None
 
@@ -447,7 +446,7 @@ class ExporterFootprintKicad:
     def get_ki_footprint(self) -> KiFootprint:
         return self.output
 
-    def export(self, output_path: str, is_project_relative: bool) -> None:
+    def export(self, footprint_full_path: str, model_3d_path: str) -> None:
 
         ki = self.output
         ki_lib = ""
@@ -499,11 +498,8 @@ class ExporterFootprintKicad:
             ki_lib += KI_TEXT.format(**vars(text))
 
         if ki.model_3d is not None:
-            model_3d_path = output_path
-            if is_project_relative:
-                model_3d_path = "${KIPRJMOD}/" + model_3d_path.split("/")[-1]
             ki_lib += KI_MODEL_3D.format(
-                file_3d=f"{model_3d_path}.3dshapes/{ki.model_3d.name}.wrl",
+                file_3d=f"{model_3d_path}/{ki.model_3d.name}.wrl",
                 pos_x=ki.model_3d.translation.x,
                 pos_y=ki.model_3d.translation.y,
                 pos_z=ki.model_3d.translation.z,
@@ -515,7 +511,7 @@ class ExporterFootprintKicad:
         ki_lib += KI_END_FILE
 
         with open(
-            file=f"{output_path}.pretty/{ki.info.name}.kicad_mod",
+            file=footprint_full_path,
             mode="w",
             encoding="utf-8",
         ) as my_lib:
