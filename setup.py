@@ -20,7 +20,7 @@ setup(
     ),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version="0.6.0",
+    version="0.6.1",
     author="uPesy",
     author_email="contact@upesy.com",
     url="https://github.com/uPesy/easyeda2kicad.py",
