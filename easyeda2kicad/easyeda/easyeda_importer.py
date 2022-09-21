@@ -149,16 +149,19 @@ class EasyedaFootprintImporter:
         self.output = self.extract_easyeda_data(
             ee_data_str=self.input["packageDetail"]["dataStr"],
             ee_data_info=self.input["packageDetail"]["dataStr"]["head"]["c_para"],
+            is_smd=self.input.get("SMT"),
         )
 
     def get_footprint(self):
         return self.output
 
-    def extract_easyeda_data(self, ee_data_str: str, ee_data_info: str) -> ee_footprint:
+    def extract_easyeda_data(
+        self, ee_data_str: dict, ee_data_info: dict, is_smd: bool
+    ) -> ee_footprint:
         new_ee_footprint = ee_footprint(
             info=EeFootprintInfo(
                 name=ee_data_info["package"],
-                fp_type="smd" if "SMT" in ee_data_info else "tht",
+                fp_type="smd" if is_smd else "tht",
                 model_3d_name=ee_data_info.get("3DModel"),
             ),
             bbox=EeFootprintBbox(
