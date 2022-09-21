@@ -100,6 +100,23 @@ def sanitize_fields(name: str) -> str:
     return name.replace(" ", "").replace("/", "_")
 
 
+def apply_text_style(text: str, kicad_version: KicadVersion) -> str:
+    if text.endswith("#"):
+        text = (
+            f"~{{{text[:-1]}}}"
+            if kicad_version == KicadVersion.v6
+            else f"~{text[:-1]}~"
+        )
+    return text
+
+
+def apply_pin_name_style(pin_name: str, kicad_version: KicadVersion) -> str:
+    return "/".join(
+        apply_text_style(text=txt, kicad_version=kicad_version)
+        for txt in pin_name.split("/")
+    )
+
+
 # Config V6
 # Dimensions are in mm
 class KiExportConfigV6(Enum):
@@ -311,10 +328,13 @@ class KiSymbolPin:
     pos_y: Union[int, float]
 
     def export_v5(self) -> str:
+
         return (
             "X {name} {num} {x} {y} {length:.0f} {orientation} {num_sz} {name_sz}"
             " {unit_num} 1 {pin_type} {pin_style}\n".format(
-                name=self.name.replace(" ", ""),
+                name=apply_pin_name_style(
+                    pin_name=self.name, kicad_version=KicadVersion.v5
+                ),
                 num=self.number,
                 x=self.pos_x,
                 y=self.pos_y,
@@ -347,7 +367,9 @@ class KiSymbolPin:
             orientation=(180 + self.orientation) % 360,  # TODO: 360 - ?
             pin_length=self.length,
             # pin_length=KiExportConfigV6.PIN_LENGTH.value,
-            pin_name=self.name.replace(" ", ""),
+            pin_name=apply_pin_name_style(
+                pin_name=self.name, kicad_version=KicadVersion.v6
+            ),
             name_size=KiExportConfigV6.PIN_NAME_SIZE.value,
             pin_num=self.number,
             num_size=KiExportConfigV6.PIN_NUM_SIZE.value,
