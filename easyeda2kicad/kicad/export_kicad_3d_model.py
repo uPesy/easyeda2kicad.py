@@ -34,6 +34,8 @@ def get_materials(obj_data: str) -> dict:
             elif value.startswith("Ks"):
                 material["specular_color"] = value.split(" ")[1:]
             elif value.startswith("d"):
+                # This isn't exactly the same as transparency, is dissolve
+                # I.e. part C115366 (SW-TH_SPEF110100) has d=1, and isn't transparent
                 material["transparency"] = value.split(" ")[1]
 
         materials[material_id] = material
@@ -87,7 +89,7 @@ def generate_wrl_model(model_3d: Ee3dModel) -> Ki3dModel:
                         diffuseColor {' '.join(material['diffuse_color'])}
                         specularColor {' '.join(material['specular_color'])}
                         ambientIntensity 0.2
-                        transparency {material['transparency']}
+                        transparency 0
                         shininess 0.5
                     }}
                 }}
