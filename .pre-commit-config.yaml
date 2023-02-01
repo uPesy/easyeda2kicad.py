@@ -82,5 +82,5 @@ repos:
         types_or: [javascript, jsx, ts, tsx, html, css, json]
         exclude: (.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env)/"
 
-default_language_version:
-    python: python3.8
+# default_language_version:
+#     python: python3.8
