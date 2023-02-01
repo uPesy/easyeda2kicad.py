@@ -16,4 +16,4 @@ jobs:
         with:
           python-version: "3.x"
           cache: "pip"
-      - uses: pre-commit/action@v2.0.3
+      - uses: pre-commit/action@v3.0.0
