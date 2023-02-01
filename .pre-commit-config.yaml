@@ -72,6 +72,8 @@ repos:
     -   id: bandit
         files: "\\.(py)$"
         exclude: (.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env)/"
+        args: ["-c", "pyproject.toml"]
+        additional_dependencies: [ "bandit[toml]" ]
 -   repo: https://github.com/pre-commit/mirrors-prettier
     rev: v2.5.1
     hooks:
