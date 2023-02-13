@@ -1,4 +1,4 @@
-# easyeda2kicad v0.6.2
+# easyeda2kicad v0.6.3
 
 _________________
 [![PyPI version](https://badge.fury.io/py/easyeda2kicad.svg)](https://badge.fury.io/py/easyeda2kicad)
@@ -23,24 +23,14 @@ A Python script that converts any electronic components from [EasyEDA](https://e
 
 
 ## 🎆 Sponsor and Support
-A big thanks to [JLCPCB](https://jlcpcb.com/caa) for sponsoring this project !
 
-<!-- <div align="center">
-  <a href="https://jlcpcb.com/caa"><img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/jlcpcb_banner.png" width="750"></a>
-</div> -->
+If this tool has saved you a lot of time when designing a PCB, please consider supporting the project by :
+- Subscribing to uPesy Premium Membership to have access to high-quality electronics tutorials at https://www.upesy.com/products/subscription
+- Buying one of my ESP32 DevKit boards: https://www.upesy.com/pages/store
 
 <div align="center">
-  <a href="https://jlcpcb.com/caa"><img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/jlcpcb_banner.png" width="750"></a>
+<a href="https://www.upesy.com/" target="_blank"><img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/upesy_store.jpg" width="350"/></a>
 </div>
-
-If this tool has saved you a lot of time when designing a PCB, please consider to support the project by :
-- using my link on your first order on JLCPCB : https://jlcpcb.com/caa
-- buying me a coffee :
-
-  <a href="https://www.buymeacoffee.com/upesy" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" height="30px"/></a>
-  <a href="https://ko-fi.com/upesy" target="_blank"><img src="https://ko-fi.com/img/githubbutton_sm.svg" height="30px"/></a>
-  <a href="https://github.com/sponsors/uPesy" target="_blank"><img src="https://img.shields.io/badge/-Github Sponsor-fafbfc?style=flat&logo=GitHub%20Sponsors" height="30px"/></a>
-
 
 ## 💾 Installation
 
@@ -68,10 +58,10 @@ easyeda2kicad --symbol --lcsc_id=C2040 --v5
 ```
 
 By default, all librairies are saved in `C:/Users/your_name/Documents/Kicad/easyeda2kicad/`, with :
-- `easyeda2kicad.kicad_sym` for Kicad v6.x symbol library
-- `easyeda2kicad.lib` for Kicad v5.x legacy symbol library
-- `easyeda2kicad.pretty/` for footprint libraries
-- `easyeda2kicad.3dshapes/` for 3d models
+- `easyeda2kicad.kicad_sym` file for Kicad v6.x symbol library
+- `easyeda2kicad.lib` file for Kicad v5.x legacy symbol library
+- `easyeda2kicad.pretty/` folder for footprint libraries
+- `easyeda2kicad.3dshapes/` folder for 3d models
 
 If you want to save components symbol/footprint in your own libs, you can specify the output lib path by using `--output` option.
 
@@ -115,8 +105,3 @@ easyeda2kicad --symbol --footprint --lcsc_id=C2040
 ## 🔥 Important Notes
 ### WARRANTY
 The correctness of the symbols and footprints converted by easyeda2kicad can't be guaranteed. Easyeda2kicad speeds up custom library design process, but you should remain careful and always double check the footprints and symbols generated.
-
-### Usage
-
-- We FORBID the illegal use of converting others files and libraries with the distribution of this program.
-- We FORBID any use that is outside the EasyEDA Terms of Use with the distribution of this program.
