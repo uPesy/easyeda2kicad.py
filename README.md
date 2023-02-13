@@ -28,9 +28,9 @@ If this tool has saved you a lot of time when designing a PCB, please consider t
 - Subscribing to uPesy Premium Membership to have access to high quality electronics tutorials at https://www.upesy.com/products/subscription
 - Buying one of my ESP32 DevKit boards : https://www.upesy.com/pages/store
 
-<!-- <div align="center">
+<div align="center">
 <a href="https://www.upesy.com/" target="_blank"><img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/upesy_store.jpg" width="350"/></a>
-</div> -->
+</div>
 
 ## 💾 Installation
 
