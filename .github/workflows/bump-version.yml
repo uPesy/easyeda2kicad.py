@@ -16,7 +16,7 @@ jobs:
         with:
           token: ${{ secrets.API_GITHUB_TOKEN }}
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: "3.x"
           cache: "pip"
