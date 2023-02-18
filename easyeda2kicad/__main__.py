@@ -157,6 +157,10 @@ def valid_arguments(arguments: dict) -> bool:
             "Kicad",
             "easyeda2kicad",
         )
+        # Use environment variables if EASYEDA2KICAD_DIR is set
+        # Else, use default_folder
+        env_folder = os.getenv("EASYEDA2KICAD_DIR", default_folder)
+        default_folder = os.path.abspath(env_folder)
         if not os.path.isdir(default_folder):
             os.mkdir(default_folder)
 
