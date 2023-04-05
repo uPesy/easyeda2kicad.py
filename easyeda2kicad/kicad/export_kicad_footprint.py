@@ -204,7 +204,9 @@ class ExporterFootprintKicad:
                     y=-round(
                         (self.input.model_3d.translation.y - self.input.bbox.y), 2
                     ),
-                    z=-round(self.input.model_3d.translation.z, 2),
+                    z=-round(self.input.model_3d.translation.z, 2)
+                    if self.input.info.fp_type == "smd"
+                    else 0,
                 ),
                 rotation=Ki3dModelBase(
                     x=(360 - self.input.model_3d.rotation.x) % 360,
@@ -450,8 +452,10 @@ class ExporterFootprintKicad:
             package_lib="easyeda2kicad", package_name=ki.info.name, edit="5DC5F6A4"
         )
 
-        if ki.info.fp_type and ki.info.fp_type == "smd":
-            ki_lib += KI_FP_TYPE.format(component_type=ki.info.fp_type)
+        if ki.info.fp_type:
+            ki_lib += KI_FP_TYPE.format(
+                component_type=("smd" if ki.info.fp_type == "smd" else "through_hole")
+            )
 
         # Get y_min and y_max to put component info
         y_low = min(pad.pos_y for pad in ki.pads)
