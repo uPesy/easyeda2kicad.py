@@ -77,6 +77,15 @@ KI_PAD_LAYER = {
     15: "Dwgs.User",
 }
 
+KI_PAD_LAYER_THT = {
+    1: "F.Cu F.Mask",
+    2: "B.Cu B.Mask",
+    3: "F.SilkS",
+    11: "*.Cu *.Mask",
+    13: "F.Fab",
+    15: "Dwgs.User",
+}
+
 KI_LAYERS = {
     1: "F.Cu",
     2: "B.Cu",
