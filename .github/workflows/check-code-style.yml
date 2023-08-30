@@ -14,6 +14,6 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.x"
+          python-version: "3.8"
           cache: "pip"
       - uses: pre-commit/action@v3.0.0

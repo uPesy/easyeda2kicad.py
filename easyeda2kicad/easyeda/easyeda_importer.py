@@ -149,7 +149,8 @@ class EasyedaFootprintImporter:
         self.output = self.extract_easyeda_data(
             ee_data_str=self.input["packageDetail"]["dataStr"],
             ee_data_info=self.input["packageDetail"]["dataStr"]["head"]["c_para"],
-            is_smd=self.input.get("SMT"),
+            is_smd=self.input.get("SMT")
+            and "-TH_" not in self.input["packageDetail"]["title"],
         )
 
     def get_footprint(self):
@@ -172,7 +173,6 @@ class EasyedaFootprintImporter:
         )
 
         for line in ee_data_str["shape"]:
-
             ee_designator = line.split("~")[0]
             ee_fields = line.split("~")[1:]
 
