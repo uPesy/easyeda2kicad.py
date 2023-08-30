@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Union
 
-from pydantic import field_validator, BaseModel
+from pydantic import BaseModel, field_validator
 
 from easyeda2kicad.easyeda.svg_path_parser import parse_svg_path
 
@@ -430,7 +430,7 @@ class EeFootprintRectangle(BaseModel):
     @field_validator("is_locked", mode="before")
     @classmethod
     def empty_str_lock(cls, field):
-        return False if field == "" else field
+        return False if field == "" else bool(float(field))
 
     def convert_to_mm(self):
         self.x = convert_to_mm(self.x)
