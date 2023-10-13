@@ -181,6 +181,7 @@ class ExporterFootprintKicad:
             self.input.pads,
             self.input.tracks,
             self.input.holes,
+            self.input.vias,
             self.input.circles,
             self.input.rectangles,
             self.input.texts,
@@ -311,6 +312,17 @@ class ExporterFootprintKicad:
             )
 
             self.output.holes.append(ki_hole)
+
+        # For Vias
+        for ee_via in self.input.vias:
+            ki_via = KiFootprintVia(
+                pos_x=ee_via.center_x - self.input.bbox.x,
+                pos_y=ee_via.center_y - self.input.bbox.y,
+                size=ee_via.radius * 2,
+                diameter=ee_via.diameter,
+            )
+
+            self.output.vias.append(ki_via)
 
         # For circles
         for ee_circle in self.input.circles:
@@ -486,6 +498,9 @@ class ExporterFootprintKicad:
 
         for hole in ki.holes:
             ki_lib += KI_HOLE.format(**vars(hole))
+
+        for via in ki.vias:
+            ki_lib += KI_VIA.format(**vars(via))
 
         for circle in ki.circles:
             ki_lib += KI_CIRCLE.format(**vars(circle))
