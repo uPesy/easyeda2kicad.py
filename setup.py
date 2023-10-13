@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 with open("README.md") as fh:
     long_description = fh.read()
 
-production_dependencies = ["pydantic>=1.5", "requests>2.0.0"]
+production_dependencies = ["pydantic>=2.0.0", "requests>2.0.0"]
 
 development_dependencies = [
     "pre-commit>=2.17.0",
@@ -20,7 +20,7 @@ setup(
     ),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version="0.6.3",
+    version="0.6.5",
     author="uPesy",
     author_email="contact@upesy.com",
     url="https://github.com/uPesy/easyeda2kicad.py",

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Union
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 from easyeda2kicad.easyeda.svg_path_parser import parse_svg_path
 
@@ -33,19 +33,23 @@ class EeSymbolPinSettings(BaseModel):
     id: str
     is_locked: bool
 
-    @validator("is_displayed", pre=True)
+    @field_validator("is_displayed", mode="before")
+    @classmethod
     def parse_display_field(cls, field: str) -> bool:
         return True if field == "show" else field
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, is_locked: str) -> str:
         return is_locked or False
 
-    @validator("rotation", pre=True)
+    @field_validator("rotation", mode="before")
+    @classmethod
     def empty_str_rotation(cls, rotation: str) -> str:
         return rotation or 0.0
 
-    @validator("type", pre=True)
+    @field_validator("type", mode="before")
+    @classmethod
     def convert_pin_type(cls, field: str) -> str:
         return (
             EasyedaPinType(int(field or 0))
@@ -63,7 +67,8 @@ class EeSymbolPinPath(BaseModel):
     path: str
     color: str
 
-    @validator("path", pre=True)
+    @field_validator("path", mode="before")
+    @classmethod
     def tune_path(cls, field: str) -> str:
         return field.replace("v", "h")
 
@@ -78,17 +83,20 @@ class EeSymbolPinName(BaseModel):
     font: str
     font_size: float
 
-    @validator("font_size", pre=True)
+    @field_validator("font_size", mode="before")
+    @classmethod
     def empty_str_font(cls, font_size: str) -> float:
         if isinstance(font_size, str) and "pt" in font_size:
             return float(font_size.replace("pt", ""))
         return font_size or 7.0
 
-    @validator("is_displayed", pre=True)
+    @field_validator("is_displayed", mode="before")
+    @classmethod
     def parse_display_field(cls, field: str) -> str:
         return True if field == "show" else field
 
-    @validator("rotation", pre=True)
+    @field_validator("rotation", mode="before")
+    @classmethod
     def empty_str_rotation(cls, rotation: str) -> str:
         return rotation or 0.0
 
@@ -98,7 +106,8 @@ class EeSymbolPinDotBis(BaseModel):
     circle_x: float
     circle_y: float
 
-    @validator("is_displayed", pre=True)
+    @field_validator("is_displayed", mode="before")
+    @classmethod
     def parse_display_field(cls, field: str) -> str:
         return True if field == "show" else field
 
@@ -107,7 +116,8 @@ class EeSymbolPinClock(BaseModel):
     is_displayed: bool
     path: str
 
-    @validator("is_displayed", pre=True)
+    @field_validator("is_displayed", mode="before")
+    @classmethod
     def parse_display_field(cls, field: str) -> str:
         return True if field == "show" else field
 
@@ -126,8 +136,8 @@ class EeSymbolPin:
 class EeSymbolRectangle(BaseModel):
     pos_x: float
     pos_y: float
-    rx: Union[float, None]
-    ry: Union[float, None]
+    rx: Union[float, None] = None
+    ry: Union[float, None] = None
     width: float
     height: float
     stroke_color: str
@@ -137,7 +147,8 @@ class EeSymbolRectangle(BaseModel):
     id: str
     is_locked: bool
 
-    @validator("*", pre=True)
+    @field_validator("*", mode="before")
+    @classmethod
     def empty_str_to_none(cls, field: str) -> str:
         return field or None
 
@@ -154,11 +165,13 @@ class EeSymbolCircle(BaseModel):
     id: str
     is_locked: bool
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, field: str) -> str:
         return field or False
 
-    @validator("fill_color", pre=True)
+    @field_validator("fill_color", mode="before")
+    @classmethod
     def parse_background_filling(cls, fill_color: str) -> str:
         return bool(fill_color and fill_color.lower() != "none")
 
@@ -174,15 +187,18 @@ class EeSymbolArc(BaseModel):
     id: str
     is_locked: bool
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, field: str) -> str:
         return field or False
 
-    @validator("fill_color", pre=True)
+    @field_validator("fill_color", mode="before")
+    @classmethod
     def parse_background_filling(cls, fill_color: str) -> str:
         return bool(fill_color and fill_color.lower() != "none")
 
-    @validator("path", pre=True)
+    @field_validator("path", mode="before")
+    @classmethod
     def convert_svg_path(cls, path: str) -> list:
         return parse_svg_path(svg_path=path)
 
@@ -199,11 +215,13 @@ class EeSymbolEllipse(BaseModel):
     id: str
     is_locked: bool
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, field: str) -> str:
         return field or False
 
-    @validator("fill_color", pre=True)
+    @field_validator("fill_color", mode="before")
+    @classmethod
     def parse_background_filling(cls, fill_color: str) -> str:
         return bool(fill_color and fill_color.lower() != "none")
 
@@ -218,11 +236,13 @@ class EeSymbolPolyline(BaseModel):
     id: str
     is_locked: bool
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, field: str) -> str:
         return field or False
 
-    @validator("fill_color", pre=True)
+    @field_validator("fill_color", mode="before")
+    @classmethod
     def parse_background_filling(cls, fill_color: str) -> str:
         return bool(fill_color and fill_color.lower() != "none")
 
@@ -245,11 +265,13 @@ class EeSymbolPath(BaseModel):
     id: str
     is_locked: bool
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, field: str) -> str:
         return field or False
 
-    @validator("fill_color", pre=True)
+    @field_validator("fill_color", mode="before")
+    @classmethod
     def parse_background_filling(cls, fill_color: str) -> str:
         return bool(fill_color and fill_color.lower() != "none")
 
@@ -328,11 +350,13 @@ class EeFootprintPad(BaseModel):
         self.hole_radius = convert_to_mm(self.hole_radius)
         self.hole_length = convert_to_mm(self.hole_length)
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, field: str) -> str:
         return field or False
 
-    @validator("rotation", pre=True)
+    @field_validator("rotation", mode="before")
+    @classmethod
     def empty_str_rotation(cls, field: str) -> str:
         return field or 0.0
 
@@ -345,7 +369,8 @@ class EeFootprintTrack(BaseModel):
     id: str
     is_locked: bool
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, field: str) -> str:
         return field or False
 
@@ -360,7 +385,8 @@ class EeFootprintHole(BaseModel):
     id: str
     is_locked: bool
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, field: str) -> str:
         return field or False
 
@@ -379,7 +405,8 @@ class EeFootprintCircle(BaseModel):
     id: str
     is_locked: bool
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, field: str) -> str:
         return field or False
 
@@ -400,9 +427,10 @@ class EeFootprintRectangle(BaseModel):
     layer_id: int
     is_locked: bool
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, field):
-        return False if field == "" else field
+        return False if field == "" else bool(float(field))
 
     def convert_to_mm(self):
         self.x = convert_to_mm(self.x)
@@ -420,7 +448,8 @@ class EeFootprintArc(BaseModel):
     id: str
     is_locked: bool
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, field):
         return False if field == "" else field
 
@@ -441,15 +470,18 @@ class EeFootprintText(BaseModel):
     id: str
     is_locked: bool
 
-    @validator("is_displayed", pre=True)
+    @field_validator("is_displayed", mode="before")
+    @classmethod
     def empty_str_display(cls, field):
         return True if field == "" else field
 
-    @validator("is_locked", pre=True)
+    @field_validator("is_locked", mode="before")
+    @classmethod
     def empty_str_lock(cls, field):
         return False if field == "" else field
 
-    @validator("rotation", pre=True)
+    @field_validator("rotation", mode="before")
+    @classmethod
     def empty_str_rotation(cls, field):
         return 0.0 if field == "" else field
 

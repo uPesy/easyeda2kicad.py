@@ -158,7 +158,7 @@ def valid_arguments(arguments: dict) -> bool:
             "easyeda2kicad",
         )
         if not os.path.isdir(default_folder):
-            os.mkdir(default_folder)
+            os.makedirs(default_folder, exist_ok=True)
 
         base_folder = default_folder
         lib_name = "easyeda2kicad"
