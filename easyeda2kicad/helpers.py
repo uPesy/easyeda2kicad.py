@@ -43,11 +43,7 @@ def set_logger(log_file: str, log_level: int) -> None:
 
 
 def sanitize_for_regex(field: str):
-    field = sanitize_fields(field)
-    chars_to_escape = r"(){}[],;.|\+-?*#^:$"
-    for char in chars_to_escape:
-        field = field.replace(char, rf"\{char}")
-    return field
+    return re.escape(field)
 
 
 def id_already_in_symbol_lib(
