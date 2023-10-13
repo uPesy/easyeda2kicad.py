@@ -40,6 +40,10 @@ KI_HOLE = (
     '\t(pad "" thru_hole circle (at {pos_x:.2f} {pos_y:.2f}) (size {size:.2f}'
     " {size:.2f}) (drill {size:.2f}) (layers *.Cu *.Mask))\n"
 )
+KI_VIA = (
+    '\t(pad "" thru_hole circle (at {pos_x:.2f} {pos_y:.2f}) (size {diameter:.2f}'
+    " {diameter:.2f}) (drill {size:.2f}) (layers *.Cu *.Paste *.Mask))\n"
+)
 KI_CIRCLE = (
     "\t(fp_circle (center {cx:.2f} {cy:.2f}) (end {end_x:.2f} {end_y:.2f}) (layer"
     " {layers}) (width {stroke_width:.2f}))\n"
@@ -215,7 +219,13 @@ class KiFootprintText:
 # ---------------- VIA ----------------
 @dataclass
 class KiFootprintVia:
-    name: str = ""
+    pos_x: float
+    pos_y: float
+    size: float
+    diameter: float
+    
+    def __post_init__(self) -> None:
+        round_float_values(self)
     # TODO
 
 
