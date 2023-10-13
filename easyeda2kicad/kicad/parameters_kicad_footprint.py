@@ -223,9 +223,10 @@ class KiFootprintVia:
     pos_y: float
     size: float
     diameter: float
-    
+
     def __post_init__(self) -> None:
         round_float_values(self)
+
     # TODO
 
 
