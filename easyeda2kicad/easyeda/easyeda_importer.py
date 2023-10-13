@@ -193,7 +193,7 @@ class EasyedaFootprintImporter:
                 new_ee_footprint.holes.append(ee_hole)
             elif ee_designator == "VIA":
                 ee_via = EeFootprintVia(
-                    **dict(zip(EeFootprintVia.__fields__,   ee_fields))
+                    **dict(zip(EeFootprintVia.__fields__, ee_fields))
                 )
                 new_ee_footprint.vias.append(ee_via)
             elif ee_designator == "CIRCLE":

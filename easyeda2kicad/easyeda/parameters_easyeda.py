@@ -395,6 +395,7 @@ class EeFootprintHole(BaseModel):
         self.center_y = convert_to_mm(self.center_y)
         self.radius = convert_to_mm(self.radius)
 
+
 class EeFootprintVia(BaseModel):
     center_x: float
     center_y: float
@@ -414,6 +415,7 @@ class EeFootprintVia(BaseModel):
         self.center_y = convert_to_mm(self.center_y)
         self.radius = convert_to_mm(self.radius)
         self.diameter = convert_to_mm(self.diameter)
+
 
 class EeFootprintCircle(BaseModel):
     cx: float
