@@ -32,7 +32,6 @@ def compute_arc(
     end_x: float,
     end_y: float,
 ) -> Tuple[float, float, float]:
-
     # Compute the half distance between the current and the final point
     dx2 = (start_x - end_x) / 2.0
     dy2 = (start_y - end_y) / 2.0
@@ -130,7 +129,6 @@ def drill_to_ki(
         and hole_length is not None
         and hole_length != 0
     ):
-
         max_distance_hole = max(hole_radius * 2, hole_length)
         pos_0 = pad_height - max_distance_hole
         pos_90 = pad_width - max_distance_hole
@@ -176,7 +174,6 @@ class ExporterFootprintKicad:
             self.generate_kicad_footprint()
 
     def generate_kicad_footprint(self) -> None:
-
         # Convert dimension from easyeda to kicad
         self.input.bbox.convert_to_mm()
 
@@ -207,7 +204,9 @@ class ExporterFootprintKicad:
                     y=-round(
                         (self.input.model_3d.translation.y - self.input.bbox.y), 2
                     ),
-                    z=-round(self.input.model_3d.translation.z, 2),
+                    z=-round(self.input.model_3d.translation.z, 2)
+                    if self.input.info.fp_type == "smd"
+                    else 0,
                 ),
                 rotation=Ki3dModelBase(
                     x=(360 - self.input.model_3d.rotation.x) % 360,
@@ -233,14 +232,15 @@ class ExporterFootprintKicad:
                 pos_y=ee_pad.center_y - self.input.bbox.y,
                 width=max(ee_pad.width, 0.01),
                 height=max(ee_pad.height, 0.01),
-                layers=KI_PAD_LAYER[ee_pad.layer_id]
-                if ee_pad.layer_id in KI_PAD_LAYER
-                else "",
+                layers=(
+                    KI_PAD_LAYER if ee_pad.hole_radius <= 0 else KI_PAD_LAYER_THT
+                ).get(ee_pad.layer_id, ""),
                 number=ee_pad.number,
                 drill=0.0,
                 orientation=angle_to_ki(ee_pad.rotation),
                 polygon="",
             )
+
             ki_pad.drill = drill_to_ki(
                 ee_pad.hole_radius, ee_pad.hole_length, ki_pad.height, ki_pad.width
             )
@@ -253,9 +253,7 @@ class ExporterFootprintKicad:
             if is_custom_shape:
                 if len(point_list) <= 0:
                     logging.warning(
-                        "PAD ${id} is a polygon, but has no points defined".format(
-                            id=ee_pad.id
-                        )
+                        f"PAD ${ee_pad.id} is a polygon, but has no points defined"
                     )
                 else:
                     # Replace pad width & height since kicad doesn't care
@@ -447,7 +445,6 @@ class ExporterFootprintKicad:
         return self.output
 
     def export(self, footprint_full_path: str, model_3d_path: str) -> None:
-
         ki = self.output
         ki_lib = ""
 
@@ -455,8 +452,10 @@ class ExporterFootprintKicad:
             package_lib="easyeda2kicad", package_name=ki.info.name, edit="5DC5F6A4"
         )
 
-        if ki.info.fp_type and ki.info.fp_type == "smd":
-            ki_lib += KI_FP_TYPE.format(component_type=ki.info.fp_type)
+        if ki.info.fp_type:
+            ki_lib += KI_FP_TYPE.format(
+                component_type=("smd" if ki.info.fp_type == "smd" else "through_hole")
+            )
 
         # Get y_min and y_max to put component info
         y_low = min(pad.pos_y for pad in ki.pads)
