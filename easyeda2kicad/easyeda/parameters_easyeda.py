@@ -395,6 +395,25 @@ class EeFootprintHole(BaseModel):
         self.center_y = convert_to_mm(self.center_y)
         self.radius = convert_to_mm(self.radius)
 
+class EeFootprintVia(BaseModel):
+    center_x: float
+    center_y: float
+    diameter: float
+    net: str
+    radius: float
+    id: str
+    is_locked: bool
+
+    @field_validator("is_locked", mode="before")
+    @classmethod
+    def empty_str_lock(cls, field: str) -> str:
+        return field or False
+
+    def convert_to_mm(self) -> None:
+        self.center_x = convert_to_mm(self.center_x)
+        self.center_y = convert_to_mm(self.center_y)
+        self.radius = convert_to_mm(self.radius)
+        self.diameter = convert_to_mm(self.diameter)
 
 class EeFootprintCircle(BaseModel):
     cx: float
@@ -536,6 +555,7 @@ class ee_footprint:
     pads: List[EeFootprintPad] = field(default_factory=list)
     tracks: List[EeFootprintTrack] = field(default_factory=list)
     holes: List[EeFootprintHole] = field(default_factory=list)
+    vias: List[EeFootprintVia] = field(default_factory=list)
     circles: List[EeFootprintCircle] = field(default_factory=list)
     arcs: List[EeFootprintArc] = field(default_factory=list)
     rectangles: List[EeFootprintRectangle] = field(default_factory=list)
