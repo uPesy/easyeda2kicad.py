@@ -136,6 +136,7 @@ class KiSymbolInfo:
     name: str
     prefix: str
     package: str
+    description: str
     manufacturer: str
     datasheet: str
     lcsc_id: str
@@ -245,6 +246,15 @@ class KiSymbolInfo:
                 style="",
                 hide="",
             ),
+            property_template.format(
+                key="MPN",
+                value=self.name,
+                id_=7,
+                pos_y=self.y_low - field_offset_y,
+                font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
+                style="",
+                hide="true",
+            ),
         ]
         if self.package:
             field_offset_y += KiExportConfigV6.FIELD_OFFSET_INCREMENT.value
@@ -253,6 +263,19 @@ class KiSymbolInfo:
                     key="Footprint",
                     value=self.package,
                     id_=2,
+                    pos_y=self.y_low - field_offset_y,
+                    font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
+                    style="",
+                    hide="hide",
+                )
+            )
+        if self.description:
+            field_offset_y += KiExportConfigV6.FIELD_OFFSET_INCREMENT.value
+            header.append(
+                property_template.format(
+                    key="ki_description",
+                    value=self.description,
+                    id_=8,
                     pos_y=self.y_low - field_offset_y,
                     font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
                     style="",

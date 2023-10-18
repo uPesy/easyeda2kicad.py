@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import sys
+import fnmatch
 from textwrap import dedent
 from typing import List
 
@@ -27,6 +28,15 @@ from easyeda2kicad.kicad.export_kicad_footprint import ExporterFootprintKicad
 from easyeda2kicad.kicad.export_kicad_symbol import ExporterSymbolKicad
 from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion
 
+def findReplace(directory, find, replace, filePattern):
+	for path, dirs, files in os.walk(os.path.abspath(directory)):
+		for filename in fnmatch.filter(files, filePattern):
+			filepath = os.path.join(path, filename)
+			with open(filepath) as f:
+				s = f.read()
+			s = s.replace(find, replace)
+			with open(filepath, "w") as f:
+				f.write(s)
 
 def get_parser() -> argparse.ArgumentParser:
 
@@ -54,6 +64,13 @@ def get_parser() -> argparse.ArgumentParser:
         "--3d",
         help="Get the 3d model of this id",
         required=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--relative",
+        required=False,
+        help="Sets the 3D-File relative to the project",
         action="store_true",
     )
 
@@ -248,6 +265,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     # Get CAD data of the component using easyeda API
     api = EasyedaApi()
     cad_data = api.get_cad_data_of_component(lcsc_id=component_id)
+    comp_details = api.get_details_of_component(lcsc_id=cad_data['lcsc']['id'])
 
     # API returned no data
     if not cad_data:
@@ -256,7 +274,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
 
     # ---------------- SYMBOL ----------------
     if arguments["symbol"]:
-        importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data)
+        importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data, easyeda_cp_details=comp_details)
         easyeda_symbol: EeSymbol = importer.get_symbol()
         # print(easyeda_symbol)
 
@@ -353,6 +371,10 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             )
 
         # logging.info(f"3D model: {os.path.join(lib_path, filename)}")
+
+    # ---------------- Relative Project Path ----------------
+    if arguments["relative"]:
+        findReplace(arguments["output"]+".pretty", os.path.dirname(arguments["output"]), "${KIPRJMOD}", "*.kicad_mod")
 
     return 0
 

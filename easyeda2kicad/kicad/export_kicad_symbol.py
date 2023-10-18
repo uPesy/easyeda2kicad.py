@@ -302,6 +302,7 @@ def convert_to_kicad(ee_symbol: EeSymbol, kicad_version: KicadVersion) -> KiSymb
         name=ee_symbol.info.name,
         prefix=ee_symbol.info.prefix.replace("?", ""),
         package=ee_symbol.info.package,
+        description=ee_symbol.info.description,
         manufacturer=ee_symbol.info.manufacturer,
         datasheet=ee_symbol.info.datasheet,
         lcsc_id=ee_symbol.info.lcsc_id,
