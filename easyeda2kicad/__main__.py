@@ -73,6 +73,14 @@ def get_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--3D-path-var",
+        required=False,
+        metavar="EASYEDALIB_3DPATH",
+        help="subsitute the 3d-models's path in the footprint by this value",
+        type=str,
+    )
+
+    parser.add_argument(
         "--overwrite",
         required=False,
         help=(
@@ -322,6 +330,8 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             model_3d_path = "${EASYEDA2KICAD}/easyeda2kicad.3dshapes"
         if arguments["project_relative"]:
             model_3d_path = "${KIPRJMOD}" + model_3d_path
+        if arguments["3D_path_var"]:
+            model_3d_path = f'$\u007b{arguments["3D_path_var"]}\u007d'
 
         ki_footprint.export(
             footprint_full_path=f"{footprint_path}/{footprint_filename}",
