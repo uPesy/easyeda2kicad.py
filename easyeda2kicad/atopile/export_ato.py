@@ -1,6 +1,8 @@
 # Global imports
 import logging
 from pathlib import Path
+import re
+from textwrap import dedent
 
 log = logging.getLogger(__name__)
 
@@ -27,42 +29,49 @@ def add_pin_vis(name, pos):
     port: {pos}"""
 
 
+def sanitize_name(name: str) -> str:
+    # Replace all non-alphanumeric characters with underscores
+    sanitized = re.sub(r"\W", "_", name)
+
+    # Check if the first character is a digit, and if so, prepend an underscore
+    if sanitized and sanitized[0].isdigit():
+        sanitized = f"_{sanitized}"
+
+    return sanitized
+
+replacement_dict = {
+    "+": "plus",
+    "-": "minus",
+}
+
 def convert_to_ato(
     ee_symbol: EeSymbol, component_id: str, component_name: str, footprint: str
 ) -> str:
-    # replace spaces, dashes and slashes with underscores in component_name
-    component_name = component_name.replace(" ", "_").replace("-", "_").replace("/", "_")
-    ato_str = f"component {component_name}:\n"
+    ato_str = f"component {sanitize_name(component_name)}:\n"
+    ato_str += f"    # component {component_name}\n"
     ato_str += f'    footprint = "{footprint}"\n'
     ato_str += f'    lcsc_id = "{component_id}"\n'
-    ato_str += f"    # pins\n"
-    ato_str_types = "    # pin types\n"
-    ato_str_vis = """
-STM32F103C8T6:
-  ports:
-  - name: top
-    location: top
-  - name: right
-    location: right
-  - name: left
-    location: left
-  - name: bottom
-    location: bottom
-  pins:"""
+    ato_str += "    # pins\n"
+
+    defined_signals = set()
     for ee_pin in ee_symbol.pins:
-        signal = ee_pin.name.text.replace(" ", "").replace("-", "_").replace("/", "_")
+        signal = sanitize_name(ee_pin.name.text)
         # add an underscore to the start of the signal name if it starts with a number
+        if signal in replacement_dict:
+            signal = replacement_dict[signal]
         if signal[0].isdigit():
             signal = "_" + signal
         pin = ee_pin.settings.spice_pin_number.replace(" ", "")
-        ato_str += f"    signal {signal} ~ pin p{pin}\n"
+        #check if the signal name has already been defined
+        if signal in defined_signals:
+            #if it has, append the pin number to the signal name
+            ato_str += f"    {signal} ~ pin {pin}\n"
+        else:
+            defined_signals.add(signal)
+            ato_str += f"    signal {signal} ~ pin {pin}\n"
         ato_pin_type = ee_pin_type_to_ato_pin_type[ee_pin.settings.type]
-        if ato_pin_type:
-            ato_str_types += f"    {signal}.type = {ato_pin_type}\n"
-        location = ee_pin_rotation_to_vis_side[ee_pin.settings.rotation]
-        ato_str_vis += add_pin_vis(signal, location)
 
-    return ato_str + "\n" + ato_str_types, ato_str_vis
+    return ato_str + "\n"
 
 
 class ExporterAto:
@@ -85,14 +94,6 @@ class ExporterAto:
         ato_dir.mkdir(parents=True, exist_ok=True)
         log.log(level=logging.INFO, msg=ato_full_path)
         with open(file=ato_full_path, mode="w", encoding="utf-8") as my_lib:
-            my_lib.write(self.output[0])
+            my_lib.write(self.output)
             log.log(level=logging.INFO, msg="ATO file written")
 
-        ato_vis_path = ato_full_path.split(".ato")[0] + ".vis.yaml"
-        log.log(level=logging.INFO, msg=ato_vis_path)
-        with open(
-            file=ato_vis_path,
-            mode="w",
-            encoding="utf-8",
-        ) as my_lib:
-            my_lib.write(self.output[1])
