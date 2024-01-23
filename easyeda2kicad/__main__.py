@@ -273,7 +273,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     if arguments["ato"]:
         importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data)
         easyeda_symbol: EeSymbol = importer.get_symbol()
-        # print(easyeda_symbol)
+
         component_name=sanitize_name(easyeda_symbol.info.name)
         # ato file path should be the the base directory of output argument /elec/src
         ato_full_path = f"{arguments['ato_file_path']}/{component_name}.ato"
@@ -293,7 +293,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             component_name = component_name,
             footprint = package_name
         )
-        # print(exporter.output)
+
         exporter.export(
             ato_full_path = ato_full_path
         )
@@ -310,7 +310,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     if arguments["symbol"]:
         importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data)
         easyeda_symbol: EeSymbol = importer.get_symbol()
-        # print(easyeda_symbol)
+
 
         is_id_already_in_symbol_lib = id_already_in_symbol_lib(
             lib_path=f"{arguments['output']}.{sym_lib_ext}",
@@ -325,7 +325,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         exporter = ExporterSymbolKicad(
             symbol=easyeda_symbol, kicad_version=kicad_version
         )
-        # print(exporter.output)
+
         kicad_symbol_lib = exporter.export(
             footprint_lib_name=arguments["output"].split("/")[-1].split(".")[0],
         )
