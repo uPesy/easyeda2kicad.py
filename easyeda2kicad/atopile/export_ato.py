@@ -31,7 +31,7 @@ def add_pin_vis(name, pos):
 
 def sanitize_name(name: str) -> str:
     # Replace all non-alphanumeric characters with underscores
-    sanitized = re.sub(r"\W", "_", name)
+    sanitized = re.sub(r"[\W/\\]", "_", name)
 
     # Check if the first character is a digit, and if so, prepend an underscore
     if sanitized and sanitized[0].isdigit():
