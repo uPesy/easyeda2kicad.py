@@ -27,7 +27,7 @@ from easyeda2kicad.kicad.export_kicad_3d_model import Exporter3dModelKicad
 from easyeda2kicad.kicad.export_kicad_footprint import ExporterFootprintKicad
 from easyeda2kicad.kicad.export_kicad_symbol import ExporterSymbolKicad
 from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion
-from easyeda2kicad.atopile.export_ato import ExporterAto
+from easyeda2kicad.atopile.export_ato import ExporterAto, sanitize_name
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -274,7 +274,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data)
         easyeda_symbol: EeSymbol = importer.get_symbol()
         # print(easyeda_symbol)
-        component_name=easyeda_symbol.info.name
+        component_name=sanitize_name(easyeda_symbol.info.name)
         # ato file path should be the the base directory of output argument /elec/src
         ato_full_path = f"{arguments['ato_file_path']}/{component_name}.ato"
         is_ato_already_in_lib_folder = os.path.isfile(ato_full_path)
