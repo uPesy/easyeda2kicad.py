@@ -7,6 +7,7 @@ from easyeda2kicad import __version__
 
 API_ENDPOINT = "https://easyeda.com/api/products/{lcsc_id}/components?version=6.4.19.5"
 ENDPOINT_3D_MODEL = "https://easyeda.com/analyzer/api/3dmodel/{uuid}"
+ENDPOINT_3D_MODEL_STEP = "https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/{uuid}"
 # ------------------------------------------------------------
 
 
@@ -43,6 +44,16 @@ class EasyedaApi:
             headers={"User-Agent": self.headers["User-Agent"]},
         )
         if r.status_code != requests.codes.ok:
-            logging.error(f"No 3D model data found for uuid:{uuid} on easyeda")
+            logging.error(f"No raw 3D model data found for uuid:{uuid} on easyeda")
             return None
         return r.content.decode()
+
+    def get_step_3d_model(self, uuid: str) -> bytes:
+        r = requests.get(
+            url=ENDPOINT_3D_MODEL_STEP.format(uuid=uuid),
+            headers={"User-Agent": self.headers["User-Agent"]},
+        )
+        if r.status_code != requests.codes.ok:
+            logging.error(f"No step 3D model data found for uuid:{uuid} on easyeda")
+            return None
+        return r.content
