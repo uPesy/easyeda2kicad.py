@@ -543,6 +543,7 @@ class Ee3dModel:
     translation: Ee3dModelBase
     rotation: Ee3dModelBase
     raw_obj: str = None
+    step: bytes = None
 
     def convert_to_mm(self) -> None:
         self.translation.convert_to_mm()
