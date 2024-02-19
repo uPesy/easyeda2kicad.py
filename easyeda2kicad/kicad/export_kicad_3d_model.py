@@ -123,6 +123,7 @@ class Exporter3dModelKicad:
             if model_3d and model_3d.raw_obj
             else None
         )
+        self.output_step = model_3d.step
 
     def export(self, lib_path: str) -> None:
         if self.output:
@@ -132,3 +133,9 @@ class Exporter3dModelKicad:
                 encoding="utf-8",
             ) as my_lib:
                 my_lib.write(self.output.raw_wrl)
+        if self.output_step:
+            with open(
+                file=f"{lib_path}.3dshapes/{self.output.name}.step",
+                mode="wb",
+            ) as my_lib:
+                my_lib.write(self.output_step)
