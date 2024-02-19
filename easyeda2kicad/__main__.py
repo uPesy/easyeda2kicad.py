@@ -349,9 +349,19 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
 
             logging.info(
                 f"Created 3D model for ID: {component_id}\n"
-                f"       3D model name: {exporter.output.name}\n" +
-                (f"       3D model path (wrl): {os.path.join(lib_path, filename_wrl)}\n" if filename_wrl else "") +
-                (f"       3D model path (step): {os.path.join(lib_path, filename_step)}\n" if filename_step else "")
+                f"       3D model name: {exporter.output.name}\n"
+                + (
+                    "       3D model path (wrl):"
+                    f" {os.path.join(lib_path, filename_wrl)}\n"
+                    if filename_wrl
+                    else ""
+                )
+                + (
+                    "       3D model path (step):"
+                    f" {os.path.join(lib_path, filename_step)}\n"
+                    if filename_step
+                    else ""
+                )
             )
 
         # logging.info(f"3D model: {os.path.join(lib_path, filename)}")
