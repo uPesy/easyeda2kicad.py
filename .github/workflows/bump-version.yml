@@ -41,7 +41,7 @@ jobs:
         env:
           COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          bump2version minor
+          bump2version major
           echo "SKIPBUMP=TRUE" >> $GITHUB_ENV
         if: "startsWith(github.event.head_commit.message, '[MAJOR]')"
 
