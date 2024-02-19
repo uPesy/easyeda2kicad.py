@@ -1,3 +1,3 @@
-__version__ = "0.6.6"
+__version__ = "0.7.0"
 __author__ = "uPesy"
 __email__ = "contact@upesy.com"
