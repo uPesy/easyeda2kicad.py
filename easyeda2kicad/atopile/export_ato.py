@@ -85,14 +85,16 @@ def convert_to_ato(
 
     defined_signals = set()
     for ee_pin in ee_symbol.pins:
-        signal = sanitize_name(ee_pin.name.text)
-        # add an underscore to the start of the signal name if it starts with a number
-        if signal in replacement_dict:
-            signal = replacement_dict[signal]
+        # get the text of the pin
+        signal = ee_pin.name.text
+        # replace all any symbol in the replacement_dict with the replacement
+        signal = "_".join(replacement_dict.get(char, char) for char in signal)
+        # if the first character is a digit, prepend an underscore
         if signal[0].isdigit():
             signal = "_" + signal
         pin = ee_pin.settings.spice_pin_number.replace(" ", "")
         #check if the signal name has already been defined
+        signal = sanitize_name(signal)
         if signal in defined_signals:
             #if it has, append the pin number to the signal name
             ato_str += f"    {signal} ~ pin {pin}\n"
