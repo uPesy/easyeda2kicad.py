@@ -249,6 +249,7 @@ class Easyeda3dModelImporter:
             model_3d: Ee3dModel = self.parse_3d_model_info(info=model_3d_info)
             if self.download_raw_3d_model:
                 model_3d.raw_obj = EasyedaApi().get_raw_3d_model_obj(uuid=model_3d.uuid)
+                model_3d.step = EasyedaApi().get_step_3d_model(uuid=model_3d.uuid)
             return model_3d
 
         logging.warning("No 3D model available for this component")
