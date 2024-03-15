@@ -6,7 +6,6 @@ import re
 import sys
 from textwrap import dedent
 from typing import List
-from pathlib import Path
 
 from easyeda2kicad import __version__
 from easyeda2kicad.easyeda.easyeda_api import EasyedaApi
