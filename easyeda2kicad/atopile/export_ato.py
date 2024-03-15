@@ -30,8 +30,15 @@ def add_pin_vis(name, pos):
 
 
 def sanitize_name(name: str) -> str:
-    # Replace all non-alphanumeric characters with underscores
-    sanitized = re.sub(r"[\W/\\]", "_", name)
+    # Replace characters based on the replacement_dict
+    for symbol, replacement in replacement_dict.items():
+        name = name.replace(symbol, f"_{replacement}_")
+
+    # Replace all non-alphanumeric characters (except underscores) with a single underscore
+    sanitized = re.sub(r'[^a-zA-Z0-9_]+', '_', name)
+
+    # Remove any leading, trailing, or multiple consecutive underscores
+    sanitized = re.sub(r'^_+|_+$|(?<=_)_+', '', sanitized)
 
     # Check if the first character is a digit, and if so, prepend an underscore
     if sanitized and sanitized[0].isdigit():
@@ -85,14 +92,12 @@ def convert_to_ato(
 
     defined_signals = set()
     for ee_pin in ee_symbol.pins:
+        # clean the signal name from any non-alphanumeric symbols or leading digits
         signal = sanitize_name(ee_pin.name.text)
-        # add an underscore to the start of the signal name if it starts with a number
-        if signal in replacement_dict:
-            signal = replacement_dict[signal]
-        if signal[0].isdigit():
-            signal = "_" + signal
+
         pin = ee_pin.settings.spice_pin_number.replace(" ", "")
         #check if the signal name has already been defined
+
         if signal in defined_signals:
             #if it has, append the pin number to the signal name
             ato_str += f"    {signal} ~ pin {pin}\n"

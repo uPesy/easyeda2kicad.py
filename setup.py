@@ -13,14 +13,14 @@ with open("requirements.txt", "w", encoding="utf-8") as f:
     f.write("\n".join(production_dependencies + development_dependencies))
 
 setup(
-    name="easyeda2kicad",
+    name="easyeda2ato",
     description=(
         "A Python script that convert any electronic components from LCSC or EasyEDA to"
         " a Kicad library"
     ),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version="0.7.0",
+    version="0.2.0",
     author="uPesy",
     author_email="contact@upesy.com",
     url="https://github.com/uPesy/easyeda2kicad.py",
