@@ -9,6 +9,7 @@ global-exclude *.swp
 
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
+recursive-include easyeda2ato *.py
 
 exclude .bumpversion.cfg
 exclude .coveragerc
