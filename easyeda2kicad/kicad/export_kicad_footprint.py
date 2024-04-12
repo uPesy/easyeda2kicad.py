@@ -512,7 +512,7 @@ class ExporterFootprintKicad:
             ki_lib += KI_TEXT.format(**vars(text))
 
         ## models will be automatically copied to ato build directory ##
-        model_3d_path = "${KIPRJMOD}/../../../build/footprints/footprints.3dshapes"
+        model_3d_path = "{build_dir}"
         if ki.model_3d is not None:
             ki_lib += KI_MODEL_3D.format(
                 file_3d=f"{model_3d_path}/{ki.model_3d.name}.step",

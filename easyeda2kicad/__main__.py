@@ -6,7 +6,6 @@ import re
 import sys
 from textwrap import dedent
 from typing import List
-from pathlib import Path
 
 from easyeda2kicad import __version__
 from easyeda2kicad.easyeda.easyeda_api import EasyedaApi
@@ -388,33 +387,36 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
 
     # ---------------- 3D MODEL ----------------
     if arguments["3d"]:
-        exporter = Exporter3dModelKicad(
-            model_3d=Easyeda3dModelImporter(
-                easyeda_cp_cad_data=cad_data, download_raw_3d_model=True
-            ).output
-        )
-        exporter.export(lib_path=arguments["output"])
-        if exporter.output or exporter.output_step:
-            filename_wrl = f"{exporter.output.name}.wrl"
-            filename_step = f"{exporter.output.name}.step"
-            lib_path = f"{arguments['output']}.3dshapes"
-
-            logging.info(
-                f"Created 3D model for ID: {component_id}\n"
-                f"       3D model name: {exporter.output.name}\n"
-                + (
-                    "       3D model path (wrl):"
-                    f" {os.path.join(lib_path, filename_wrl)}\n"
-                    if filename_wrl
-                    else ""
-                )
-                + (
-                    "       3D model path (step):"
-                    f" {os.path.join(lib_path, filename_step)}\n"
-                    if filename_step
-                    else ""
-                )
+        try:
+            exporter = Exporter3dModelKicad(
+                model_3d=Easyeda3dModelImporter(
+                    easyeda_cp_cad_data=cad_data, download_raw_3d_model=True
+                ).output
             )
+            exporter.export(lib_path=arguments["output"])
+            if exporter.output or exporter.output_step:
+                filename_wrl = f"{exporter.output.name}.wrl"
+                filename_step = f"{exporter.output.name}.step"
+                lib_path = f"{arguments['output']}.3dshapes"
+
+                logging.info(
+                    f"Created 3D model for ID: {component_id}\n"
+                    f"       3D model name: {exporter.output.name}\n"
+                    + (
+                        "       3D model path (wrl):"
+                        f" {os.path.join(lib_path, filename_wrl)}\n"
+                        if filename_wrl
+                        else ""
+                    )
+                    + (
+                        "       3D model path (step):"
+                        f" {os.path.join(lib_path, filename_step)}\n"
+                        if filename_step
+                        else ""
+                    )
+                )
+        except Exception as e:
+            logging.warning(f"Failed to create 3D model for ID: {component_id}\n{e}")
 
         # logging.info(f"3D model: {os.path.join(lib_path, filename)}")
 
