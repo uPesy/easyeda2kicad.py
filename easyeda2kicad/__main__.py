@@ -26,6 +26,7 @@ from easyeda2kicad.kicad.export_kicad_3d_model import Exporter3dModelKicad
 from easyeda2kicad.kicad.export_kicad_footprint import ExporterFootprintKicad
 from easyeda2kicad.kicad.export_kicad_symbol import ExporterSymbolKicad
 from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion
+from easyeda2kicad.atopile.export_ato import ExporterAto, sanitize_name
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -38,6 +39,18 @@ def get_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument("--lcsc_id", help="LCSC id", required=True, type=str)
+
+    parser.add_argument(
+        "--ato", help="Get atopile file definition of this id", required=False, action="store_true"
+    )
+
+    parser.add_argument(
+        "--ato_file_path",
+        required=False,
+        metavar="file.ato",
+        help="Output dir for .ato file",
+        type=str,
+    )
 
     parser.add_argument(
         "--symbol", help="Get symbol of this id", required=False, action="store_true"
@@ -114,9 +127,9 @@ def valid_arguments(arguments: dict) -> bool:
         return False
 
     if arguments["full"]:
-        arguments["symbol"], arguments["footprint"], arguments["3d"] = True, True, True
+        arguments["ato"], arguments["symbol"], arguments["footprint"], arguments["3d"] = True, True, True, True
 
-    if not any([arguments["symbol"], arguments["footprint"], arguments["3d"]]):
+    if not any([arguments["ato"], arguments["symbol"], arguments["footprint"], arguments["3d"]]):
         logging.error(
             "Missing action arguments\n"
             "  easyeda2kicad --lcsc_id=C2040 --footprint\n"
@@ -158,7 +171,7 @@ def valid_arguments(arguments: dict) -> bool:
             "easyeda2kicad",
         )
         if not os.path.isdir(default_folder):
-            os.makedirs(default_folder, exist_ok=True)
+            os.mkdir(default_folder)
 
         base_folder = default_folder
         lib_name = "easyeda2kicad"
@@ -254,11 +267,49 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         logging.error(f"Failed to fetch data from EasyEDA API for part {component_id}")
         return 1
 
+
+    # ---------------- ATOPILE ----------------
+    if arguments["ato"]:
+        importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data)
+        easyeda_symbol: EeSymbol = importer.get_symbol()
+
+        component_name=sanitize_name(easyeda_symbol.info.name)
+        # ato file path should be the the base directory of output argument /elec/src
+        ato_full_path = f"{arguments['ato_file_path']}/{component_name}.ato"
+        is_ato_already_in_lib_folder = os.path.isfile(ato_full_path)
+
+        if not arguments["overwrite"] and is_ato_already_in_lib_folder:
+            logging.error("Use --overwrite to update the older ato file")
+            return 1
+
+        footprint_importer = EasyedaFootprintImporter(easyeda_cp_cad_data=cad_data)
+        easyeda_footprint = footprint_importer.get_footprint()
+        package_name=easyeda_footprint.info.name
+
+        exporter = ExporterAto(
+            symbol = easyeda_symbol,
+            component_id = component_id,
+            component_name = component_name,
+            footprint = package_name
+        )
+
+        exporter.export(
+            ato_full_path = ato_full_path
+        )
+
+
+        logging.info(
+            f"Created Atopile file for ID : {component_id}\n"
+            f"       Symbol name : {easyeda_symbol.info.name}\n"
+            f"       Library path : {ato_full_path}"
+        )
+
+
     # ---------------- SYMBOL ----------------
     if arguments["symbol"]:
         importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data)
         easyeda_symbol: EeSymbol = importer.get_symbol()
-        # print(easyeda_symbol)
+
 
         is_id_already_in_symbol_lib = id_already_in_symbol_lib(
             lib_path=f"{arguments['output']}.{sym_lib_ext}",
@@ -273,7 +324,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         exporter = ExporterSymbolKicad(
             symbol=easyeda_symbol, kicad_version=kicad_version
         )
-        # print(exporter.output)
+
         kicad_symbol_lib = exporter.export(
             footprint_lib_name=arguments["output"].split("/")[-1].split(".")[0],
         )
@@ -336,33 +387,36 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
 
     # ---------------- 3D MODEL ----------------
     if arguments["3d"]:
-        exporter = Exporter3dModelKicad(
-            model_3d=Easyeda3dModelImporter(
-                easyeda_cp_cad_data=cad_data, download_raw_3d_model=True
-            ).output
-        )
-        exporter.export(lib_path=arguments["output"])
-        if exporter.output or exporter.output_step:
-            filename_wrl = f"{exporter.output.name}.wrl"
-            filename_step = f"{exporter.output.name}.step"
-            lib_path = f"{arguments['output']}.3dshapes"
-
-            logging.info(
-                f"Created 3D model for ID: {component_id}\n"
-                f"       3D model name: {exporter.output.name}\n"
-                + (
-                    "       3D model path (wrl):"
-                    f" {os.path.join(lib_path, filename_wrl)}\n"
-                    if filename_wrl
-                    else ""
-                )
-                + (
-                    "       3D model path (step):"
-                    f" {os.path.join(lib_path, filename_step)}\n"
-                    if filename_step
-                    else ""
-                )
+        try:
+            exporter = Exporter3dModelKicad(
+                model_3d=Easyeda3dModelImporter(
+                    easyeda_cp_cad_data=cad_data, download_raw_3d_model=True
+                ).output
             )
+            exporter.export(lib_path=arguments["output"])
+            if exporter.output or exporter.output_step:
+                filename_wrl = f"{exporter.output.name}.wrl"
+                filename_step = f"{exporter.output.name}.step"
+                lib_path = f"{arguments['output']}.3dshapes"
+
+                logging.info(
+                    f"Created 3D model for ID: {component_id}\n"
+                    f"       3D model name: {exporter.output.name}\n"
+                    + (
+                        "       3D model path (wrl):"
+                        f" {os.path.join(lib_path, filename_wrl)}\n"
+                        if filename_wrl
+                        else ""
+                    )
+                    + (
+                        "       3D model path (step):"
+                        f" {os.path.join(lib_path, filename_step)}\n"
+                        if filename_step
+                        else ""
+                    )
+                )
+        except Exception as e:
+            logging.warning(f"Failed to create 3D model for ID: {component_id}\n{e}")
 
         # logging.info(f"3D model: {os.path.join(lib_path, filename)}")
 
