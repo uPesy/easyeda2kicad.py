@@ -273,7 +273,6 @@ class Easyeda3dModelImporter:
         )
 
         if model_3d_info := self.get_3d_model_info(ee_data=ee_data):
-            # print(f"model_3d_info is {model_3d_info}")
             model_3d: Ee3dModel = self.parse_3d_model_info(info=model_3d_info)
             if self.download_raw_3d_model:
                 model_3d.raw_obj = EasyedaApi().get_raw_3d_model_obj(uuid=model_3d.uuid)

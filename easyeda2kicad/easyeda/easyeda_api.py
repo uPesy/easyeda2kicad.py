@@ -8,7 +8,7 @@ from easyeda2kicad import __version__
 API_ENDPOINT = "https://easyeda.com/api/products/{lcsc_id}/components?version=6.4.19.5"
 ENDPOINT_3D_MODEL = "https://easyeda.com/analyzer/api/3dmodel/{uuid}"
 ENDPOINT_3D_MODEL_STEP = "https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/{uuid}"
-API_PRIVATE_COMPONENTS = "https://easyeda.com/api/components/{uuid}?version=6.5.42"
+API_PRIVATE_COMPONENTS = "https://easyeda.com/api/components/{uuid}?version=6.5.42&uuid={uuid}" #&datastrid=1d3f07aa4e674c7da0bf096e762290e2"
 # ENDPOINT_3D_MODEL_STEP found in https://modules.lceda.cn/smt-gl-engine/0.8.22.6032922c/smt-gl-engine.js : points to the bucket containing the step files.
 
 # ------------------------------------------------------------
@@ -24,12 +24,9 @@ class EasyedaApi:
         }
 
     def get_info_from_easyeda_api(self, lcsc_id: str|None, uuid: str|None=None) -> dict:
-        # print(f"lcsc_id is {lcsc_id} and uuid is {uuid}")
         if lcsc_id is None and uuid is not None:
-            # print(f"using uuid {uuid}")
             r = requests.get(url=API_PRIVATE_COMPONENTS.format(uuid=uuid), headers=self.headers)
         else:
-            # print(f"using lcsc_id {lcsc_id}")
             r = requests.get(url=API_ENDPOINT.format(lcsc_id=lcsc_id), headers=self.headers)
         api_response = r.json()
 
@@ -42,9 +39,7 @@ class EasyedaApi:
         return r.json()
 
     def get_cad_data_of_component(self, lcsc_id: str|None, uuid: str|None=None) -> dict:
-        # print(f"in get_cad_data_of_component: lcsc_id is {lcsc_id} and uuid is {uuid}")
         cp_cad_info = self.get_info_from_easyeda_api(lcsc_id=lcsc_id, uuid=uuid)
-        # print(f"cp_cad_info is {cp_cad_info}")
         if cp_cad_info == {}:
             return {}
         return cp_cad_info["result"]

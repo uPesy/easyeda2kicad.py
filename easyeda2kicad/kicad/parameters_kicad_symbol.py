@@ -6,6 +6,8 @@ from dataclasses import dataclass, field, fields
 from enum import Enum, auto
 from typing import List, Union
 
+re_sub_pattern_slashes_in_filename = "[\\/]"
+re_sub_replacement_for_slashes_in_filename = "-"
 
 class KicadVersion(Enum):
     v5 = auto()
@@ -251,7 +253,7 @@ class KiSymbolInfo:
             header.append(
                 property_template.format(
                     key="Footprint",
-                    value=self.package,
+                    value=re.sub(re_sub_pattern_slashes_in_filename, re_sub_replacement_for_slashes_in_filename, self.package), # replace slashes in filename
                     id_=2,
                     pos_y=self.y_low - field_offset_y,
                     font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,

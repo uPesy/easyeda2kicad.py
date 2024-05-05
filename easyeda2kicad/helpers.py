@@ -47,7 +47,7 @@ def sanitize_for_regex(field: str):
 
 
 def id_already_in_symbol_lib(
-    lib_path: str, component_name: str, kicad_version: KicadVersion
+    lib_path: str|os.PathLike, component_name: str, kicad_version: KicadVersion
 ) -> bool:
     with open(lib_path, encoding="utf-8") as lib_file:
         current_lib = lib_file.read()
@@ -65,7 +65,7 @@ def id_already_in_symbol_lib(
 
 
 def update_component_in_symbol_lib_file(
-    lib_path: str,
+    lib_path: str|os.PathLike,
     component_name: str,
     component_content: str,
     kicad_version: KicadVersion,
@@ -80,7 +80,6 @@ def update_component_in_symbol_lib_file(
             current_lib,
             flags=re.DOTALL,
         )
-
         new_lib = new_lib.replace(
             "(generator kicad_symbol_editor)",
             "(generator https://github.com/uPesy/easyeda2kicad.py)",
@@ -91,7 +90,7 @@ def update_component_in_symbol_lib_file(
 
 
 def add_component_in_symbol_lib_file(
-    lib_path: str, component_content: str, kicad_version: KicadVersion
+    lib_path: str|os.PathLike, component_content: str, kicad_version: KicadVersion
 ) -> None:
 
     if kicad_version == KicadVersion.v5:

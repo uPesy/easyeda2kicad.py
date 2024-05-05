@@ -28,10 +28,7 @@ from easyeda2kicad.helpers import (
 from easyeda2kicad.kicad.export_kicad_3d_model import Exporter3dModelKicad
 from easyeda2kicad.kicad.export_kicad_footprint import ExporterFootprintKicad
 from easyeda2kicad.kicad.export_kicad_symbol import ExporterSymbolKicad
-from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion
-
-re_sub_pattern_slashes_in_filename = "[\\/]"
-re_sub_replacement_for_slashes_in_filename = "-"
+from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion, re_sub_pattern_slashes_in_filename, re_sub_replacement_for_slashes_in_filename
 
 def get_parser() -> argparse.ArgumentParser:
 
@@ -168,28 +165,27 @@ def valid_arguments(arguments: dict) -> bool:
     arguments["output"] = base_folder / lib_name
 
     # Create new footprint folder if it does not exist
-    pathlibpath_footprint = pathlib.Path(f"{arguments['output']}.pretty")
+    pathlibpath_footprint = arguments["output"].with_suffix(f".pretty")
     if not pathlibpath_footprint.is_dir():
-        pathlibpath_footprint.mkdir(parents=True, exist_ok=True)
-        logging.info(f"Create {lib_name}.pretty footprint folder in {base_folder}")
+        mkdir_res = pathlibpath_footprint.mkdir(parents=True, exist_ok=True)
+        logging.info(f"Create {lib_name}.pretty footprint folder in {base_folder}: {mkdir_res}")
 
     # Create new 3d model folder if don't exist
-    pathlibpath_3dmodel = pathlib.Path(f"{arguments['output']}.3dshapes")
+    pathlibpath_3dmodel = arguments["output"].with_suffix(f".3dshapes")
     if not pathlibpath_3dmodel.is_dir():
-        # os.mkdir(f"{arguments['output']}.3dshapes")
-        pathlibpath_3dmodel.mkdir(parents=True, exist_ok=True)
-        logging.info(f"Create {lib_name}.3dshapes 3D model folder in {base_folder}")
+        mkdir_res = pathlibpath_3dmodel.mkdir(parents=True, exist_ok=True)
+        logging.info(f"Create {lib_name}.3dshapes 3D model folder in {base_folder}: {mkdir_res}")
 
     lib_extension = "kicad_sym" if kicad_version == KicadVersion.v6 else "lib"
-    pathlibpath_lib_extension = pathlib.Path(arguments['output']).with_suffix(f".{lib_extension}")
+    pathlibpath_lib_extension = arguments["output"].with_suffix(f".{lib_extension}")
     if not pathlibpath_lib_extension.is_file():
         writecontent = dedent("""
                 (kicad_symbol_lib
                   (version 20211014)
                   (generator https://github.com/uPesy/easyeda2kicad.py)
                 )""") if kicad_version == KicadVersion.v6 else "EESchema-LIBRARY Version 2.4\n#encoding utf-8\n"
-        pathlibpath_lib_extension.write_text(writecontent, encoding ="utf-8")
-        logging.info(f"Create {lib_name}.{lib_extension} symbol lib in {base_folder}")
+        write_res = pathlibpath_lib_extension.write_text(writecontent, encoding ="utf-8")
+        logging.info(f"Create {lib_name}.{lib_extension} symbol lib in {base_folder}: {write_res}")
 
     return True
 
@@ -227,7 +223,6 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     except SystemExit as err:
         return err.code
     arguments = vars(args)
-    print(f"arguments is {arguments}")
 
     if arguments["debug"]:
         set_logger(log_file=None, log_level=logging.DEBUG)
@@ -283,7 +278,6 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         exporter = ExporterSymbolKicad(
             symbol=easyeda_symbol, kicad_version=kicad_version
         )
-        # print(exporter.output)
         kicad_symbol_lib = exporter.export(
             footprint_lib_name=arguments["output"].stem
         )
@@ -305,7 +299,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         logging.info(
             f"Created Kicad symbol for ID : {partid}\n"
             f"       Symbol name : {easyeda_symbol.info.name}\n"
-            f"       Library path : {arguments['output']}.{sym_lib_ext}"
+            f"       Library path : {pathlibpath_lib_path_symbol}"
         )
 
     # ---------------- FOOTPRINT ----------------
@@ -322,7 +316,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             return 1
 
         ki_footprint = ExporterFootprintKicad(footprint=easyeda_footprint)
-        footprint_filename = re.sub(re_sub_pattern_slashes_in_filename,re_sub_replacement_for_slashes_in_filename,easyeda_footprint.info.name)#f"{easyeda_footprint.info.name}.kicad_mod"
+        footprint_filename = re.sub(re_sub_pattern_slashes_in_filename, re_sub_replacement_for_slashes_in_filename, easyeda_footprint.info.name)
         footprint_filename = f"{footprint_filename}.kicad_mod"
         footprint_path = pathlibpath_lib_path_footprint
         model_3d_path = pathlibpath_lib_path_model_3d
@@ -352,7 +346,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         )
         exporter.export(lib_path=arguments["output"])
         if exporter.output or exporter.output_step:
-            cleaned_filename = re.sub(re_sub_pattern_slashes_in_filename,re_sub_replacement_for_slashes_in_filename,exporter.output.name)
+            cleaned_filename = re.sub(re_sub_pattern_slashes_in_filename, re_sub_replacement_for_slashes_in_filename, exporter.output.name)
             filename_wrl = f"{cleaned_filename}.wrl"
             filename_step = f"{cleaned_filename}.step"
             lib_path = pathlibpath_lib_path_model_3d

@@ -2,7 +2,7 @@
 import logging
 from math import acos, cos, isnan, pi, sin, sqrt
 from typing import Tuple, Union
-
+import os
 from easyeda2kicad.easyeda.parameters_easyeda import ee_footprint
 from easyeda2kicad.kicad.parameters_kicad_footprint import *
 
@@ -456,7 +456,7 @@ class ExporterFootprintKicad:
     def get_ki_footprint(self) -> KiFootprint:
         return self.output
 
-    def export(self, footprint_full_path: str, model_3d_path: str) -> None:
+    def export(self, footprint_full_path: str|os.PathLike, model_3d_path: str|os.PathLike) -> None:
         ki = self.output
         ki_lib = ""
 
@@ -529,4 +529,4 @@ class ExporterFootprintKicad:
             mode="w",
             encoding="utf-8",
         ) as my_lib:
-            my_lib.write(ki_lib)
+            writeres = my_lib.write(ki_lib)
