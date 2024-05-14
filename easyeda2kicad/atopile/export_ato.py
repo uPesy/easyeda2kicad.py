@@ -87,6 +87,7 @@ def convert_to_ato(
     ato_str += f"    # component {component_name}\n"
     ato_str += f'    footprint = "{footprint}"\n'
     ato_str += f'    lcsc_id = "{component_id}"\n'
+    ato_str += f'    mpn = "{component_id}"\n'
     ato_str += "    # pins\n"
 
     defined_signals = set()
