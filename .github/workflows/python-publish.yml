@@ -2,16 +2,23 @@
 name: upload package to pypi
 
 on:
-  workflow_dispatch: {}
+    workflow_dispatch: {}
 
 jobs:
     deploy:
+        environment:
+            name: pypi
+            url: https://pypi.org/p/atopile/
+
+        permissions:
+            contents: read  # Otherwise we override the default value of `read` and get no access at all
+            id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
         runs-on: ubuntu-latest
 
         steps:
             - uses: actions/checkout@v3
               with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                    token: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Set up Python
               uses: actions/setup-python@v4
@@ -28,4 +35,6 @@ jobs:
               run: python -m build
 
             - name: Publish package
-              uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+              uses: pypa/gh-action-pypi-publish@81e9d935c883d0b210363ab89cf05f3894778450
+              with:
+                skip-existing: true  # Helpful while we're migrating
