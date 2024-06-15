@@ -257,15 +257,20 @@ class ExporterFootprintKicad:
                         f"PAD ${ee_pad.id} is a polygon, but has no points defined"
                     )
                 else:
-                    # Replace pad width & height since kicad doesn't care
-                    ki_pad.width = 1.0
-                    ki_pad.height = 1.0
+                    # Set the pad width and height to the smallest value allowed by KiCad.
+                    # KiCad tries to draw a pad that forms the base of the polygon,
+                    # but this is often unnecessary and should be disabled.
+                    ki_pad.width = 0.005
+                    ki_pad.height = 0.005
 
-                    # Generate polygon
+                    # The points of the polygon always seem to correspond to coordinates when orientation=0.
+                    ki_pad.orientation = 0
+
+                    # Generate polygon with coordinates relative to the base pad's position.
                     path = "".join(
                         "(xy {} {})".format(
-                            round(point_list[i] - self.input.bbox.x, 2),
-                            round(point_list[i + 1] - self.input.bbox.y, 2),
+                            round(point_list[i] - self.input.bbox.x - ki_pad.pos_x, 2),
+                            round(point_list[i + 1] - self.input.bbox.y - ki_pad.pos_y, 2),
                         )
                         for i in range(0, len(point_list), 2)
                     )
