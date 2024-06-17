@@ -270,7 +270,9 @@ class ExporterFootprintKicad:
                     path = "".join(
                         "(xy {} {})".format(
                             round(point_list[i] - self.input.bbox.x - ki_pad.pos_x, 2),
-                            round(point_list[i + 1] - self.input.bbox.y - ki_pad.pos_y, 2),
+                            round(
+                                point_list[i + 1] - self.input.bbox.y - ki_pad.pos_y, 2
+                            ),
                         )
                         for i in range(0, len(point_list), 2)
                     )
