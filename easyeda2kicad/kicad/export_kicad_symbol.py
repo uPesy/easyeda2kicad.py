@@ -226,18 +226,20 @@ def convert_ee_polylines(
         if isinstance(ee_polyline, EeSymbolPolygon) or ee_polyline.fill_color:
             x_points.append(x_points[0])
             y_points.append(y_points[0])
-
-        kicad_polygon = KiSymbolPolygon(
-            points=[
-                [x_points[i], y_points[i]]
-                for i in range(min(len(x_points), len(y_points)))
-            ],
-            points_number=min(len(x_points), len(y_points)),
-            is_closed=x_points[0] == x_points[-1] and y_points[0] == y_points[-1],
-        )
-
-        kicad_polygons.append(kicad_polygon)
-
+        if (len(x_points) > 0 and len(y_points) > 0):
+            kicad_polygon = KiSymbolPolygon(
+                points=[
+                    [x_points[i], y_points[i]]
+                    for i in range(min(len(x_points), len(y_points)))
+                ],
+                points_number=min(len(x_points), len(y_points)),
+                is_closed=x_points[0] == x_points[-1] and y_points[0] == y_points[-1],
+            )
+    
+            kicad_polygons.append(kicad_polygon)
+        else:
+            logging.warning("Skipping polygon with no parseable points")
+            
     return kicad_polygons
 
 
@@ -281,17 +283,19 @@ def convert_ee_paths(
         # if ee_path.fill_color:
         #     x_points.append(x_points[0])
         #     y_points.append(y_points[0])
+        if (len(x_points) > 0 and len(y_points) > 0):
+            ki_polygon = KiSymbolPolygon(
+                points=[
+                    [x_points[i], y_points[i]]
+                    for i in range(min(len(x_points), len(y_points)))
+                ],
+                points_number=min(len(x_points), len(y_points)),
+                is_closed=x_points[0] == x_points[-1] and y_points[0] == y_points[-1],
+            )
 
-        ki_polygon = KiSymbolPolygon(
-            points=[
-                [x_points[i], y_points[i]]
-                for i in range(min(len(x_points), len(y_points)))
-            ],
-            points_number=min(len(x_points), len(y_points)),
-            is_closed=x_points[0] == x_points[-1] and y_points[0] == y_points[-1],
-        )
-
-        kicad_polygons.append(ki_polygon)
+            kicad_polygons.append(ki_polygon)
+        else:
+            logging.warning("Skipping path with no parseable points")
 
     return kicad_polygons, kicad_beziers
 
