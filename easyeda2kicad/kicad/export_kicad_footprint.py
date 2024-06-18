@@ -278,7 +278,7 @@ class ExporterFootprintKicad:
                     )
                     ki_pad.polygon = (
                         "\n\t\t(primitives \n\t\t\t(gr_poly \n\t\t\t\t(pts"
-                        f" {path}\n\t\t\t\t) \n\t\t\t\t(width 0.1) \n\t\t\t)\n\t\t)\n\t"
+                        f" {path}\n\t\t\t\t) \n\t\t\t\t(width 0) \n\t\t\t)\n\t\t)\n\t"
                     )
 
             self.output.pads.append(ki_pad)
