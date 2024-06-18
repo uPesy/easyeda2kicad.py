@@ -406,7 +406,7 @@ class ExporterFootprintKicad:
 
                     # Generates a polygon with coordinates relative to the anchor pad.
                     path = "".join(
-                        "(xy {} {})".format(round(x, 2), round(y, 2))
+                        f"(xy {round(x, 2)} {round(y, 2)})"
                         for x, y in [
                             (x - ki_pad.pos_x, y - ki_pad.pos_y)
                             for x, y in actual_coords
