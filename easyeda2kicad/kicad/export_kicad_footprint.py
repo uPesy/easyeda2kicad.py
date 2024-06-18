@@ -262,18 +262,6 @@ def find_circle_center_in_polygon(
     return None
 
 
-def apply_same_translation(
-    p: Tuple[float, float], ref_from: Tuple[float, float], ref_to: Tuple[float, float]
-) -> Tuple[float, float]:
-    dx = ref_to[0] - ref_from[0]
-    dy = ref_to[1] - ref_from[1]
-
-    new_x = p[0] + dx
-    new_y = p[1] + dy
-
-    return (new_x, new_y)
-
-
 # ---------------------------------------
 
 
