@@ -43,6 +43,8 @@ pip install easyeda2kicad
 ```bash
 # For symbol + footprint + 3d model (with --full argument)
 easyeda2kicad --full --lcsc_id=C2040
+# For components not listed in public libraries (user-created)
+easyeda2kicad --full --uuid=18f70c95488944a99ceedb9505986f4e
 # For symbol + footprint + 3d model
 easyeda2kicad --symbol --footprint --3d --lcsc_id=C2040
 # For symbol + footprint
@@ -85,6 +87,10 @@ By default, easyeda2kicad will generate a symbol library for Kicad v6.x (.kicad_
 ```bash
 easyeda2kicad --symbol --lcsc_id=C2040 --v5
 ```
+
+If you created your own symbol, footprint or 3D model which is not listed in public libraries, you can retrieve the component by specifying the uuid argument. Find the uuid through the network inspector of your browser when you select a component in your workspace library(thus filed a request). The requested url should be something like this:
+
+https://easyeda.com/api/components/{uuid}?version=6.5.42&uuid={uuid}&datastrid=blah
 
 ## 🔗 Add libraries in Kicad
 

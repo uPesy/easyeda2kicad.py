@@ -1,6 +1,7 @@
 # Global imports
 import json
 import logging
+from typing import List,Union
 
 from easyeda2kicad.easyeda.easyeda_api import EasyedaApi
 from easyeda2kicad.easyeda.parameters_easyeda import *
@@ -91,6 +92,19 @@ def add_easyeda_arc(arc_data: str, ee_symbol: EeSymbol):
         EeSymbolArc(**dict(zip(EeSymbolArc.__fields__, arc_data.split("~")[1:])))
     )
 
+def selective_get_element_by_dictkey(srcdict: dict|None, keys:List|None=[], defaultvalue=None):
+    if srcdict is None:
+        return defaultvalue
+    for key in keys:
+        if key in srcdict:
+            return srcdict.get(key)
+    return defaultvalue
+
+def selective_choose_among_elements(srclist:List|None, defaultvalue=None):
+    for element in srclist:
+        if element is not None:
+            return element
+    return defaultvalue
 
 easyeda_handlers = {
     "P": add_easyeda_pin,
@@ -117,15 +131,28 @@ class EasyedaSymbolImporter:
         return self.output
 
     def extract_easyeda_data(self, ee_data: dict, ee_data_info: dict) -> EeSymbol:
+        potential_datasheet = selective_get_element_by_dictkey(ee_data,["lcsc"],None)
+        potential_datasheet = selective_get_element_by_dictkey(potential_datasheet,["url"],None)
+        potential_datasheets = [potential_datasheet]
+        potential_datasheets.append(selective_get_element_by_dictkey(ee_data_info,["link"],None))
+        potential_datasheets.append(selective_get_element_by_dictkey(ee_data_info,["datasheet"],None))
+        potential_lcsc_id = selective_get_element_by_dictkey(ee_data,["lcsc"],None)
+        potential_lcsc_id = selective_get_element_by_dictkey(potential_lcsc_id,["number"],None)
+        potential_lcsc_ids = [potential_lcsc_id]
+        potential_lcsc_ids.append(selective_get_element_by_dictkey(ee_data_info,["Supplier Part"],None))
+        potential_jlc_id = selective_get_element_by_dictkey(ee_data_info,["BOM_JLCPCB Part Class"],None)
+        potential_jlc_ids = [potential_jlc_id]
+        potential_jlc_ids.append(selective_get_element_by_dictkey(ee_data_info,["Supplier Part"],None))
+
         new_ee_symbol = EeSymbol(
             info=EeSymbolInfo(
                 name=ee_data_info["name"],
                 prefix=ee_data_info["pre"],
                 package=ee_data_info.get("package", None),
-                manufacturer=ee_data_info.get("BOM_Manufacturer", None),
-                datasheet=ee_data["lcsc"].get("url", None),
-                lcsc_id=ee_data["lcsc"].get("number", None),
-                jlc_id=ee_data_info.get("BOM_JLCPCB Part Class", None),
+                manufacturer=selective_get_element_by_dictkey(ee_data_info, ["BOM_Manufacturer", "Manufacturer"], None), #ee_data_info.get("BOM_Manufacturer", None),
+                datasheet=selective_choose_among_elements(potential_datasheets), #ee_data["lcsc"].get("url", None),
+                lcsc_id=selective_choose_among_elements(potential_lcsc_ids),#ee_data["lcsc"].get("number", None),
+                jlc_id=selective_choose_among_elements(potential_jlc_ids)#ee_data_info.get("BOM_JLCPCB Part Class", None),
             ),
             bbox=EeSymbolBbox(
                 x=float(ee_data["dataStr"]["head"]["x"]),
@@ -256,6 +283,7 @@ class Easyeda3dModelImporter:
         return None
 
     def get_3d_model_info(self, ee_data: str) -> dict:
+        # return nothing if there's no SVGNODE
         for line in ee_data:
             ee_designator = line.split("~")[0]
             if ee_designator == "SVGNODE":
