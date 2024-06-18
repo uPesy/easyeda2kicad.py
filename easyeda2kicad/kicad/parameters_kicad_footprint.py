@@ -28,6 +28,7 @@ KI_FAB_REF = (
 )
 KI_END_FILE = ")"
 
+KI_PAD_SIZE_MIN = 0.001
 KI_PAD = (
     "\t(pad {number} {type} {shape} (at {pos_x:.2f} {pos_y:.2f} {orientation:.2f})"
     " (size {width:.2f} {height:.2f}) (layers {layers}){drill}{polygon})\n"
