@@ -1,7 +1,7 @@
 # Global imports
 import logging
 from math import acos, cos, isnan, pi, sin, sqrt
-from typing import Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 from easyeda2kicad.easyeda.parameters_easyeda import ee_footprint
 from easyeda2kicad.kicad.parameters_kicad_footprint import *
@@ -165,6 +165,124 @@ def rotate(x: float, y: float, degrees: float) -> Tuple[float, float]:
 # ---------------------------------------
 
 
+def is_on_segment(
+    x0: float, y0: float, x1: float, y1: float, px: float, py: float
+) -> bool:
+    """
+    Returns True if the point (px, py) is on the line segment from (x0, y0) to (x1, y1).
+    """
+    EPSILON = 1e-9
+    return (
+        min(x0, x1) <= px <= max(x0, x1)
+        and min(y0, y1) <= py <= max(y0, y1)
+        and abs((px - x0) * (y1 - y0) - (py - y0) * (x1 - x0)) < EPSILON
+    )
+
+
+def is_left(x0: float, y0: float, x1: float, y1: float, px: float, py: float) -> bool:
+    """
+    Returns True if the point (px, py) is to the left of the line segment from (x0, y0) to (x1, y1)
+    """
+    return ((x1 - x0) * (py - y0) - (y1 - y0) * (px - x0)) > 0
+
+
+def is_point_in_polygon(
+    point: Tuple[float, float], polygon: List[Tuple[float, float]]
+) -> bool:
+    x, y = point
+    winding_number = 0
+
+    n = len(polygon)
+    for i in range(n):
+        x0, y0 = polygon[i]
+        x1, y1 = polygon[(i + 1) % n]
+
+        if is_on_segment(x0, y0, x1, y1, x, y):
+            return True
+
+        if y0 <= y:
+            if y1 > y and is_left(x0, y0, x1, y1, x, y):
+                winding_number += 1
+        else:
+            if y1 <= y and not is_left(x0, y0, x1, y1, x, y):
+                winding_number -= 1
+
+    return winding_number != 0
+
+
+def get_circumscribed_regular_polygon(
+    center: Tuple[float, float], radius: float, n: int
+) -> List[Tuple[float, float]]:
+    cx, cy = center
+    return [
+        (
+            cx + radius * cos(2 * pi * i / n),
+            cy + radius * sin(2 * pi * i / n),
+        )
+        for i in range(n)
+    ]
+
+
+def is_circle_in_polygon(
+    center: Tuple[float, float], radius: float, polygon: List[Tuple[float, float]]
+) -> bool:
+    return all(
+        is_point_in_polygon(vertex, polygon)
+        for vertex in get_circumscribed_regular_polygon(center, radius, 12)
+    )
+
+
+def get_bounds_of_polygon(
+    polygon: List[Tuple[float, float]],
+) -> Tuple[float, float, float, float]:
+    min_x = min(polygon, key=lambda vertex: vertex[0])[0]
+    max_x = max(polygon, key=lambda vertex: vertex[0])[0]
+    min_y = min(polygon, key=lambda vertex: vertex[1])[1]
+    max_y = max(polygon, key=lambda vertex: vertex[1])[1]
+    return (min_x, max_x, min_y, max_y)
+
+
+def frange(start: float, stop: float, step: float):
+    n = int((stop - start) / step)
+    for i in range(n):
+        yield start + step * i  # Reduce error accumulation
+
+
+def find_circle_center_in_polygon(
+    polygon: List[Tuple[float, float]], radius: float
+) -> Optional[Tuple[float, float]]:
+    min_x, max_x, min_y, max_y = get_bounds_of_polygon(polygon)
+    STEP = 0.05
+
+    for x in frange(min_x, max_x, STEP):
+        for y in frange(min_y, max_y, STEP):
+            center = (x, y)
+            if is_circle_in_polygon(center, radius, polygon):
+                return center
+    return None
+
+
+def set_appropriate_position_for_custom_shape(
+    ki_pad: KiFootprintPad, polygon: List[Tuple[float, float]]
+) -> None:
+    # anchor pad shape == circle, width == height
+    center = (ki_pad.pos_x, ki_pad.pos_y)
+    radius = ki_pad.width / 2
+    if is_circle_in_polygon(center, radius, polygon):
+        return
+
+    new_center = find_circle_center_in_polygon(polygon, radius)
+    if new_center is None:
+        logging.warning(
+            f"The custom shape of PAD #${ki_pad.number} cannot contain its anchor pad"
+        )
+    else:
+        ki_pad.pos_x, ki_pad.pos_y = new_center
+
+
+# ---------------------------------------
+
+
 class ExporterFootprintKicad:
     def __init__(self, footprint: ee_footprint):
         self.input = footprint
@@ -258,27 +376,37 @@ class ExporterFootprintKicad:
                     )
                 else:
                     # Set the pad width and height to the smallest value allowed by KiCad.
-                    # KiCad tries to draw a pad that forms the base of the polygon,
-                    # but this is often unnecessary and should be disabled.
-                    ki_pad.width = 0.005
-                    ki_pad.height = 0.005
+                    # KiCad draws a custom polygon's anchor pad at a specified size,
+                    # which is usually unnecessary and should be removed.
+                    ki_pad.width = KI_PAD_SIZE_MIN
+                    ki_pad.height = KI_PAD_SIZE_MIN
 
-                    # The points of the polygon always seem to correspond to coordinates when orientation=0.
+                    # Regardless of the imported rotation value,
+                    # the coords seem to correspond to the values when orientation = 0
                     ki_pad.orientation = 0
 
-                    # Generate polygon with coordinates relative to the base pad's position.
-                    path = "".join(
-                        "(xy {} {})".format(
-                            round(point_list[i] - self.input.bbox.x - ki_pad.pos_x, 2),
-                            round(
-                                point_list[i + 1] - self.input.bbox.y - ki_pad.pos_y, 2
-                            ),
+                    absolute_coords = [
+                        (
+                            point_list[i] - self.input.bbox.x,
+                            point_list[i + 1] - self.input.bbox.y,
                         )
                         for i in range(0, len(point_list), 2)
+                    ]
+                    # The anchor pad is now very small but definitely present.
+                    # If possible, it should be moved to be contained within the polygon.
+                    set_appropriate_position_for_custom_shape(ki_pad, absolute_coords)
+
+                    # Generates a polygon with coordinates relative to the anchor pad.
+                    path = "".join(
+                        f"(xy {round(x, 2)} {round(y, 2)})"
+                        for x, y in [
+                            (x - ki_pad.pos_x, y - ki_pad.pos_y)
+                            for x, y in absolute_coords
+                        ]
                     )
                     ki_pad.polygon = (
                         "\n\t\t(primitives \n\t\t\t(gr_poly \n\t\t\t\t(pts"
-                        f" {path}\n\t\t\t\t) \n\t\t\t\t(width 0.1) \n\t\t\t)\n\t\t)\n\t"
+                        f" {path}\n\t\t\t\t) \n\t\t\t\t(width 0) \n\t\t\t)\n\t\t)\n\t"
                     )
 
             self.output.pads.append(ki_pad)
