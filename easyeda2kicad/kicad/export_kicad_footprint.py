@@ -262,6 +262,24 @@ def find_circle_center_in_polygon(
     return None
 
 
+def set_appropriate_position_for_custom_shape(
+    ki_pad: KiFootprintPad, polygon: List[Tuple[float, float]]
+) -> None:
+    # anchor pad shape == circle, width == height
+    center = (ki_pad.pos_x, ki_pad.pos_y)
+    radius = ki_pad.width / 2
+    if is_circle_in_polygon(center, radius, polygon):
+        return
+
+    new_center = find_circle_center_in_polygon(polygon, radius)
+    if new_center is None:
+        logging.warning(
+            f"The custom shape of PAD #${ki_pad.number} cannot contain its anchor pad"
+        )
+    else:
+        ki_pad.pos_x, ki_pad.pos_y = new_center
+
+
 # ---------------------------------------
 
 
@@ -367,7 +385,7 @@ class ExporterFootprintKicad:
                     # the coords seem to correspond to the values when orientation = 0
                     ki_pad.orientation = 0
 
-                    actual_coords = [
+                    absolute_coords = [
                         (
                             point_list[i] - self.input.bbox.x,
                             point_list[i + 1] - self.input.bbox.y,
@@ -376,28 +394,14 @@ class ExporterFootprintKicad:
                     ]
                     # The anchor pad is now very small but definitely present.
                     # If possible, it should be moved to be contained within the polygon.
-                    if not is_circle_in_polygon(
-                        (ki_pad.pos_x, ki_pad.pos_y), KI_PAD_SIZE_MIN / 2, actual_coords
-                    ):
-                        new_center = find_circle_center_in_polygon(
-                            actual_coords, KI_PAD_SIZE_MIN / 2
-                        )
-                        if new_center is None:
-                            logging.warning(
-                                "Custom polygon cannot contain its anchor pad"
-                            )
-                        else:
-                            ki_pad.pos_x = new_center[0]
-                            ki_pad.pos_y = new_center[1]
-                    else:
-                        logging.debug("Custom polygon already contains its anchor pad")
+                    set_appropriate_position_for_custom_shape(ki_pad, absolute_coords)
 
                     # Generates a polygon with coordinates relative to the anchor pad.
                     path = "".join(
                         f"(xy {round(x, 2)} {round(y, 2)})"
                         for x, y in [
                             (x - ki_pad.pos_x, y - ki_pad.pos_y)
-                            for x, y in actual_coords
+                            for x, y in absolute_coords
                         ]
                     )
                     ki_pad.polygon = (
