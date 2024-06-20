@@ -367,7 +367,12 @@ class ExporterFootprintKicad:
                 start_x + width,
                 start_x,
             ]
-            ki_rectangle.points_start_y = [start_y, start_y, start_y + height, start_y]
+            ki_rectangle.points_start_y = [
+                start_y,
+                start_y,
+                start_y + height,
+                start_y + height,
+            ]
             ki_rectangle.points_end_x = [
                 start_x + width,
                 start_x + width,
