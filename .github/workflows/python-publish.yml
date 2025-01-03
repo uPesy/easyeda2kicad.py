@@ -29,7 +29,4 @@ jobs:
 
     - uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        # TODO: we want this on
-        # URL-based dependencies aren't supported
-        # https://github.com/atopile/atopile/blob/28b85da0cd29a6743f8f4b5de54ecd1474872b2f/pyproject.toml#L34
-        attestations: false
+        attestations: true
