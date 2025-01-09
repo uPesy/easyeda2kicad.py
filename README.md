@@ -38,6 +38,11 @@ If this tool has saved you a lot of time when designing a PCB, please consider s
 pip install easyeda2kicad
 ```
 
+Note: In MacOS you need to use the KiCad python to install easyeda2kicad.
+```bash
+/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3 -m pip install easyeda2kicad
+```
+
 ## 💻 Usage
 
 ```bash
