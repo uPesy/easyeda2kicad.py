@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import sys
+import ctypes
 from textwrap import dedent
 from typing import List
 
@@ -152,9 +153,8 @@ def valid_arguments(arguments: dict) -> bool:
             return False
     else:
         default_folder = os.path.join(
-            os.path.expanduser("~"),
-            "Documents",
-            "Kicad",
+            get_documents_folder(),
+            "KiCad",
             "easyeda2kicad",
         )
         if not os.path.isdir(default_folder):
@@ -196,6 +196,17 @@ def valid_arguments(arguments: dict) -> bool:
 
     return True
 
+def get_documents_folder():
+    if os.name == 'nt':  # Check if the OS is Windows
+        CSIDL_PERSONAL = 5  # CSIDL for "My Documents"
+        buf = ctypes.create_unicode_buffer(260)
+        ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, 0, buf)
+        return os.path.normpath(buf.value)  # Ensures correct path format
+    else:
+        return os.path.join(
+            os.path.expanduser("~"),
+            "Documents",
+        )
 
 def delete_component_in_symbol_lib(
     lib_path: str, component_id: str, component_name: str
