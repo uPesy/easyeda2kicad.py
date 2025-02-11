@@ -1,10 +1,10 @@
 # Global imports
 import argparse
+import ctypes
 import logging
 import os
 import re
 import sys
-import ctypes
 from textwrap import dedent
 from typing import List
 
@@ -197,7 +197,7 @@ def valid_arguments(arguments: dict) -> bool:
     return True
 
 def get_documents_folder():
-    if os.name == 'nt':  # Check if the OS is Windows
+    if os.name == "nt":  # Check if the OS is Windows
         CSIDL_PERSONAL = 5  # CSIDL for "My Documents"
         buf = ctypes.create_unicode_buffer(260)
         ctypes.windll.shell32.SHGetFolderPathW(None, CSIDL_PERSONAL, None, 0, buf)
