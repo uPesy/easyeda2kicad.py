@@ -30,11 +30,9 @@ If not, you can use the Python executable included with Kicad by using the KiCad
 
 Then run this command to install easyeda2kicad
 
-
 ```bash
 pip install easyeda2kicad
 ```
-
 
 Note: On MacOS, you can run the KiCad Python executable with this command to install easyeda2kicad.
 ```bash
