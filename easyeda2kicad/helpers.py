@@ -98,15 +98,30 @@ def add_component_in_symbol_lib_file(
         with open(file=lib_path, mode="a+", encoding="utf-8") as lib_file:
             lib_file.write(component_content)
     elif kicad_version == KicadVersion.v6:
-        with open(file=lib_path, mode="rb+") as lib_file:
-            lib_file.seek(-2, 2)
-            lib_file.truncate()
-            lib_file.write(component_content.encode(encoding="utf-8"))
-            lib_file.write("\n)".encode(encoding="utf-8"))
-
+        # Read the current library file
         with open(file=lib_path, encoding="utf-8") as lib_file:
-            new_lib_data = lib_file.read()
+            current_lib_data = lib_file.read()
+        
+        # Find the position before the closing parenthesis of the library
+        # The library structure should be: (kicad_symbol_lib ... )
+        # We need to insert the symbol before the final closing parenthesis
+        last_paren_pos = current_lib_data.rfind(')')
+        if last_paren_pos == -1:
+            raise ValueError("Invalid KiCad library file: no closing parenthesis found")
+        
+        # Ensure proper indentation for the component content
+        # Split component_content into lines and add proper indentation
+        component_lines = component_content.split('\n')
+        indented_component = '\n'.join('  ' + line if line.strip() else line for line in component_lines)
+        
+        # Insert the component content before the closing parenthesis
+        new_lib_data = (
+            current_lib_data[:last_paren_pos] + 
+            indented_component + "\n" +
+            current_lib_data[last_paren_pos:]
+        )
 
+        # Write the updated library file
         with open(file=lib_path, mode="w", encoding="utf-8") as lib_file:
             lib_file.write(
                 new_lib_data.replace(
