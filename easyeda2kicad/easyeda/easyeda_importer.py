@@ -10,9 +10,21 @@ def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
     segments = pin_data.split("^^")
     ee_segments = [seg.split("~") for seg in segments]
 
+    # Extract the correct KiCad pin number from segment 4[4]
+    correct_pin_number = None
+    if len(ee_segments) > 4 and len(ee_segments[4]) > 4:
+        correct_pin_number = ee_segments[4][4]
+
     pin_settings = EeSymbolPinSettings(
         **dict(zip(EeSymbolPinSettings.__fields__, ee_segments[0][1:]))
     )
+    
+    # Override spice_pin_number with the correct KiCad pin number if found
+    if correct_pin_number is not None:
+        pin_settings.spice_pin_number = correct_pin_number
+    else:
+        logging.warning(f"Could not find correct pin number for pin data, using spice_pin_number: {pin_settings.spice_pin_number}")
+    
     pin_dot = EeSymbolPinDot(
         dot_x=float(ee_segments[1][0]), dot_y=float(ee_segments[1][1])
     )
