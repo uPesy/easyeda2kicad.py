@@ -5,7 +5,7 @@ A Python tool for converting EasyEDA symbols, footprints, and 3D models
 to KiCad library format.
 """
 
-__version__ = "0.8.0"
+from ._version import __version__
 __author__ = "uPesy"
 __email__ = "contact@upesy.com"
 

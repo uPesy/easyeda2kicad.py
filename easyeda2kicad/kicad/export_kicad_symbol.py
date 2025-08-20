@@ -2,7 +2,7 @@
 import logging
 from typing import Callable, List, Tuple, Union
 
-from easyeda2kicad.easyeda.parameters_easyeda import (
+from ..easyeda.parameters_easyeda import (
     EasyedaPinType,
     EeSymbol,
     EeSymbolArc,
@@ -15,10 +15,10 @@ from easyeda2kicad.easyeda.parameters_easyeda import (
     EeSymbolPolyline,
     EeSymbolRectangle,
 )
-from easyeda2kicad.easyeda.svg_path_parser import SvgPathEllipticalArc, SvgPathMoveTo
-from easyeda2kicad.helpers import get_middle_arc_pos
-from easyeda2kicad.kicad.export_kicad_footprint import compute_arc
-from easyeda2kicad.kicad.parameters_kicad_symbol import *
+from ..easyeda.svg_path_parser import SvgPathEllipticalArc, SvgPathMoveTo
+from ..helpers import get_middle_arc_pos
+from .export_kicad_footprint import compute_arc
+from .parameters_kicad_symbol import *
 
 ee_pin_type_to_ki_pin_type = {
     EasyedaPinType.unspecified: KiPinType.unspecified,

@@ -2,8 +2,8 @@
 import json
 import logging
 
-from easyeda2kicad.easyeda.easyeda_api import EasyedaApi
-from easyeda2kicad.easyeda.parameters_easyeda import *
+from .easyeda_api import EasyedaApi
+from .parameters_easyeda import *
 
 
 def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):

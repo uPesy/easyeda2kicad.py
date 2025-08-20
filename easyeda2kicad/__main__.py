@@ -7,25 +7,25 @@ import sys
 from textwrap import dedent
 from typing import List
 
-from easyeda2kicad import __version__
-from easyeda2kicad.easyeda.easyeda_api import EasyedaApi
-from easyeda2kicad.easyeda.easyeda_importer import (
+from ._version import __version__
+from .easyeda.easyeda_api import EasyedaApi
+from .easyeda.easyeda_importer import (
     Easyeda3dModelImporter,
     EasyedaFootprintImporter,
     EasyedaSymbolImporter,
 )
-from easyeda2kicad.easyeda.parameters_easyeda import EeSymbol
-from easyeda2kicad.helpers import (
+from .easyeda.parameters_easyeda import EeSymbol
+from .helpers import (
     add_component_in_symbol_lib_file,
     get_local_config,
     id_already_in_symbol_lib,
     set_logger,
     update_component_in_symbol_lib_file,
 )
-from easyeda2kicad.kicad.export_kicad_3d_model import Exporter3dModelKicad
-from easyeda2kicad.kicad.export_kicad_footprint import ExporterFootprintKicad
-from easyeda2kicad.kicad.export_kicad_symbol import ExporterSymbolKicad
-from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion
+from .kicad.export_kicad_3d_model import Exporter3dModelKicad
+from .kicad.export_kicad_footprint import ExporterFootprintKicad
+from .kicad.export_kicad_symbol import ExporterSymbolKicad
+from .kicad.parameters_kicad_symbol import KicadVersion
 
 
 def get_parser() -> argparse.ArgumentParser:
