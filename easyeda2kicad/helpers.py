@@ -7,8 +7,8 @@ import re
 from datetime import datetime
 from glob import escape
 
-from easyeda2kicad import __version__
-from easyeda2kicad.kicad.parameters_kicad_symbol import KicadVersion, sanitize_fields
+from ._version import __version__
+from .kicad.parameters_kicad_symbol import KicadVersion, sanitize_fields
 
 sym_lib_regex_pattern = {
     "v5": r"(#\n# {component_name}\n#\n.*?ENDDEF\n)",

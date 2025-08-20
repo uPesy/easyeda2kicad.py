@@ -3,7 +3,7 @@ import logging
 
 import requests
 
-from easyeda2kicad import __version__
+from .._version import __version__
 
 API_ENDPOINT = "https://easyeda.com/api/products/{lcsc_id}/components?version=6.4.19.5"
 ENDPOINT_3D_MODEL = "https://modules.easyeda.com/3dmodel/{uuid}"
