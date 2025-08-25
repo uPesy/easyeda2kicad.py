@@ -1,7 +1,8 @@
 # Global imports
+import json
 import logging
-
-import requests
+import urllib.error
+import urllib.request
 
 from .._version import __version__
 
@@ -23,16 +24,35 @@ class EasyedaApi:
         }
 
     def get_info_from_easyeda_api(self, lcsc_id: str) -> dict:
-        r = requests.get(url=API_ENDPOINT.format(lcsc_id=lcsc_id), headers=self.headers)
-        api_response = r.json()
+        try:
+            req = urllib.request.Request(
+                url=API_ENDPOINT.format(lcsc_id=lcsc_id), headers=self.headers
+            )
+            with urllib.request.urlopen(req, timeout=30) as response:
+                raw_data = response.read()
+                # Handle gzip compression
+                if raw_data[:2] == b"\x1f\x8b":  # gzip magic number
+                    import gzip
 
-        if not api_response or (
-            "code" in api_response and api_response["success"] is False
-        ):
-            logging.debug(f"{api_response}")
+                    data = gzip.decompress(raw_data).decode("utf-8")
+                else:
+                    data = raw_data.decode("utf-8")
+                try:
+                    api_response = json.loads(data)
+                except json.JSONDecodeError as e:
+                    logging.error(f"Invalid JSON response from API: {e}")
+                    return {}
+
+            if not api_response or (
+                "code" in api_response and api_response["success"] is False
+            ):
+                logging.debug(f"{api_response}")
+                return {}
+
+            return api_response
+        except (urllib.error.URLError, json.JSONDecodeError) as e:
+            logging.error(f"API request failed: {e}")
             return {}
-
-        return r.json()
 
     def get_cad_data_of_component(self, lcsc_id: str) -> dict:
         cp_cad_info = self.get_info_from_easyeda_api(lcsc_id=lcsc_id)
@@ -41,21 +61,35 @@ class EasyedaApi:
         return cp_cad_info["result"]
 
     def get_raw_3d_model_obj(self, uuid: str) -> str:
-        r = requests.get(
-            url=ENDPOINT_3D_MODEL.format(uuid=uuid),
-            headers={"User-Agent": self.headers["User-Agent"]},
-        )
-        if r.status_code != requests.codes.ok:
-            logging.error(f"No raw 3D model data found for uuid:{uuid} on easyeda")
+        try:
+            req = urllib.request.Request(
+                url=ENDPOINT_3D_MODEL.format(uuid=uuid),
+                headers={"User-Agent": self.headers["User-Agent"]},
+            )
+            with urllib.request.urlopen(req, timeout=30) as response:
+                if response.status != 200:
+                    logging.error(
+                        f"No raw 3D model data found for uuid:{uuid} on easyeda"
+                    )
+                    return None
+                return response.read().decode()
+        except urllib.error.URLError as e:
+            logging.error(f"Failed to get 3D model for uuid:{uuid}: {e}")
             return None
-        return r.content.decode()
 
     def get_step_3d_model(self, uuid: str) -> bytes:
-        r = requests.get(
-            url=ENDPOINT_3D_MODEL_STEP.format(uuid=uuid),
-            headers={"User-Agent": self.headers["User-Agent"]},
-        )
-        if r.status_code != requests.codes.ok:
-            logging.error(f"No step 3D model data found for uuid:{uuid} on easyeda")
+        try:
+            req = urllib.request.Request(
+                url=ENDPOINT_3D_MODEL_STEP.format(uuid=uuid),
+                headers={"User-Agent": self.headers["User-Agent"]},
+            )
+            with urllib.request.urlopen(req, timeout=30) as response:
+                if response.status != 200:
+                    logging.error(
+                        f"No step 3D model data found for uuid:{uuid} on easyeda"
+                    )
+                    return None
+                return response.read()
+        except urllib.error.URLError as e:
+            logging.error(f"Failed to get STEP model for uuid:{uuid}: {e}")
             return None
-        return r.content

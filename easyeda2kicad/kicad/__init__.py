@@ -2,24 +2,24 @@
 KiCad module - Handle KiCad format export and data structures
 """
 
-from .export_kicad_symbol import ExporterSymbolKicad
-from .export_kicad_footprint import ExporterFootprintKicad
 from .export_kicad_3d_model import Exporter3dModelKicad
-from .parameters_kicad_symbol import (
-    KicadVersion,
-    KiSymbol,
-    KiSymbolInfo,
-    KiSymbolPin,
-    KiPinType,
-    KiPinStyle,
-    KiBoxFill,
-)
+from .export_kicad_footprint import ExporterFootprintKicad
+from .export_kicad_symbol import ExporterSymbolKicad
 from .parameters_kicad_footprint import (
+    Ki3dModel,
     KiFootprint,
     KiFootprintInfo,
     KiFootprintPad,
     KiFootprintTrack,
-    Ki3dModel,
+)
+from .parameters_kicad_symbol import (
+    KiBoxFill,
+    KicadVersion,
+    KiPinStyle,
+    KiPinType,
+    KiSymbol,
+    KiSymbolInfo,
+    KiSymbolPin,
 )
 
 __all__ = [

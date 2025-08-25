@@ -1,24 +1,26 @@
 # Global imports
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
+
 from enum import Enum
 from typing import List, Union
 
-from pydantic import BaseModel, validator
 
-
-class SvgPathMoveTo(BaseModel):
+@dataclass
+class SvgPathMoveTo:
     start_x: float
     start_y: float
 
 
-class SvgPathLineTo(BaseModel):
+@dataclass
+class SvgPathLineTo:
     pos_x: float
     pos_y: float
 
 
-class SvgPathEllipticalArc(BaseModel):
+@dataclass
+class SvgPathEllipticalArc:
     radius_x: float
     radius_y: float
     x_axis_rotation: float
@@ -28,8 +30,9 @@ class SvgPathEllipticalArc(BaseModel):
     end_y: float
 
 
-class SvgPathClosePath(BaseModel):
-    ...
+@dataclass
+class SvgPathClosePath:
+    pass
 
 
 svg_path_handlers = {
@@ -53,14 +56,26 @@ def parse_svg_path(svg_path: str) -> list:
             cmd_class, cmd_nb_arguments = cmd_class_info
             arguments = path_command[1].strip().split(" ")
             # if multiple (x y) in a command
-            parsed_path.extend(
-                cmd_class(
-                    **dict(
-                        zip(cmd_class.__fields__, arguments[i : i + cmd_nb_arguments])
+            # Create instances using dataclass fields
+
+            field_names = [f.name for f in fields(cmd_class)]
+            # Safe argument extraction with bounds checking
+            for i in range(0, len(arguments), cmd_nb_arguments or 1):
+                arg_slice = arguments[i : i + cmd_nb_arguments]
+                if len(arg_slice) >= cmd_nb_arguments:
+                    try:
+                        parsed_path.append(
+                            cmd_class(**dict(zip(field_names, arg_slice)))
+                        )
+                    except (ValueError, TypeError) as e:
+                        logging.warning(
+                            f"Failed to create SVG path element {cmd_class.__name__}: {e}"
+                        )
+                else:
+                    logging.warning(
+                        f"Insufficient arguments for SVG command {cmd_class.__name__}, expected {cmd_nb_arguments}, got {len(arg_slice)}"
                     )
-                )
-                for i in range(0, len(arguments), cmd_nb_arguments or 1)
-            )
+                    break
         else:
             logging.warning("SVG command path not supported")
 

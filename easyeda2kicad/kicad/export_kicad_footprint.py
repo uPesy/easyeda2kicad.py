@@ -205,9 +205,11 @@ class ExporterFootprintKicad:
                     y=-round(
                         (self.input.model_3d.translation.y - self.input.bbox.y), 2
                     ),
-                    z=-round(self.input.model_3d.translation.z, 2)
-                    if self.input.info.fp_type == "smd"
-                    else 0,
+                    z=(
+                        -round(self.input.model_3d.translation.z, 2)
+                        if self.input.info.fp_type == "smd"
+                        else 0
+                    ),
                 ),
                 rotation=Ki3dModelBase(
                     x=(360 - self.input.model_3d.rotation.x) % 360,
@@ -226,9 +228,11 @@ class ExporterFootprintKicad:
         for ee_pad in self.input.pads:
             ki_pad = KiFootprintPad(
                 type="thru_hole" if ee_pad.hole_radius > 0 else "smd",
-                shape=KI_PAD_SHAPE[ee_pad.shape]
-                if ee_pad.shape in KI_PAD_SHAPE
-                else "custom",
+                shape=(
+                    KI_PAD_SHAPE[ee_pad.shape]
+                    if ee_pad.shape in KI_PAD_SHAPE
+                    else "custom"
+                ),
                 pos_x=ee_pad.center_x - self.input.bbox.x,
                 pos_y=ee_pad.center_y - self.input.bbox.y,
                 width=max(ee_pad.width, 0.01),
@@ -286,9 +290,11 @@ class ExporterFootprintKicad:
         # For tracks
         for ee_track in self.input.tracks:
             ki_track = KiFootprintTrack(
-                layers=KI_PAD_LAYER[ee_track.layer_id]
-                if ee_track.layer_id in KI_PAD_LAYER
-                else "F.Fab",
+                layers=(
+                    KI_PAD_LAYER[ee_track.layer_id]
+                    if ee_track.layer_id in KI_PAD_LAYER
+                    else "F.Fab"
+                ),
                 stroke_width=max(ee_track.stroke_width, 0.01),
             )
 
@@ -338,9 +344,11 @@ class ExporterFootprintKicad:
                 cy=ee_circle.cy - self.input.bbox.y,
                 end_x=0.0,
                 end_y=0.0,
-                layers=KI_LAYERS[ee_circle.layer_id]
-                if ee_circle.layer_id in KI_LAYERS
-                else "F.Fab",
+                layers=(
+                    KI_LAYERS[ee_circle.layer_id]
+                    if ee_circle.layer_id in KI_LAYERS
+                    else "F.Fab"
+                ),
                 stroke_width=max(ee_circle.stroke_width, 0.01),
             )
             ki_circle.end_x = ki_circle.cx + ee_circle.radius
@@ -350,9 +358,11 @@ class ExporterFootprintKicad:
         # For rectangles
         for ee_rectangle in self.input.rectangles:
             ki_rectangle = KiFootprintRectangle(
-                layers=KI_PAD_LAYER[ee_rectangle.layer_id]
-                if ee_rectangle.layer_id in KI_PAD_LAYER
-                else "F.Fab",
+                layers=(
+                    KI_PAD_LAYER[ee_rectangle.layer_id]
+                    if ee_rectangle.layer_id in KI_PAD_LAYER
+                    else "F.Fab"
+                ),
                 stroke_width=max(ee_rectangle.stroke_width, 0.01),
             )
 
@@ -430,9 +440,11 @@ class ExporterFootprintKicad:
                 end_x=end_x,
                 end_y=end_y,
                 angle=extent,
-                layers=KI_LAYERS[ee_arc.layer_id]
-                if ee_arc.layer_id in KI_LAYERS
-                else "F.Fab",
+                layers=(
+                    KI_LAYERS[ee_arc.layer_id]
+                    if ee_arc.layer_id in KI_LAYERS
+                    else "F.Fab"
+                ),
                 stroke_width=max(fp_to_ki(ee_arc.stroke_width), 0.01),
             )
             self.output.arcs.append(ki_arc)
@@ -444,9 +456,11 @@ class ExporterFootprintKicad:
                 pos_y=ee_text.center_y - self.input.bbox.y,
                 orientation=angle_to_ki(ee_text.rotation),
                 text=ee_text.text,
-                layers=KI_LAYERS[ee_text.layer_id]
-                if ee_text.layer_id in KI_LAYERS
-                else "F.Fab",
+                layers=(
+                    KI_LAYERS[ee_text.layer_id]
+                    if ee_text.layer_id in KI_LAYERS
+                    else "F.Fab"
+                ),
                 font_size=max(ee_text.font_size, 1),
                 thickness=max(ee_text.stroke_width, 0.01),
                 display=" hide" if ee_text.is_displayed is False else "",
