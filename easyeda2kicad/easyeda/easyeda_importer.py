@@ -6,6 +6,16 @@ from .easyeda_api import EasyedaApi
 from .parameters_easyeda import *
 
 
+# Safe conversion helpers
+def _safe_float(value, default=0.0):
+    if value is None or value == "":
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+
 def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
     segments = pin_data.split("^^")
     ee_segments = [seg.split("~") for seg in segments]
@@ -15,30 +25,86 @@ def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
     if len(ee_segments) > 4 and len(ee_segments[4]) > 4:
         correct_pin_number = ee_segments[4][4]
 
-    pin_settings = EeSymbolPinSettings(
-        **dict(zip(EeSymbolPinSettings.__fields__, ee_segments[0][1:]))
+    from dataclasses import fields
+
+    pin_settings_data = (
+        ee_segments[0][1:] if len(ee_segments) > 0 and len(ee_segments[0]) > 1 else []
     )
-    
+    pin_settings_fields = [f.name for f in fields(EeSymbolPinSettings)]
+    pin_settings = EeSymbolPinSettings(
+        **dict(zip(pin_settings_fields, pin_settings_data))
+    )
+
     # Override spice_pin_number with the correct KiCad pin number if found
     if correct_pin_number is not None:
         pin_settings.spice_pin_number = correct_pin_number
     else:
-        logging.warning(f"Could not find correct pin number for pin data, using spice_pin_number: {pin_settings.spice_pin_number}")
-    
+        logging.warning(
+            f"Could not find correct pin number for pin data, using spice_pin_number: {pin_settings.spice_pin_number}"
+        )
+
     pin_dot = EeSymbolPinDot(
-        dot_x=float(ee_segments[1][0]), dot_y=float(ee_segments[1][1])
+        dot_x=_safe_float(
+            ee_segments[1][0]
+            if len(ee_segments) > 1 and len(ee_segments[1]) > 0
+            else None
+        ),
+        dot_y=_safe_float(
+            ee_segments[1][1]
+            if len(ee_segments) > 1 and len(ee_segments[1]) > 1
+            else None
+        ),
     )
-    pin_path = EeSymbolPinPath(path=ee_segments[2][0], color=ee_segments[2][1])
+    pin_path = EeSymbolPinPath(
+        path=(
+            ee_segments[2][0]
+            if len(ee_segments) > 2 and len(ee_segments[2]) > 0
+            else ""
+        ),
+        color=(
+            ee_segments[2][1]
+            if len(ee_segments) > 2 and len(ee_segments[2]) > 1
+            else ""
+        ),
+    )
     pin_name = EeSymbolPinName(
-        **dict(zip(EeSymbolPinName.__fields__, ee_segments[3][:]))
+        **dict(
+            zip(
+                [f.name for f in fields(EeSymbolPinName)],
+                ee_segments[3][:] if len(ee_segments) > 3 else [],
+            )
+        )
     )
 
     pin_dot_bis = EeSymbolPinDotBis(
-        is_displayed=ee_segments[5][0],
-        circle_x=float(ee_segments[5][1]),
-        circle_y=float(ee_segments[5][2]),
+        is_displayed=(
+            ee_segments[5][0]
+            if len(ee_segments) > 5 and len(ee_segments[5]) > 0
+            else ""
+        ),
+        circle_x=_safe_float(
+            ee_segments[5][1]
+            if len(ee_segments) > 5 and len(ee_segments[5]) > 1
+            else None
+        ),
+        circle_y=_safe_float(
+            ee_segments[5][2]
+            if len(ee_segments) > 5 and len(ee_segments[5]) > 2
+            else None
+        ),
     )
-    pin_clock = EeSymbolPinClock(is_displayed=ee_segments[6][0], path=ee_segments[6][1])
+    pin_clock = EeSymbolPinClock(
+        is_displayed=(
+            ee_segments[6][0]
+            if len(ee_segments) > 6 and len(ee_segments[6]) > 0
+            else ""
+        ),
+        path=(
+            ee_segments[6][1]
+            if len(ee_segments) > 6 and len(ee_segments[6]) > 1
+            else ""
+        ),
+    )
 
     ee_symbol.pins.append(
         EeSymbolPin(
@@ -55,7 +121,12 @@ def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
 def add_easyeda_rectangle(rectangle_data: str, ee_symbol: EeSymbol):
     ee_symbol.rectangles.append(
         EeSymbolRectangle(
-            **dict(zip(EeSymbolRectangle.__fields__, rectangle_data.split("~")[1:]))
+            **dict(
+                zip(
+                    [f.name for f in fields(EeSymbolRectangle)],
+                    rectangle_data.split("~")[1:],
+                )
+            )
         )
     )
 
@@ -63,7 +134,12 @@ def add_easyeda_rectangle(rectangle_data: str, ee_symbol: EeSymbol):
 def add_easyeda_polyline(polyline_data: str, ee_symbol: EeSymbol):
     ee_symbol.polylines.append(
         EeSymbolPolyline(
-            **dict(zip(EeSymbolPolyline.__fields__, polyline_data.split("~")[1:]))
+            **dict(
+                zip(
+                    [f.name for f in fields(EeSymbolPolyline)],
+                    polyline_data.split("~")[1:],
+                )
+            )
         )
     )
 
@@ -71,21 +147,34 @@ def add_easyeda_polyline(polyline_data: str, ee_symbol: EeSymbol):
 def add_easyeda_polygon(polygon_data: str, ee_symbol: EeSymbol):
     ee_symbol.polygons.append(
         EeSymbolPolygon(
-            **dict(zip(EeSymbolPolygon.__fields__, polygon_data.split("~")[1:]))
+            **dict(
+                zip(
+                    [f.name for f in fields(EeSymbolPolygon)],
+                    polygon_data.split("~")[1:],
+                )
+            )
         )
     )
 
 
 def add_easyeda_path(path_data: str, ee_symbol: EeSymbol):
     ee_symbol.paths.append(
-        EeSymbolPath(**dict(zip(EeSymbolPath.__fields__, path_data.split("~")[1:])))
+        EeSymbolPath(
+            **dict(
+                zip([f.name for f in fields(EeSymbolPath)], path_data.split("~")[1:])
+            )
+        )
     )
 
 
 def add_easyeda_circle(circle_data: str, ee_symbol: EeSymbol):
     ee_symbol.circles.append(
         EeSymbolCircle(
-            **dict(zip(EeSymbolCircle.__fields__, circle_data.split("~")[1:]))
+            **dict(
+                zip(
+                    [f.name for f in fields(EeSymbolCircle)], circle_data.split("~")[1:]
+                )
+            )
         )
     )
 
@@ -93,14 +182,21 @@ def add_easyeda_circle(circle_data: str, ee_symbol: EeSymbol):
 def add_easyeda_ellipse(ellipse_data: str, ee_symbol: EeSymbol):
     ee_symbol.ellipses.append(
         EeSymbolEllipse(
-            **dict(zip(EeSymbolEllipse.__fields__, ellipse_data.split("~")[1:]))
+            **dict(
+                zip(
+                    [f.name for f in fields(EeSymbolEllipse)],
+                    ellipse_data.split("~")[1:],
+                )
+            )
         )
     )
 
 
 def add_easyeda_arc(arc_data: str, ee_symbol: EeSymbol):
     ee_symbol.arcs.append(
-        EeSymbolArc(**dict(zip(EeSymbolArc.__fields__, arc_data.split("~")[1:])))
+        EeSymbolArc(
+            **dict(zip([f.name for f in fields(EeSymbolArc)], arc_data.split("~")[1:]))
+        )
     )
 
 
@@ -140,8 +236,8 @@ class EasyedaSymbolImporter:
                 jlc_id=ee_data_info.get("BOM_JLCPCB Part Class", None),
             ),
             bbox=EeSymbolBbox(
-                x=float(ee_data["dataStr"]["head"]["x"]),
-                y=float(ee_data["dataStr"]["head"]["y"]),
+                x=_safe_float(ee_data["dataStr"]["head"].get("x")),
+                y=_safe_float(ee_data["dataStr"]["head"].get("y")),
             ),
         )
 
@@ -178,8 +274,8 @@ class EasyedaFootprintImporter:
                 model_3d_name=ee_data_info.get("3DModel"),
             ),
             bbox=EeFootprintBbox(
-                x=float(ee_data_str["head"]["x"]),
-                y=float(ee_data_str["head"]["y"]),
+                x=_safe_float(ee_data_str["head"].get("x")),
+                y=_safe_float(ee_data_str["head"].get("y")),
             ),
             model_3d=None,
         )
@@ -190,42 +286,46 @@ class EasyedaFootprintImporter:
 
             if ee_designator == "PAD":
                 ee_pad = EeFootprintPad(
-                    **dict(zip(EeFootprintPad.__fields__, ee_fields[:18]))
+                    **dict(
+                        zip([f.name for f in fields(EeFootprintPad)], ee_fields[:18])
+                    )
                 )
                 new_ee_footprint.pads.append(ee_pad)
             elif ee_designator == "TRACK":
                 ee_track = EeFootprintTrack(
-                    **dict(zip(EeFootprintTrack.__fields__, ee_fields))
+                    **dict(zip([f.name for f in fields(EeFootprintTrack)], ee_fields))
                 )
                 new_ee_footprint.tracks.append(ee_track)
             elif ee_designator == "HOLE":
                 ee_hole = EeFootprintHole(
-                    **dict(zip(EeFootprintHole.__fields__, ee_fields))
+                    **dict(zip([f.name for f in fields(EeFootprintHole)], ee_fields))
                 )
                 new_ee_footprint.holes.append(ee_hole)
             elif ee_designator == "VIA":
                 ee_via = EeFootprintVia(
-                    **dict(zip(EeFootprintVia.__fields__, ee_fields))
+                    **dict(zip([f.name for f in fields(EeFootprintVia)], ee_fields))
                 )
                 new_ee_footprint.vias.append(ee_via)
             elif ee_designator == "CIRCLE":
                 ee_circle = EeFootprintCircle(
-                    **dict(zip(EeFootprintCircle.__fields__, ee_fields))
+                    **dict(zip([f.name for f in fields(EeFootprintCircle)], ee_fields))
                 )
                 new_ee_footprint.circles.append(ee_circle)
             elif ee_designator == "ARC":
                 ee_arc = EeFootprintArc(
-                    **dict(zip(EeFootprintArc.__fields__, ee_fields))
+                    **dict(zip([f.name for f in fields(EeFootprintArc)], ee_fields))
                 )
                 new_ee_footprint.arcs.append(ee_arc)
             elif ee_designator == "RECT":
                 ee_rectangle = EeFootprintRectangle(
-                    **dict(zip(EeFootprintRectangle.__fields__, ee_fields))
+                    **dict(
+                        zip([f.name for f in fields(EeFootprintRectangle)], ee_fields)
+                    )
                 )
                 new_ee_footprint.rectangles.append(ee_rectangle)
             elif ee_designator == "TEXT":
                 ee_text = EeFootprintText(
-                    **dict(zip(EeFootprintText.__fields__, ee_fields))
+                    **dict(zip([f.name for f in fields(EeFootprintText)], ee_fields))
                 )
                 new_ee_footprint.texts.append(ee_text)
             elif ee_designator == "SVGNODE":
@@ -271,8 +371,15 @@ class Easyeda3dModelImporter:
         for line in ee_data:
             ee_designator = line.split("~")[0]
             if ee_designator == "SVGNODE":
-                raw_json = line.split("~")[1:][0]
-                return json.loads(raw_json)["attrs"]
+                split_data = line.split("~")[1:]
+                if split_data:
+                    raw_json = split_data[0]
+                    try:
+                        parsed_json = json.loads(raw_json)
+                        return parsed_json.get("attrs", {})
+                    except json.JSONDecodeError as e:
+                        logging.error(f"Failed to parse 3D model JSON: {e}")
+                        return {}
         return {}
 
     def parse_3d_model_info(self, info: dict) -> Ee3dModel:
@@ -280,11 +387,24 @@ class Easyeda3dModelImporter:
             name=info["title"],
             uuid=info["uuid"],
             translation=Ee3dModelBase(
-                x=info["c_origin"].split(",")[0],
-                y=info["c_origin"].split(",")[1],
-                z=info["z"],
+                x=(
+                    info["c_origin"].split(",")[0]
+                    if "c_origin" in info and "," in info["c_origin"]
+                    else "0"
+                ),
+                y=(
+                    info["c_origin"].split(",")[1]
+                    if "c_origin" in info and len(info["c_origin"].split(",")) > 1
+                    else "0"
+                ),
+                z=info.get("z", "0"),
             ),
             rotation=Ee3dModelBase(
-                **dict(zip(Ee3dModelBase.__fields__, info["c_rotation"].split(",")))
+                **dict(
+                    zip(
+                        [f.name for f in fields(Ee3dModelBase)],
+                        info.get("c_rotation", "0,0,0").split(","),
+                    )
+                )
             ),
         )
