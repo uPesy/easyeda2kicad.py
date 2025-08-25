@@ -27,9 +27,7 @@ pretty = true
 
 [tool.pylint.master]
 output-format = "colorized"
-extension-pkg-whitelist = [
-    "pydantic"
-]
+extension-pkg-whitelist = []
 ignore="(.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env|)/"
 
 [tool.pylint.format]
