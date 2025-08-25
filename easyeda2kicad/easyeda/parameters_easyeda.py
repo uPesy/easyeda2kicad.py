@@ -56,7 +56,6 @@ class EeSymbolBbox:
     x: float
     y: float
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -77,7 +76,6 @@ class EeSymbolPinSettings:
     id: str
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -104,7 +102,6 @@ class EeSymbolPinDot:
     dot_x: float
     dot_y: float
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -117,7 +114,6 @@ class EeSymbolPinPath:
     path: str
     color: str
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -136,7 +132,6 @@ class EeSymbolPinName:
     font: str
     font_size: float
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -157,7 +152,6 @@ class EeSymbolPinDotBis:
     circle_x: float
     circle_y: float
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -171,7 +165,6 @@ class EeSymbolPinClock:
     is_displayed: bool
     path: str
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -187,7 +180,6 @@ class EeSymbolPin:
     dot: EeSymbolPinDotBis
     clock: EeSymbolPinClock
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
 
@@ -207,7 +199,6 @@ class EeSymbolRectangle:
     rx: Union[float, None] = None
     ry: Union[float, None] = None
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -245,7 +236,6 @@ class EeSymbolCircle:
     id: str
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -274,7 +264,6 @@ class EeSymbolArc:
     id: str
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -303,7 +292,6 @@ class EeSymbolEllipse:
     id: str
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -332,7 +320,6 @@ class EeSymbolPolyline:
     id: str
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -367,7 +354,6 @@ class EeSymbolPath:
     id: str
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -392,7 +378,6 @@ class EeSymbolInfo:
     lcsc_id: str = ""
     jlc_id: str = ""
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
 
@@ -409,7 +394,6 @@ class EeSymbol:
     polygons: List[EeSymbolPolygon] = field(default_factory=list)
     paths: List[EeSymbolPath] = field(default_factory=list)
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
 
@@ -425,7 +409,6 @@ class EeFootprintBbox:
     x: float
     y: float
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -457,7 +440,6 @@ class EeFootprintPad:
     is_plated: bool
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -491,7 +473,6 @@ class EeFootprintTrack:
     id: str
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -512,7 +493,6 @@ class EeFootprintHole:
     id: str
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -538,7 +518,6 @@ class EeFootprintVia:
     id: str
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -566,7 +545,6 @@ class EeFootprintCircle:
     id: str
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -590,7 +568,6 @@ class EeFootprintRectangle:
     layer_id: int
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -620,7 +597,6 @@ class EeFootprintArc:
     id: str
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -644,7 +620,6 @@ class EeFootprintText:
     id: str
     is_locked: bool
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -674,7 +649,6 @@ class EeFootprintInfo:
     fp_type: str
     model_3d_name: str
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
 
@@ -685,7 +659,6 @@ class Ee3dModelBase:
     y: float = 0.0
     z: float = 0.0
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
@@ -709,7 +682,6 @@ class Ee3dModel:
     raw_obj: str = None
     step: bytes = None
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def convert_to_mm(self) -> None:
@@ -731,5 +703,4 @@ class ee_footprint:
     rectangles: List[EeFootprintRectangle] = field(default_factory=list)
     texts: List[EeFootprintText] = field(default_factory=list)
 
-    # Maintain pydantic compatibility
     __fields__ = property(lambda self: _get_field_names(self.__class__))
