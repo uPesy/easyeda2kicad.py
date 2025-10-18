@@ -119,12 +119,21 @@ def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
 
 
 def add_easyeda_rectangle(rectangle_data: str, ee_symbol: EeSymbol):
+    parts = rectangle_data.split("~")[1:]
+
+    # Handle EasyEDA format inconsistency: sometimes has empty fields at index 2,3
+    # Format: R~x~y~(empty)~(empty)~width~height~...
+    # We need to map: x, y, width, height correctly
+    if len(parts) >= 7 and parts[2] == '' and parts[3] == '':
+        # Move width/height from position 4,5 to 2,3
+        parts = [parts[0], parts[1], parts[4], parts[5]] + parts[6:]
+
     ee_symbol.rectangles.append(
         EeSymbolRectangle(
             **dict(
                 zip(
                     [f.name for f in fields(EeSymbolRectangle)],
-                    rectangle_data.split("~")[1:],
+                    parts,
                 )
             )
         )
