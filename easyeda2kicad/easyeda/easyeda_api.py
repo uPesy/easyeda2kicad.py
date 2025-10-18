@@ -3,6 +3,9 @@ import json
 import logging
 import urllib.error
 import urllib.request
+import ssl
+import sys
+import os
 
 from .._version import __version__
 
@@ -22,13 +25,49 @@ class EasyedaApi:
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "User-Agent": f"easyeda2kicad v{__version__}",
         }
+        self.ssl_context = self._create_ssl_context()
+
+    def _create_ssl_context(self) -> ssl.SSLContext:
+        """Create SSL context with proper certificate handling for macOS."""
+        context = ssl.create_default_context()
+
+        # macOS-specific: Try to use KiCad's embedded Python certifi first
+        if sys.platform == "darwin":
+            kicad_certifi_paths = [
+                "/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/3.9/lib/python3.9/site-packages/certifi/cacert.pem",
+                "/Applications/KiCad-9.0/KiCad.app/Contents/Frameworks/Python.framework/Versions/3.9/lib/python3.9/site-packages/certifi/cacert.pem",
+                "/Applications/KiCad-10.0/KiCad.app/Contents/Frameworks/Python.framework/Versions/3.9/lib/python3.9/site-packages/certifi/cacert.pem",
+            ]
+
+            for cert_path in kicad_certifi_paths:
+                if os.path.isfile(cert_path):
+                    try:
+                        context.load_verify_locations(cafile=cert_path)
+                        logging.info(f"Using KiCad certificate bundle: {cert_path}")
+                        return context
+                    except Exception as e:
+                        logging.warning(f"Failed to load cert from {cert_path}: {e}")
+
+        # Try to use certifi package if available (works on all platforms)
+        try:
+            import certifi
+
+            context.load_verify_locations(cafile=certifi.where())
+            logging.info("Using certifi package for SSL certificates")
+            return context
+        except (ImportError, Exception) as e:
+            logging.debug(f"certifi package not available: {e}")
+
+        # Fall back to default context (uses system certificates)
+        logging.info("Using system default SSL certificates")
+        return context
 
     def get_info_from_easyeda_api(self, lcsc_id: str) -> dict:
         try:
             req = urllib.request.Request(
                 url=API_ENDPOINT.format(lcsc_id=lcsc_id), headers=self.headers
             )
-            with urllib.request.urlopen(req, timeout=30) as response:
+            with urllib.request.urlopen(req, timeout=30, context=self.ssl_context) as response:
                 raw_data = response.read()
                 # Handle gzip compression
                 if raw_data[:2] == b"\x1f\x8b":  # gzip magic number
@@ -66,7 +105,7 @@ class EasyedaApi:
                 url=ENDPOINT_3D_MODEL.format(uuid=uuid),
                 headers={"User-Agent": self.headers["User-Agent"]},
             )
-            with urllib.request.urlopen(req, timeout=30) as response:
+            with urllib.request.urlopen(req, timeout=30, context=self.ssl_context) as response:
                 if response.status != 200:
                     logging.error(
                         f"No raw 3D model data found for uuid:{uuid} on easyeda"
@@ -83,7 +122,7 @@ class EasyedaApi:
                 url=ENDPOINT_3D_MODEL_STEP.format(uuid=uuid),
                 headers={"User-Agent": self.headers["User-Agent"]},
             )
-            with urllib.request.urlopen(req, timeout=30) as response:
+            with urllib.request.urlopen(req, timeout=30, context=self.ssl_context) as response:
                 if response.status != 200:
                     logging.error(
                         f"No step 3D model data found for uuid:{uuid} on easyeda"
