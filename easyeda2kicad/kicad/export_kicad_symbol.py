@@ -29,12 +29,12 @@ ee_pin_type_to_ki_pin_type = {
 }
 
 
-def px_to_mil(dim: Union[int, float]) -> int:
-    return int(10 * dim)
+def px_to_mil(dim: Union[int, float, str]) -> int:
+    return int(10 * float(dim))
 
 
-def px_to_mm(dim: Union[int, float]) -> float:
-    return 10.0 * dim * 0.0254
+def px_to_mm(dim: Union[int, float, str]) -> float:
+    return 10.0 * float(dim) * 0.0254
 
 
 def convert_ee_pins(
@@ -157,13 +157,13 @@ def convert_ee_arcs(
         else:
             ki_arc = KiSymbolArc(
                 radius=to_ki(
-                    max(ee_arc.path[1].radius_x, ee_arc.path[1].radius_y)
+                    max(float(ee_arc.path[1].radius_x), float(ee_arc.path[1].radius_y))
                 ),  # doesn't support elliptical arc
-                angle_start=ee_arc.path[1].x_axis_rotation,
-                start_x=to_ki(ee_arc.path[0].start_x - ee_bbox.x),
-                start_y=to_ki(ee_arc.path[0].start_y - ee_bbox.y),
-                end_x=to_ki(ee_arc.path[1].end_x - ee_bbox.x),
-                end_y=to_ki(ee_arc.path[1].end_y - ee_bbox.y),
+                angle_start=float(ee_arc.path[1].x_axis_rotation),
+                start_x=to_ki(float(ee_arc.path[0].start_x) - ee_bbox.x),
+                start_y=to_ki(float(ee_arc.path[0].start_y) - ee_bbox.y),
+                end_x=to_ki(float(ee_arc.path[1].end_x) - ee_bbox.x),
+                end_y=to_ki(float(ee_arc.path[1].end_y) - ee_bbox.y),
             )
 
             center_x, center_y, angle_end = compute_arc(
