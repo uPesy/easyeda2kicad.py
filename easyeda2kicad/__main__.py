@@ -7,6 +7,7 @@ import sys
 from textwrap import dedent
 from typing import List
 
+# Local imports
 from ._version import __version__
 from .easyeda.easyeda_api import EasyedaApi
 from .easyeda.easyeda_importer import (
@@ -17,7 +18,6 @@ from .easyeda.easyeda_importer import (
 from .easyeda.parameters_easyeda import EeSymbol
 from .helpers import (
     add_component_in_symbol_lib_file,
-    get_local_config,
     id_already_in_symbol_lib,
     set_logger,
     update_component_in_symbol_lib_file,
@@ -228,7 +228,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     try:
         args = parser.parse_args(argv)
     except SystemExit as err:
-        return err.code
+        return err.code if isinstance(err.code, int) else 1
     arguments = vars(args)
 
     if arguments["debug"]:
@@ -342,7 +342,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             ).output
         )
         exporter.export(lib_path=arguments["output"])
-        if exporter.output or exporter.output_step:
+        if exporter.output:
             filename_wrl = f"{exporter.output.name}.wrl"
             filename_step = f"{exporter.output.name}.step"
             lib_path = f"{arguments['output']}.3dshapes"

@@ -1,19 +1,87 @@
 # Global imports
 import json
 import logging
+from dataclasses import fields
+from typing import get_args, get_origin, get_type_hints
 
+# Local imports
 from .easyeda_api import EasyedaApi
 from .parameters_easyeda import *
 
 
 # Safe conversion helpers
 def _safe_float(value, default=0.0):
+    """Convert value to float, return default if conversion fails."""
     if value is None or value == "":
         return default
     try:
         return float(value)
     except (ValueError, TypeError):
         return default
+
+
+def _safe_int(value, default=0):
+    """Convert value to int, return default if conversion fails."""
+    if value is None or value == "":
+        return default
+    try:
+        return int(float(value))  # float first to handle "1.0" -> 1
+    except (ValueError, TypeError):
+        return default
+
+
+def _safe_bool(value, default=False):
+    """Convert value to bool, return default if conversion fails."""
+    if value is None or value == "":
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() in ("true", "1", "yes", "on")
+    try:
+        return bool(int(value))
+    except (ValueError, TypeError):
+        return default
+
+
+def convert_fields_to_types(field_dict, dataclass_type):
+    """
+    Convert string values in field_dict to appropriate types based on dataclass_type annotations.
+    This is the ROOT CAUSE FIX for EasyEDA string data.
+    """
+    try:
+        type_hints = get_type_hints(dataclass_type)
+    except Exception:
+        # Fallback if type hints can't be resolved
+        return field_dict
+
+    converted = {}
+    for key, value in field_dict.items():
+        if key not in type_hints:
+            converted[key] = value
+            continue
+
+        field_type = type_hints[key]
+
+        # Handle Optional types
+        origin = get_origin(field_type)
+        if origin is type(None) or str(origin) == "typing.Union":
+            args = get_args(field_type)
+            if args and type(None) in args:
+                # It's Optional[T], get the non-None type
+                field_type = next((arg for arg in args if arg is not type(None)), str)
+
+        # Convert based on type
+        if field_type == float or field_type == "float":
+            converted[key] = _safe_float(value)
+        elif field_type == int or field_type == "int":
+            converted[key] = _safe_int(value)
+        elif field_type == bool or field_type == "bool":
+            converted[key] = _safe_bool(value)
+        else:
+            converted[key] = value
+
+    return converted
 
 
 def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
@@ -25,14 +93,13 @@ def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
     if len(ee_segments) > 4 and len(ee_segments[4]) > 4:
         correct_pin_number = ee_segments[4][4]
 
-    from dataclasses import fields
-
     pin_settings_data = (
         ee_segments[0][1:] if len(ee_segments) > 0 and len(ee_segments[0]) > 1 else []
     )
     pin_settings_fields = [f.name for f in fields(EeSymbolPinSettings)]
+    pin_settings_dict = dict(zip(pin_settings_fields, pin_settings_data))
     pin_settings = EeSymbolPinSettings(
-        **dict(zip(pin_settings_fields, pin_settings_data))
+        **convert_fields_to_types(pin_settings_dict, EeSymbolPinSettings)
     )
 
     # Override spice_pin_number with the correct KiCad pin number if found
@@ -67,17 +134,18 @@ def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
             else ""
         ),
     )
-    pin_name = EeSymbolPinName(
-        **dict(
-            zip(
-                [f.name for f in fields(EeSymbolPinName)],
-                ee_segments[3][:] if len(ee_segments) > 3 else [],
-            )
+    pin_name_dict = dict(
+        zip(
+            [f.name for f in fields(EeSymbolPinName)],
+            ee_segments[3][:] if len(ee_segments) > 3 else [],
         )
+    )
+    pin_name = EeSymbolPinName(
+        **convert_fields_to_types(pin_name_dict, EeSymbolPinName)
     )
 
     pin_dot_bis = EeSymbolPinDotBis(
-        is_displayed=(
+        is_displayed=_safe_bool(
             ee_segments[5][0]
             if len(ee_segments) > 5 and len(ee_segments[5]) > 0
             else ""
@@ -94,7 +162,7 @@ def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
         ),
     )
     pin_clock = EeSymbolPinClock(
-        is_displayed=(
+        is_displayed=_safe_bool(
             ee_segments[6][0]
             if len(ee_segments) > 6 and len(ee_segments[6]) > 0
             else ""
@@ -124,89 +192,78 @@ def add_easyeda_rectangle(rectangle_data: str, ee_symbol: EeSymbol):
     # Handle EasyEDA format inconsistency: sometimes has empty fields at index 2,3
     # Format: R~x~y~(empty)~(empty)~width~height~...
     # We need to map: x, y, width, height correctly
-    if len(parts) >= 7 and parts[2] == '' and parts[3] == '':
+    if len(parts) >= 7 and parts[2] == "" and parts[3] == "":
         # Move width/height from position 4,5 to 2,3
         parts = [parts[0], parts[1], parts[4], parts[5]] + parts[6:]
 
-    ee_symbol.rectangles.append(
-        EeSymbolRectangle(
-            **dict(
-                zip(
-                    [f.name for f in fields(EeSymbolRectangle)],
-                    parts,
-                )
-            )
+    rectangle_dict = dict(
+        zip(
+            [f.name for f in fields(EeSymbolRectangle)],
+            parts,
         )
+    )
+    ee_symbol.rectangles.append(
+        EeSymbolRectangle(**convert_fields_to_types(rectangle_dict, EeSymbolRectangle))
     )
 
 
 def add_easyeda_polyline(polyline_data: str, ee_symbol: EeSymbol):
-    ee_symbol.polylines.append(
-        EeSymbolPolyline(
-            **dict(
-                zip(
-                    [f.name for f in fields(EeSymbolPolyline)],
-                    polyline_data.split("~")[1:],
-                )
-            )
+    polyline_dict = dict(
+        zip(
+            [f.name for f in fields(EeSymbolPolyline)],
+            polyline_data.split("~")[1:],
         )
+    )
+    ee_symbol.polylines.append(
+        EeSymbolPolyline(**convert_fields_to_types(polyline_dict, EeSymbolPolyline))
     )
 
 
 def add_easyeda_polygon(polygon_data: str, ee_symbol: EeSymbol):
-    ee_symbol.polygons.append(
-        EeSymbolPolygon(
-            **dict(
-                zip(
-                    [f.name for f in fields(EeSymbolPolygon)],
-                    polygon_data.split("~")[1:],
-                )
-            )
+    polygon_dict = dict(
+        zip(
+            [f.name for f in fields(EeSymbolPolygon)],
+            polygon_data.split("~")[1:],
         )
+    )
+    ee_symbol.polygons.append(
+        EeSymbolPolygon(**convert_fields_to_types(polygon_dict, EeSymbolPolygon))
     )
 
 
 def add_easyeda_path(path_data: str, ee_symbol: EeSymbol):
+    path_dict = dict(
+        zip([f.name for f in fields(EeSymbolPath)], path_data.split("~")[1:])
+    )
     ee_symbol.paths.append(
-        EeSymbolPath(
-            **dict(
-                zip([f.name for f in fields(EeSymbolPath)], path_data.split("~")[1:])
-            )
-        )
+        EeSymbolPath(**convert_fields_to_types(path_dict, EeSymbolPath))
     )
 
 
 def add_easyeda_circle(circle_data: str, ee_symbol: EeSymbol):
+    circle_dict = dict(
+        zip([f.name for f in fields(EeSymbolCircle)], circle_data.split("~")[1:])
+    )
     ee_symbol.circles.append(
-        EeSymbolCircle(
-            **dict(
-                zip(
-                    [f.name for f in fields(EeSymbolCircle)], circle_data.split("~")[1:]
-                )
-            )
-        )
+        EeSymbolCircle(**convert_fields_to_types(circle_dict, EeSymbolCircle))
     )
 
 
 def add_easyeda_ellipse(ellipse_data: str, ee_symbol: EeSymbol):
-    ee_symbol.ellipses.append(
-        EeSymbolEllipse(
-            **dict(
-                zip(
-                    [f.name for f in fields(EeSymbolEllipse)],
-                    ellipse_data.split("~")[1:],
-                )
-            )
+    ellipse_dict = dict(
+        zip(
+            [f.name for f in fields(EeSymbolEllipse)],
+            ellipse_data.split("~")[1:],
         )
+    )
+    ee_symbol.ellipses.append(
+        EeSymbolEllipse(**convert_fields_to_types(ellipse_dict, EeSymbolEllipse))
     )
 
 
 def add_easyeda_arc(arc_data: str, ee_symbol: EeSymbol):
-    ee_symbol.arcs.append(
-        EeSymbolArc(
-            **dict(zip([f.name for f in fields(EeSymbolArc)], arc_data.split("~")[1:]))
-        )
-    )
+    arc_dict = dict(zip([f.name for f in fields(EeSymbolArc)], arc_data.split("~")[1:]))
+    ee_symbol.arcs.append(EeSymbolArc(**convert_fields_to_types(arc_dict, EeSymbolArc)))
 
 
 easyeda_handlers = {
@@ -238,11 +295,11 @@ class EasyedaSymbolImporter:
             info=EeSymbolInfo(
                 name=ee_data_info["name"],
                 prefix=ee_data_info["pre"],
-                package=ee_data_info.get("package", None),
-                manufacturer=ee_data_info.get("BOM_Manufacturer", None),
-                datasheet=ee_data["lcsc"].get("url", None),
-                lcsc_id=ee_data["lcsc"].get("number", None),
-                jlc_id=ee_data_info.get("BOM_JLCPCB Part Class", None),
+                package=ee_data_info.get("package", ""),
+                manufacturer=ee_data_info.get("BOM_Manufacturer", ""),
+                datasheet=ee_data["lcsc"].get("url", ""),
+                lcsc_id=ee_data["lcsc"].get("number", ""),
+                jlc_id=ee_data_info.get("BOM_JLCPCB Part Class", ""),
             ),
             bbox=EeSymbolBbox(
                 x=_safe_float(ee_data["dataStr"]["head"].get("x")),
@@ -266,7 +323,7 @@ class EasyedaFootprintImporter:
         self.output = self.extract_easyeda_data(
             ee_data_str=self.input["packageDetail"]["dataStr"],
             ee_data_info=self.input["packageDetail"]["dataStr"]["head"]["c_para"],
-            is_smd=self.input.get("SMT")
+            is_smd=bool(self.input.get("SMT"))
             and "-TH_" not in self.input["packageDetail"]["title"],
         )
 
@@ -280,7 +337,7 @@ class EasyedaFootprintImporter:
             info=EeFootprintInfo(
                 name=ee_data_info["package"],
                 fp_type="smd" if is_smd else "tht",
-                model_3d_name=ee_data_info.get("3DModel"),
+                model_3d_name=ee_data_info.get("3DModel", ""),
             ),
             bbox=EeFootprintBbox(
                 x=_safe_float(ee_data_str["head"].get("x")),
@@ -396,17 +453,17 @@ class Easyeda3dModelImporter:
             name=info["title"],
             uuid=info["uuid"],
             translation=Ee3dModelBase(
-                x=(
+                x=_safe_float(
                     info["c_origin"].split(",")[0]
                     if "c_origin" in info and "," in info["c_origin"]
                     else "0"
                 ),
-                y=(
+                y=_safe_float(
                     info["c_origin"].split(",")[1]
                     if "c_origin" in info and len(info["c_origin"].split(",")) > 1
                     else "0"
                 ),
-                z=info.get("z", "0"),
+                z=_safe_float(info.get("z", "0")),
             ),
             rotation=Ee3dModelBase(
                 **dict(

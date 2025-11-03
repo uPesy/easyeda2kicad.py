@@ -2,6 +2,7 @@
 KiCad module - Handle KiCad format export and data structures
 """
 
+# Local imports
 from .export_kicad_3d_model import Exporter3dModelKicad
 from .export_kicad_footprint import ExporterFootprintKicad
 from .export_kicad_symbol import ExporterSymbolKicad

@@ -1,8 +1,9 @@
 # Global imports
 from dataclasses import dataclass, field, fields
 from enum import Enum
-from typing import List, Union
+from typing import List, Optional, Union
 
+# Local imports
 from .svg_path_parser import parse_svg_path
 
 
@@ -82,7 +83,7 @@ class EeSymbolPinSettings:
         # Convert string values safely
         self.is_displayed = _safe_bool(self.is_displayed, False)
         self.is_locked = _safe_bool(self.is_locked, False)
-        self.rotation = _safe_float(self.rotation, 0.0)
+        self.rotation = _safe_int(self.rotation, 0)
         self.pos_x = _safe_float(self.pos_x, 0.0)
         self.pos_y = _safe_float(self.pos_y, 0.0)
         self.spice_pin_number = (
@@ -138,7 +139,7 @@ class EeSymbolPinName:
         # Safe conversions for all numeric fields
         self.pos_x = _safe_float(self.pos_x, 0.0)
         self.pos_y = _safe_float(self.pos_y, 0.0)
-        self.rotation = _safe_float(self.rotation, 0.0)
+        self.rotation = _safe_int(self.rotation, 0)
         self.is_displayed = _safe_bool(self.is_displayed, True)
         if isinstance(self.font_size, str) and "pt" in self.font_size:
             self.font_size = _safe_float(self.font_size.replace("pt", ""), 7.0)
@@ -627,7 +628,7 @@ class EeFootprintText:
         self.center_x = _safe_float(self.center_x, 0.0)
         self.center_y = _safe_float(self.center_y, 0.0)
         self.stroke_width = _safe_float(self.stroke_width, 0.0)
-        self.rotation = _safe_float(self.rotation, 0.0)
+        self.rotation = _safe_int(self.rotation, 0)
         self.font_size = _safe_float(self.font_size, 7.0)
         self.layer_id = _safe_int(self.layer_id, 0)
         self.is_displayed = _safe_bool(self.is_displayed, True)
@@ -679,8 +680,8 @@ class Ee3dModel:
     uuid: str
     translation: Ee3dModelBase
     rotation: Ee3dModelBase
-    raw_obj: str = None
-    step: bytes = None
+    raw_obj: Optional[str] = None
+    step: Optional[bytes] = None
 
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
@@ -693,7 +694,7 @@ class Ee3dModel:
 class ee_footprint:
     info: EeFootprintInfo
     bbox: EeFootprintBbox
-    model_3d: Ee3dModel
+    model_3d: Optional[Ee3dModel]
     pads: List[EeFootprintPad] = field(default_factory=list)
     tracks: List[EeFootprintTrack] = field(default_factory=list)
     holes: List[EeFootprintHole] = field(default_factory=list)

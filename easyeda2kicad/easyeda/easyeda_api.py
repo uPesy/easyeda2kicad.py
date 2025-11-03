@@ -1,13 +1,26 @@
 # Global imports
+import gzip
 import json
 import logging
-import urllib.error
-import urllib.request
+import os
 import ssl
 import sys
-import os
+import urllib.error
+import urllib.request
+from typing import Optional
 
+# Local imports
 from .._version import __version__
+
+# Optional import for SSL certificate verification
+try:
+    import certifi  # type: ignore[import]
+
+    HAS_CERTIFI = True
+    _certifi = certifi  # Store reference to avoid possibly unbound warnings
+except ImportError:
+    HAS_CERTIFI = False
+    _certifi = None  # type: ignore[assignment]
 
 API_ENDPOINT = "https://easyeda.com/api/products/{lcsc_id}/components?version=6.4.19.5"
 ENDPOINT_3D_MODEL = "https://modules.easyeda.com/3dmodel/{uuid}"
@@ -49,14 +62,15 @@ class EasyedaApi:
                         logging.warning(f"Failed to load cert from {cert_path}: {e}")
 
         # Try to use certifi package if available (works on all platforms)
-        try:
-            import certifi
-
-            context.load_verify_locations(cafile=certifi.where())
-            logging.info("Using certifi package for SSL certificates")
-            return context
-        except (ImportError, Exception) as e:
-            logging.debug(f"certifi package not available: {e}")
+        if HAS_CERTIFI and _certifi is not None:
+            try:
+                context.load_verify_locations(cafile=_certifi.where())
+                logging.info("Using certifi package for SSL certificates")
+                return context
+            except Exception as e:
+                logging.debug(f"Failed to use certifi: {e}")
+        else:
+            logging.debug("certifi package not available")
 
         # Fall back to default context (uses system certificates)
         logging.info("Using system default SSL certificates")
@@ -67,12 +81,12 @@ class EasyedaApi:
             req = urllib.request.Request(
                 url=API_ENDPOINT.format(lcsc_id=lcsc_id), headers=self.headers
             )
-            with urllib.request.urlopen(req, timeout=30, context=self.ssl_context) as response:
+            with urllib.request.urlopen(
+                req, timeout=30, context=self.ssl_context
+            ) as response:
                 raw_data = response.read()
                 # Handle gzip compression
                 if raw_data[:2] == b"\x1f\x8b":  # gzip magic number
-                    import gzip
-
                     data = gzip.decompress(raw_data).decode("utf-8")
                 else:
                     data = raw_data.decode("utf-8")
@@ -99,13 +113,15 @@ class EasyedaApi:
             return {}
         return cp_cad_info["result"]
 
-    def get_raw_3d_model_obj(self, uuid: str) -> str:
+    def get_raw_3d_model_obj(self, uuid: str) -> Optional[str]:
         try:
             req = urllib.request.Request(
                 url=ENDPOINT_3D_MODEL.format(uuid=uuid),
                 headers={"User-Agent": self.headers["User-Agent"]},
             )
-            with urllib.request.urlopen(req, timeout=30, context=self.ssl_context) as response:
+            with urllib.request.urlopen(
+                req, timeout=30, context=self.ssl_context
+            ) as response:
                 if response.status != 200:
                     logging.error(
                         f"No raw 3D model data found for uuid:{uuid} on easyeda"
@@ -116,13 +132,15 @@ class EasyedaApi:
             logging.error(f"Failed to get 3D model for uuid:{uuid}: {e}")
             return None
 
-    def get_step_3d_model(self, uuid: str) -> bytes:
+    def get_step_3d_model(self, uuid: str) -> Optional[bytes]:
         try:
             req = urllib.request.Request(
                 url=ENDPOINT_3D_MODEL_STEP.format(uuid=uuid),
                 headers={"User-Agent": self.headers["User-Agent"]},
             )
-            with urllib.request.urlopen(req, timeout=30, context=self.ssl_context) as response:
+            with urllib.request.urlopen(
+                req, timeout=30, context=self.ssl_context
+            ) as response:
                 if response.status != 200:
                     logging.error(
                         f"No step 3D model data found for uuid:{uuid} on easyeda"

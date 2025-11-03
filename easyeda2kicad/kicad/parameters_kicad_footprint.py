@@ -1,10 +1,6 @@
 # Global imports
-import itertools
-import re
-import textwrap
 from dataclasses import dataclass, field, fields
-from enum import Enum, auto
-from typing import List
+from typing import List, Optional
 
 # ---------------------------- FOOTPRINT PART ----------------------------
 
@@ -128,7 +124,7 @@ class KiFootprintPad:
     height: float
     layers: str
     number: str
-    drill: float
+    drill: str
     orientation: float
     polygon: str
 
@@ -264,14 +260,14 @@ class Ki3dModel:
     name: str
     translation: Ki3dModelBase
     rotation: Ki3dModelBase
-    raw_wrl: str = None
+    raw_wrl: Optional[str] = None
 
 
 # ---------------- FOOTPRINT  ----------------
 @dataclass
 class KiFootprint:
     info: KiFootprintInfo
-    model_3d: Ki3dModel
+    model_3d: Optional[Ki3dModel]
     pads: List[KiFootprintPad] = field(default_factory=list)
     tracks: List[KiFootprintTrack] = field(default_factory=list)
     vias: List[KiFootprintVia] = field(default_factory=list)

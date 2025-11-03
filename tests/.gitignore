@@ -1,0 +1,8 @@
+# Ignore test outputs
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Keep reference outputs in git for regression testing
+# (uncomment if you want to exclude them)
+# reference_outputs/

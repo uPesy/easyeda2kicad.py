@@ -2,7 +2,6 @@
 import logging
 import re
 from dataclasses import dataclass, field, fields
-
 from enum import Enum
 from typing import List, Union
 
