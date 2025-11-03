@@ -189,19 +189,47 @@ def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
 def add_easyeda_rectangle(rectangle_data: str, ee_symbol: EeSymbol):
     parts = rectangle_data.split("~")[1:]
 
-    # Handle EasyEDA format inconsistency: sometimes has empty fields at index 2,3
-    # Format: R~x~y~(empty)~(empty)~width~height~...
-    # We need to map: x, y, width, height correctly
-    if len(parts) >= 7 and parts[2] == "" and parts[3] == "":
-        # Move width/height from position 4,5 to 2,3
-        parts = [parts[0], parts[1], parts[4], parts[5]] + parts[6:]
+    # Handle EasyEDA format inconsistency with TWO different formats:
+    # Format 1: R~x~y~~width~height~stroke_color~stroke_width~stroke_style~fill_color~id~locked
+    #           Empty fields at positions 2,3 indicate no rounded corners
+    # Format 2: R~x~y~rx~ry~width~height~stroke_color~stroke_width~stroke_style~fill_color~id~locked
+    #           rx, ry for rounded corners at positions 2,3
+    #
+    # Dataclass expects: pos_x, pos_y, width, height, stroke_color, stroke_width, stroke_style,
+    #                    fill_color, id, is_locked, rx, ry
 
+    rx, ry = None, None
+
+    if len(parts) >= 6 and parts[2] == "" and parts[3] == "":
+        # Format 1: No rounded corners (empty fields at 2,3)
+        # R~x~y~~width~height~stroke_color~...
+        # Map to: [x, y, width, height, stroke_color, ...]
+        normalized_parts = [parts[0], parts[1], parts[4], parts[5]] + parts[6:]
+        rx, ry = None, None
+    elif len(parts) >= 8:
+        # Format 2: Rounded corners (rx, ry at positions 2,3)
+        # R~x~y~rx~ry~width~height~stroke_color~...
+        # Map to: [x, y, width, height, stroke_color, ...]
+        rx, ry = parts[2], parts[3]
+        normalized_parts = [parts[0], parts[1], parts[4], parts[5]] + parts[6:]
+    else:
+        # Fallback: assume Format 1 layout
+        normalized_parts = parts
+
+    # Build dict for dataclass fields (without rx, ry first)
     rectangle_dict = dict(
         zip(
             [f.name for f in fields(EeSymbolRectangle)],
-            parts,
+            normalized_parts,
         )
     )
+
+    # Add rx, ry at the end if they were extracted
+    if rx is not None:
+        rectangle_dict['rx'] = rx
+    if ry is not None:
+        rectangle_dict['ry'] = ry
+
     ee_symbol.rectangles.append(
         EeSymbolRectangle(**convert_fields_to_types(rectangle_dict, EeSymbolRectangle))
     )
@@ -291,6 +319,17 @@ class EasyedaSymbolImporter:
         return self.output
 
     def extract_easyeda_data(self, ee_data: dict, ee_data_info: dict) -> EeSymbol:
+        # Try to get BBox from dataStr.BBox first (correct geometry bounds)
+        # Fall back to head.x/y for backward compatibility
+        bbox_data = ee_data["dataStr"].get("BBox", {})
+        head_data = ee_data["dataStr"]["head"]
+
+        # Use BBox.x/y if available, otherwise fall back to head.x/y
+        bbox_x = _safe_float(bbox_data.get("x", head_data.get("x")))
+        bbox_y = _safe_float(bbox_data.get("y", head_data.get("y")))
+        bbox_width = _safe_float(bbox_data.get("width", 0.0))
+        bbox_height = _safe_float(bbox_data.get("height", 0.0))
+
         new_ee_symbol = EeSymbol(
             info=EeSymbolInfo(
                 name=ee_data_info["name"],
@@ -302,8 +341,10 @@ class EasyedaSymbolImporter:
                 jlc_id=ee_data_info.get("BOM_JLCPCB Part Class", ""),
             ),
             bbox=EeSymbolBbox(
-                x=_safe_float(ee_data["dataStr"]["head"].get("x")),
-                y=_safe_float(ee_data["dataStr"]["head"].get("y")),
+                x=bbox_x,
+                y=bbox_y,
+                width=bbox_width,
+                height=bbox_height,
             ),
         )
 
