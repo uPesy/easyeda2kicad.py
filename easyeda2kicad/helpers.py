@@ -14,7 +14,7 @@ from .kicad.parameters_kicad_symbol import KicadVersion, sanitize_fields
 
 sym_lib_regex_pattern = {
     "v5": r"(#\n# {component_name}\n#\n.*?ENDDEF\n)",
-    "v6": r'\n  \(symbol "{component_name}".*?\n  \)',
+    "v6": r'\n( *)\(symbol "{component_name}".*?\n\1\)(?=\n|$)',
     "v6_99": r"",
 }
 

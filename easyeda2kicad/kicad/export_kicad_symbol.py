@@ -49,11 +49,17 @@ def px_to_mm(dim: Union[int, float, str]) -> float:
     return 10.0 * float(dim) * 0.0254
 
 
+def px_to_mm_grid(dim: Union[int, float, str], grid: float = 1.27) -> float:
+    """Convert EasyEDA pixels to KiCad mm and snap to grid (default 50mil = 1.27mm)."""
+    mm_value = 10.0 * float(dim) * 0.0254
+    return round(mm_value / grid) * grid
+
+
 def convert_ee_pins(
     ee_pins: List[EeSymbolPin], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
 ) -> List[KiSymbolPin]:
 
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
+    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
     # pin_spacing = (
     #     KiExportConfigV5.PIN_SPACING.value
     #     if kicad_version == KicadVersion.v5
@@ -103,7 +109,7 @@ def convert_ee_rectangles(
     kicad_version: KicadVersion,
 ) -> List[KiSymbolRectangle]:
 
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
+    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
 
     kicad_rectangles = []
     for ee_rectangle in ee_rectangles:
@@ -122,13 +128,15 @@ def convert_ee_rectangles(
 def convert_ee_circles(
     ee_circles: List[EeSymbolCircle], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
 ):
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
+    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    # For dimensions like radius, use px_to_mm without grid snapping
+    to_ki_dimension: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
 
     return [
         KiSymbolCircle(
             pos_x=to_ki(int(ee_circle.center_x) - int(ee_bbox.x)),
             pos_y=-to_ki(int(ee_circle.center_y) - int(ee_bbox.y)),
-            radius=to_ki(ee_circle.radius),
+            radius=to_ki_dimension(ee_circle.radius),
             background_filling=ee_circle.fill_color,
         )
         for ee_circle in ee_circles
@@ -140,14 +148,16 @@ def convert_ee_ellipses(
     ee_bbox: EeSymbolBbox,
     kicad_version: KicadVersion,
 ) -> List[KiSymbolCircle]:
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
+    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    # For dimensions like radius, use px_to_mm without grid snapping
+    to_ki_dimension: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
 
     # Ellipses are not supported in Kicad -> If it's not a real ellipse, but just a circle
     return [
         KiSymbolCircle(
             pos_x=to_ki(int(ee_ellipses.center_x) - int(ee_bbox.x)),
             pos_y=-to_ki(int(ee_ellipses.center_y) - int(ee_bbox.y)),
-            radius=to_ki(ee_ellipses.radius_x),
+            radius=to_ki_dimension(ee_ellipses.radius_x),
         )
         for ee_ellipses in ee_ellipses
         if ee_ellipses.radius_x == ee_ellipses.radius_y
@@ -157,7 +167,9 @@ def convert_ee_ellipses(
 def convert_ee_arcs(
     ee_arcs: List[EeSymbolArc], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
 ) -> List[KiSymbolArc]:
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
+    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    # For dimensions like radius, use px_to_mm without grid snapping
+    to_ki_dimension: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
 
     kicad_arcs = []
     for ee_arc in ee_arcs:
@@ -168,7 +180,7 @@ def convert_ee_arcs(
             logging.error("Can't convert this arc")
         else:
             ki_arc = KiSymbolArc(
-                radius=to_ki(
+                radius=to_ki_dimension(
                     max(float(ee_arc.path[1].radius_x), float(ee_arc.path[1].radius_y))
                 ),  # doesn't support elliptical arc
                 angle_start=float(ee_arc.path[1].x_axis_rotation),
@@ -181,8 +193,8 @@ def convert_ee_arcs(
             center_x, center_y, angle_end = compute_arc(
                 start_x=ki_arc.start_x,
                 start_y=ki_arc.start_y,
-                radius_x=to_ki(ee_arc.path[1].radius_x),
-                radius_y=to_ki(ee_arc.path[1].radius_y),
+                radius_x=to_ki_dimension(ee_arc.path[1].radius_x),
+                radius_y=to_ki_dimension(ee_arc.path[1].radius_y),
                 angle=ki_arc.angle_start,
                 large_arc_flag=ee_arc.path[1].flag_large_arc,
                 sweep_flag=ee_arc.path[1].flag_sweep,
@@ -221,7 +233,7 @@ def convert_ee_polylines(
     kicad_version: KicadVersion,
 ) -> List[KiSymbolPolygon]:
 
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
+    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
     kicad_polygons = []
     for ee_polyline in ee_polylines:
         raw_pts = ee_polyline.points.split(" ")
@@ -270,7 +282,7 @@ def convert_ee_paths(
 ) -> Tuple[List[KiSymbolPolygon], List[KiSymbolPolygon]]:
     kicad_polygons: List[KiSymbolPolygon] = []
     kicad_beziers: List[KiSymbolPolygon] = []
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
+    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
 
     for ee_path in ee_paths:
         raw_pts = ee_path.paths.split(" ")

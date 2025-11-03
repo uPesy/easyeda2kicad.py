@@ -56,6 +56,8 @@ class EasyedaPinType(Enum):
 class EeSymbolBbox:
     x: float
     y: float
+    width: float = 0.0  # Added: BBox width from JSON
+    height: float = 0.0  # Added: BBox height from JSON
 
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
@@ -63,6 +65,8 @@ class EeSymbolBbox:
         # Safe conversions for all numeric fields
         self.x = _safe_float(self.x, 0.0)
         self.y = _safe_float(self.y, 0.0)
+        self.width = _safe_float(self.width, 0.0)
+        self.height = _safe_float(self.height, 0.0)
 
 
 # ---------------- PIN ----------------
