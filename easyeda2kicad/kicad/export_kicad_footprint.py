@@ -3,6 +3,7 @@ import logging
 from math import acos, cos, isnan, pi, sin, sqrt
 from typing import Tuple, Union
 
+# Local imports
 from ..easyeda.parameters_easyeda import ee_footprint
 from .parameters_kicad_footprint import *
 
@@ -111,10 +112,11 @@ def compute_arc(
 # ---------------------------------------
 
 
-def fp_to_ki(dim: float) -> float:
+def fp_to_ki(dim: Union[float, str]) -> float:
+    """Convert EasyEDA footprint dimension to KiCad. Handles both float and string input."""
     if dim not in ["", None] and isnan(float(dim)) is False:
         return round(float(dim) * 10 * 0.0254, 2)
-    return dim
+    return 0.0 if dim in ["", None] else float(dim)
 
 
 # ---------------------------------------
@@ -146,10 +148,15 @@ def drill_to_ki(
 # ---------------------------------------
 
 
-def angle_to_ki(rotation: float) -> Union[float, str]:
-    if isnan(rotation) is False:
-        return -(360 - rotation) if rotation > 180 else rotation
-    return ""
+def angle_to_ki(rotation: Union[float, str]) -> float:
+    """Convert EasyEDA rotation angle to KiCad. Handles both float and string input."""
+    try:
+        rot_float = float(rotation) if isinstance(rotation, str) else rotation
+        if isnan(rot_float) is False:
+            return -(360 - rot_float) if rot_float > 180 else rot_float
+    except (ValueError, TypeError):
+        pass
+    return 0.0
 
 
 # ---------------------------------------
@@ -241,7 +248,7 @@ class ExporterFootprintKicad:
                     KI_PAD_LAYER if ee_pad.hole_radius <= 0 else KI_PAD_LAYER_THT
                 ).get(ee_pad.layer_id, ""),
                 number=ee_pad.number,
-                drill=0.0,
+                drill="",
                 orientation=angle_to_ki(ee_pad.rotation),
                 polygon="",
             )

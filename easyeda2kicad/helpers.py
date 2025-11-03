@@ -6,7 +6,9 @@ import os
 import re
 from datetime import datetime
 from glob import escape
+from typing import Optional
 
+# Local imports
 from ._version import __version__
 from .kicad.parameters_kicad_symbol import KicadVersion, sanitize_fields
 
@@ -17,7 +19,7 @@ sym_lib_regex_pattern = {
 }
 
 
-def set_logger(log_file: str, log_level: int) -> None:
+def set_logger(log_file: Optional[str], log_level: int) -> None:
 
     root_log = logging.getLogger()
     root_log.setLevel(log_level)

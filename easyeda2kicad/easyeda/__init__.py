@@ -2,6 +2,7 @@
 EasyEDA module - Handle EasyEDA data import and processing
 """
 
+# Local imports
 from .easyeda_api import EasyedaApi
 from .easyeda_importer import (
     Easyeda3dModelImporter,

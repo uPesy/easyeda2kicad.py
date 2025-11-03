@@ -1,7 +1,8 @@
 # Global imports
 import logging
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Sequence, Tuple, Union
 
+# Local imports
 from ..easyeda.parameters_easyeda import (
     EasyedaPinType,
     EeSymbol,
@@ -18,7 +19,18 @@ from ..easyeda.parameters_easyeda import (
 from ..easyeda.svg_path_parser import SvgPathEllipticalArc, SvgPathMoveTo
 from ..helpers import get_middle_arc_pos
 from .export_kicad_footprint import compute_arc
-from .parameters_kicad_symbol import *
+from .parameters_kicad_symbol import (
+    KicadVersion,
+    KiPinStyle,
+    KiPinType,
+    KiSymbol,
+    KiSymbolArc,
+    KiSymbolCircle,
+    KiSymbolInfo,
+    KiSymbolPin,
+    KiSymbolPolygon,
+    KiSymbolRectangle,
+)
 
 ee_pin_type_to_ki_pin_type = {
     EasyedaPinType.unspecified: KiPinType.unspecified,
@@ -204,7 +216,7 @@ def convert_ee_arcs(
 
 
 def convert_ee_polylines(
-    ee_polylines: List[Union[EeSymbolPolyline, EeSymbolPolygon]],
+    ee_polylines: Sequence[Union[EeSymbolPolyline, EeSymbolPolygon]],
     ee_bbox: EeSymbolBbox,
     kicad_version: KicadVersion,
 ) -> List[KiSymbolPolygon]:
@@ -256,8 +268,8 @@ def convert_ee_polygons(
 def convert_ee_paths(
     ee_paths: List[EeSymbolPath], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
 ) -> Tuple[List[KiSymbolPolygon], List[KiSymbolPolygon]]:
-    kicad_polygons = []
-    kicad_beziers = []
+    kicad_polygons: List[KiSymbolPolygon] = []
+    kicad_beziers: List[KiSymbolPolygon] = []
     to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
 
     for ee_path in ee_paths:
@@ -337,9 +349,11 @@ def convert_to_kicad(ee_symbol: EeSymbol, kicad_version: KicadVersion) -> KiSymb
         kicad_version=kicad_version,
     )
 
-    kicad_symbol.polygons, kicad_symbol.beziers = convert_ee_paths(
+    polygons_from_paths, beziers_from_paths = convert_ee_paths(
         ee_paths=ee_symbol.paths, ee_bbox=ee_symbol.bbox, kicad_version=kicad_version
     )
+    kicad_symbol.polygons = polygons_from_paths
+    kicad_symbol.beziers = beziers_from_paths  # type: ignore[assignment]
     kicad_symbol.polygons += convert_ee_polylines(
         ee_polylines=ee_symbol.polylines,
         ee_bbox=ee_symbol.bbox,
@@ -362,11 +376,13 @@ class ExporterSymbolKicad:
     def __init__(self, symbol, kicad_version: KicadVersion):
         self.input: EeSymbol = symbol
         self.version = kicad_version
-        self.output = (
-            convert_to_kicad(ee_symbol=self.input, kicad_version=kicad_version)
-            if isinstance(self.input, EeSymbol)
-            else logging.error("Unknown input symbol format")
-        )
+        if isinstance(self.input, EeSymbol):
+            self.output = convert_to_kicad(
+                ee_symbol=self.input, kicad_version=kicad_version
+            )
+        else:
+            logging.error("Unknown input symbol format")
+            raise ValueError("Unknown input symbol format")
 
     def export(self, footprint_lib_name: str) -> str:
 
