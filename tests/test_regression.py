@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import List, Tuple
 
 import pytest
-
 from easyeda2kicad.__main__ import main
 
 
@@ -45,27 +44,27 @@ class TestRegression:
         """
         import re
 
-        lines = content.split('\n')
+        lines = content.split("\n")
         normalized = []
 
         for line in lines:
             # Skip timestamp lines
-            if 'tedit' in line.lower() or 'date' in line.lower():
+            if "tedit" in line.lower() or "date" in line.lower():
                 continue
             # Skip version comments
-            if 'easyeda2kicad.py' in line and 'version' in line.lower():
+            if "easyeda2kicad.py" in line and "version" in line.lower():
                 continue
             # Skip "Generated with" lines
-            if 'generated with' in line.lower():
+            if "generated with" in line.lower():
                 continue
 
             # Normalize temporary paths to a standard format
             # Replace /tmp/easyeda2kicad_test_XXXXX/ with /tmp/test/
-            line = re.sub(r'/tmp/easyeda2kicad_test_[^/]+/', '/tmp/test/', line)
+            line = re.sub(r"/tmp/easyeda2kicad_test_[^/]+/", "/tmp/test/", line)
 
             normalized.append(line.rstrip())
 
-        return '\n'.join(normalized)
+        return "\n".join(normalized)
 
     def compare_files(
         self, ref_file: Path, new_file: Path, file_type: str
@@ -88,18 +87,18 @@ class TestRegression:
             return False, f"New file was not generated: {new_file}"
 
         # Read and normalize both files
-        with open(ref_file, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(ref_file, "r", encoding="utf-8", errors="ignore") as f:
             ref_content = self.normalize_file_content(f.read(), file_type)
 
-        with open(new_file, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(new_file, "r", encoding="utf-8", errors="ignore") as f:
             new_content = self.normalize_file_content(f.read(), file_type)
 
         if ref_content == new_content:
             return True, "Files are identical (after normalization)"
 
         # Calculate difference
-        ref_lines = ref_content.split('\n')
-        new_lines = new_content.split('\n')
+        ref_lines = ref_content.split("\n")
+        new_lines = new_content.split("\n")
 
         diff_lines = []
         max_lines = max(len(ref_lines), len(new_lines))
@@ -118,7 +117,7 @@ class TestRegression:
                     diff_lines.append("... (more differences)")
                     break
 
-        return False, '\n'.join(diff_lines)
+        return False, "\n".join(diff_lines)
 
     def get_generated_files(self, output_dir: Path, component_id: str) -> List[Path]:
         """Get list of all generated files for a component."""
@@ -126,15 +125,15 @@ class TestRegression:
         output_dir = Path(output_dir)
 
         # Look for symbol files
-        for pattern in ['*.kicad_sym', '*.lib']:
+        for pattern in ["*.kicad_sym", "*.lib"]:
             files.extend(output_dir.glob(pattern))
 
         # Look for footprint files
-        for pattern in ['*.pretty/*.kicad_mod']:
+        for pattern in ["*.pretty/*.kicad_mod"]:
             files.extend(output_dir.glob(pattern))
 
         # Look for 3D model files
-        for pattern in ['*.3dshapes/*.wrl', '*.3dshapes/*.step']:
+        for pattern in ["*.3dshapes/*.wrl", "*.3dshapes/*.step"]:
             files.extend(output_dir.glob(pattern))
 
         return files
@@ -147,8 +146,10 @@ class TestRegression:
         # Generate files with current version
         # Use sys.argv style to simulate command line
         args = [
-            "--lcsc_id", component_id,
-            "--output", str(output_path),
+            "--lcsc_id",
+            component_id,
+            "--output",
+            str(output_path),
             "--symbol",
         ]
 
@@ -183,8 +184,10 @@ class TestRegression:
 
         # Generate files with current version
         args = [
-            "--lcsc_id", component_id,
-            "--output", str(output_path),
+            "--lcsc_id",
+            component_id,
+            "--output",
+            str(output_path),
             "--footprint",
         ]
 
@@ -219,8 +222,10 @@ class TestRegression:
 
         # Generate files with current version
         args = [
-            "--lcsc_id", component_id,
-            "--output", str(output_path),
+            "--lcsc_id",
+            component_id,
+            "--output",
+            str(output_path),
             "--footprint",
             "--3d",
         ]
@@ -260,8 +265,10 @@ class TestRegression:
 
         # Generate all files with current version
         args = [
-            "--lcsc_id", component_id,
-            "--output", str(output_path),
+            "--lcsc_id",
+            component_id,
+            "--output",
+            str(output_path),
             "--full",
             "--3d",
         ]
@@ -305,8 +312,10 @@ class TestCreateReference:
 
         # Generate all files
         args = [
-            "--lcsc_id", component_id,
-            "--output", str(output_path),
+            "--lcsc_id",
+            component_id,
+            "--output",
+            str(output_path),
             "--full",
             "--3d",
         ]

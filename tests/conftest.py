@@ -13,7 +13,7 @@ def pytest_addoption(parser):
         "--create-reference",
         action="store_true",
         default=False,
-        help="Create reference files instead of comparing"
+        help="Create reference files instead of comparing",
     )
 
 
