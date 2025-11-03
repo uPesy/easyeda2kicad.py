@@ -1,0 +1,249 @@
+(kicad_symbol_lib
+  (version 20211014)
+  (generator https://github.com/uPesy/easyeda2kicad.py)
+
+    (symbol "ESP32-C3"
+      (in_bom yes)
+      (on_board yes)
+      (property
+        "Reference"
+        "U"
+        (id 0)
+        (at 0 31.75 0)
+        (effects (font (size 1.27 1.27) ) )
+      )
+      (property
+        "Value"
+        "ESP32-C3"
+        (id 1)
+        (at 0 -31.75 0)
+        (effects (font (size 1.27 1.27) ) )
+      )
+      (property
+        "Footprint"
+        "test_lib:QFN-32_L5.0-W5.0-P0.50-TL-EP3.7"
+        (id 2)
+        (at 0 -34.29 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "LCSC Part"
+        "C2838500"
+        (id 5)
+        (at 0 -36.83 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (symbol "ESP32-C3_0_1"
+        (rectangle
+          (start -19.05 24.13)
+          (end -18.54 23.62)
+          (stroke (width 0) (type default) (color 0 0 0 0))
+          (fill (type background))
+        )
+        (circle
+          (center -17.78 22.86)
+          (radius 0.38)
+          (stroke (width 0) (type default) (color 0 0 0 0))
+          (fill (type none))
+        )
+        (pin unspecified line
+          (at -21.59 8.89 0)
+          (length 2.54)
+          (name "LNA_IN" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -21.59 6.35 0)
+          (length 2.54)
+          (name "VDD3P3" (effects (font (size 1.27 1.27))))
+          (number "2" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -21.59 3.81 0)
+          (length 2.54)
+          (name "VDD3P3" (effects (font (size 1.27 1.27))))
+          (number "3" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -21.59 1.27 0)
+          (length 2.54)
+          (name "XTAL_32K_P" (effects (font (size 1.27 1.27))))
+          (number "4" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -21.59 -1.27 0)
+          (length 2.54)
+          (name "XTAL_32K_N" (effects (font (size 1.27 1.27))))
+          (number "5" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -21.59 -3.81 0)
+          (length 2.54)
+          (name "GPIO2" (effects (font (size 1.27 1.27))))
+          (number "6" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -21.59 -6.35 0)
+          (length 2.54)
+          (name "CHIP_EN" (effects (font (size 1.27 1.27))))
+          (number "7" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -21.59 -8.89 0)
+          (length 2.54)
+          (name "GPIO3" (effects (font (size 1.27 1.27))))
+          (number "8" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -8.89 -26.67 90)
+          (length 2.54)
+          (name "MTMS" (effects (font (size 1.27 1.27))))
+          (number "9" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -6.35 -26.67 90)
+          (length 2.54)
+          (name "MTDI" (effects (font (size 1.27 1.27))))
+          (number "10" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -3.81 -26.67 90)
+          (length 2.54)
+          (name "VDD3P3_RTC" (effects (font (size 1.27 1.27))))
+          (number "11" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -1.27 -26.67 90)
+          (length 2.54)
+          (name "MTCK" (effects (font (size 1.27 1.27))))
+          (number "12" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 1.27 -26.67 90)
+          (length 2.54)
+          (name "MTDO" (effects (font (size 1.27 1.27))))
+          (number "13" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 3.81 -26.67 90)
+          (length 2.54)
+          (name "GPIO8" (effects (font (size 1.27 1.27))))
+          (number "14" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 6.35 -26.67 90)
+          (length 2.54)
+          (name "GPIO9" (effects (font (size 1.27 1.27))))
+          (number "15" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 8.89 -26.67 90)
+          (length 2.54)
+          (name "GPIO10" (effects (font (size 1.27 1.27))))
+          (number "16" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 21.59 -8.89 180)
+          (length 2.54)
+          (name "VDD3P3_CPU" (effects (font (size 1.27 1.27))))
+          (number "17" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 21.59 -6.35 180)
+          (length 2.54)
+          (name "VDD_SPI" (effects (font (size 1.27 1.27))))
+          (number "18" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 21.59 -3.81 180)
+          (length 2.54)
+          (name "SPIHD" (effects (font (size 1.27 1.27))))
+          (number "19" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 21.59 -1.27 180)
+          (length 2.54)
+          (name "SPIWP" (effects (font (size 1.27 1.27))))
+          (number "20" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 21.59 1.27 180)
+          (length 2.54)
+          (name "SPICS0" (effects (font (size 1.27 1.27))))
+          (number "21" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 21.59 3.81 180)
+          (length 2.54)
+          (name "SPICLK" (effects (font (size 1.27 1.27))))
+          (number "22" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 21.59 6.35 180)
+          (length 2.54)
+          (name "SPID" (effects (font (size 1.27 1.27))))
+          (number "23" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 21.59 8.89 180)
+          (length 2.54)
+          (name "SPIQ" (effects (font (size 1.27 1.27))))
+          (number "24" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 8.89 26.67 270)
+          (length 2.54)
+          (name "GPIO18" (effects (font (size 1.27 1.27))))
+          (number "25" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 6.35 26.67 270)
+          (length 2.54)
+          (name "GPIO19" (effects (font (size 1.27 1.27))))
+          (number "26" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 3.81 26.67 270)
+          (length 2.54)
+          (name "U0RXD" (effects (font (size 1.27 1.27))))
+          (number "27" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 1.27 26.67 270)
+          (length 2.54)
+          (name "U0TXD" (effects (font (size 1.27 1.27))))
+          (number "28" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -1.27 26.67 270)
+          (length 2.54)
+          (name "XTAL_N" (effects (font (size 1.27 1.27))))
+          (number "29" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -3.81 26.67 270)
+          (length 2.54)
+          (name "XTAL_P" (effects (font (size 1.27 1.27))))
+          (number "30" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -6.35 26.67 270)
+          (length 2.54)
+          (name "VDDA" (effects (font (size 1.27 1.27))))
+          (number "31" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -8.89 26.67 270)
+          (length 2.54)
+          (name "VDDA" (effects (font (size 1.27 1.27))))
+          (number "32" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at -11.43 26.67 270)
+          (length 2.54)
+          (name "EP" (effects (font (size 1.27 1.27))))
+          (number "33" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )
+)

@@ -1,0 +1,70 @@
+(kicad_symbol_lib
+  (version 20211014)
+  (generator https://github.com/uPesy/easyeda2kicad.py)
+
+    (symbol "LM317LIPK"
+      (in_bom yes)
+      (on_board yes)
+      (property
+        "Reference"
+        "U"
+        (id 0)
+        (at 0 7.62 0)
+        (effects (font (size 1.27 1.27) ) )
+      )
+      (property
+        "Value"
+        "LM317LIPK"
+        (id 1)
+        (at 0 -7.62 0)
+        (effects (font (size 1.27 1.27) ) )
+      )
+      (property
+        "Footprint"
+        "test_lib:SOT-89_L4.5-W2.5-P1.50-LS4.2-BR"
+        (id 2)
+        (at 0 -10.16 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "Datasheet"
+        "https://lcsc.com/product-detail/Low-Dropout-Regulators-LDO_TI_LM317LIPK_LM317LIPK_C112537.html"
+        (id 3)
+        (at 0 -12.70 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "LCSC Part"
+        "C112537"
+        (id 5)
+        (at 0 -15.24 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (symbol "LM317LIPK_0_1"
+        (rectangle
+          (start -10.16 5.08)
+          (end -9.65 4.57)
+          (stroke (width 0) (type default) (color 0 0 0 0))
+          (fill (type background))
+        )
+        (pin unspecified line
+          (at -17.78 2.54 0)
+          (length 7.62)
+          (name "IN" (effects (font (size 1.27 1.27))))
+          (number "3" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 17.78 2.54 180)
+          (length 7.62)
+          (name "OUT" (effects (font (size 1.27 1.27))))
+          (number "2" (effects (font (size 1.27 1.27))))
+        )
+        (pin unspecified line
+          (at 17.78 -2.54 180)
+          (length 7.62)
+          (name "ADJUSTMENT" (effects (font (size 1.27 1.27))))
+          (number "1" (effects (font (size 1.27 1.27))))
+        )
+      )
+    )
+)
