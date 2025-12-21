@@ -1,4 +1,4 @@
-# easyeda2kicad v0.8.0
+# easyeda2kicad v0.9.0
 
 [![PyPI version](https://badge.fury.io/py/easyeda2kicad.svg)](https://badge.fury.io/py/easyeda2kicad)
 [![License](https://img.shields.io/github/license/upesy/easyeda2kicad.py.svg)](https://pypi.org/project/isort/)

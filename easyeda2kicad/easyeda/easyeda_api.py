@@ -106,7 +106,7 @@ class EasyedaApi:
         if HAS_CERTIFI and _certifi is not None:
             try:
                 context.load_verify_locations(cafile=_certifi.where())
-                logging.info("Using certifi package for SSL certificates")
+                logging.debug("Using certifi package for SSL certificates")
                 return context
             except Exception as e:
                 logging.debug(f"Failed to use certifi: {e}")

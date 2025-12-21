@@ -302,7 +302,7 @@ class ExporterFootprintKicad:
                     if ee_track.layer_id in KI_PAD_LAYER
                     else "F.Fab"
                 ),
-                stroke_width=max(ee_track.stroke_width, 0.01),
+                stroke_width=max(fp_to_ki(ee_track.stroke_width), 0.01),
             )
 
             # Generate line
@@ -356,7 +356,7 @@ class ExporterFootprintKicad:
                     if ee_circle.layer_id in KI_LAYERS
                     else "F.Fab"
                 ),
-                stroke_width=max(ee_circle.stroke_width, 0.01),
+                stroke_width=max(fp_to_ki(ee_circle.stroke_width), 0.01),
             )
             ki_circle.end_x = ki_circle.cx + ee_circle.radius
             ki_circle.end_y = ki_circle.cy
@@ -370,7 +370,7 @@ class ExporterFootprintKicad:
                     if ee_rectangle.layer_id in KI_PAD_LAYER
                     else "F.Fab"
                 ),
-                stroke_width=max(ee_rectangle.stroke_width, 0.01),
+                stroke_width=max(fp_to_ki(ee_rectangle.stroke_width), 0.01),
             )
 
             start_x = ee_rectangle.x - self.input.bbox.x
@@ -384,7 +384,7 @@ class ExporterFootprintKicad:
                 start_x + width,
                 start_x,
             ]
-            ki_rectangle.points_start_y = [start_y, start_y, start_y + height, start_y]
+            ki_rectangle.points_start_y = [start_y, start_y, start_y + height, start_y + height]
             ki_rectangle.points_end_x = [
                 start_x + width,
                 start_x + width,
