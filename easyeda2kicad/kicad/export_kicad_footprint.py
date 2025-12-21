@@ -240,15 +240,19 @@ class ExporterFootprintKicad:
             ki_3d_model_info = Ki3dModel(
                 name=self.input.model_3d.name,
                 translation=Ki3dModelBase(
-                    x=round((self.input.model_3d.translation.x - self.input.bbox.x), 2),
-                    y=-round(
-                        (self.input.model_3d.translation.y - self.input.bbox.y), 2
-                    ),
-                    z=(
-                        -round(self.input.model_3d.translation.z, 2)
-                        if self.input.info.fp_type == "smd"
-                        else 0
-                    ),
+                    # Original calculation (disabled - 3D models are already correctly positioned)
+                    # x=round((self.input.model_3d.translation.x - self.input.bbox.x), 2),
+                    # y=-round(
+                    #     (self.input.model_3d.translation.y - self.input.bbox.y), 2
+                    # ),
+                    # z=(
+                    #     -round(self.input.model_3d.translation.z, 2)
+                    #     if self.input.info.fp_type == "smd"
+                    #     else 0
+                    # ),
+                    x=0.0,
+                    y=0.0,
+                    z=0.0,
                 ),
                 rotation=Ki3dModelBase(
                     x=(360 - self.input.model_3d.rotation.x) % 360,
