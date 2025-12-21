@@ -222,6 +222,7 @@ class ExporterFootprintKicad:
             self.input.vias,
             self.input.circles,
             self.input.rectangles,
+            self.input.arcs,
             self.input.texts,
         ):
             for field in fields:
@@ -333,7 +334,7 @@ class ExporterFootprintKicad:
                     if ee_track.layer_id in KI_PAD_LAYER
                     else "F.Fab"
                 ),
-                stroke_width=max(fp_to_ki(ee_track.stroke_width), 0.01),
+                stroke_width=max(ee_track.stroke_width, 0.01),
             )
 
             # Generate line
@@ -387,13 +388,16 @@ class ExporterFootprintKicad:
                     if ee_circle.layer_id in KI_LAYERS
                     else "F.Fab"
                 ),
-                stroke_width=max(fp_to_ki(ee_circle.stroke_width), 0.01),
+                stroke_width=max(ee_circle.stroke_width, 0.01),
             )
             ki_circle.end_x = ki_circle.cx + ee_circle.radius
             ki_circle.end_y = ki_circle.cy
             self.output.circles.append(ki_circle)
 
         # For rectangles
+        # NOTE: RECT stroke_width requires fp_to_ki() conversion even though convert_to_mm() was already called.
+        # This double conversion appears intentional - RECT stroke_width may be stored in different units in EasyEDA.
+        # Example: RECT stroke_width=3 → 0.194mm (not 0.762mm like other shapes)
         for ee_rectangle in self.input.rectangles:
             ki_rectangle = KiFootprintRectangle(
                 layers=(
@@ -488,7 +492,7 @@ class ExporterFootprintKicad:
                     if ee_arc.layer_id in KI_LAYERS
                     else "F.Fab"
                 ),
-                stroke_width=max(fp_to_ki(ee_arc.stroke_width), 0.01),
+                stroke_width=max(ee_arc.stroke_width, 0.01),
             )
             self.output.arcs.append(ki_arc)
 
