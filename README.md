@@ -1,6 +1,5 @@
 # easyeda2kicad v0.8.0
 
-_________________
 [![PyPI version](https://badge.fury.io/py/easyeda2kicad.svg)](https://badge.fury.io/py/easyeda2kicad)
 [![License](https://img.shields.io/github/license/upesy/easyeda2kicad.py.svg)](https://pypi.org/project/isort/)
 [![Downloads](https://pepy.tech/badge/easyeda2kicad)](https://pepy.tech/project/easyeda2kicad)
@@ -9,8 +8,6 @@ _________________
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 [![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
-_________________
-
 
 A Python script that converts any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a Kicad library including **3D model** in color. This tool will speed up your PCB design workflow especially when using [JLCPCB SMT assembly services](https://jlcpcb.com/caa). **It supports library formats for both Kicad v6.x and Kicad v5.x.**
 
@@ -21,10 +18,10 @@ A Python script that converts any electronic components from [EasyEDA](https://e
   <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/demo_footprint.png" width="500">
 </div>
 
-
 ## 🎆 Sponsor and Support
 
 If this tool has saved you a lot of time when designing a PCB, please consider supporting the project by :
+
 - Subscribing to uPesy Premium Membership to have access to high-quality electronics tutorials at https://www.upesy.com/products/subscription
 - Buying one of my ESP32 DevKit boards: https://www.upesy.com/pages/store
 
@@ -58,6 +55,7 @@ easyeda2kicad --symbol --lcsc_id=C2040 --v5
 ```
 
 By default, all librairies are saved in `C:/Users/your_name/Documents/Kicad/easyeda2kicad/`, with :
+
 - `easyeda2kicad.kicad_sym` file for Kicad v6.x symbol library
 - `easyeda2kicad.lib` file for Kicad v5.x legacy symbol library
 - `easyeda2kicad.pretty/` folder for footprint libraries
@@ -70,6 +68,7 @@ easyeda2kicad --full --lcsc_id=C2040 --output ~/libs/my_lib
 ```
 
 This command will save:
+
 - the symbol in `~/libs/my_lib.kicad_sym` file for symbol library. The file will be created if it doesn't exist.
 - the footprint in `~/libs/my_lib.pretty/` folder for footprint libraries. The folder will be created if it doesn't exist.
 - the 3d models in `~/libs/my_lib.3dshapes/` folder for 3d models. The folder will be created if it doesn't exist. The 3D models will be saved both in .WRL and .STEP format.
@@ -85,6 +84,16 @@ By default, easyeda2kicad will generate a symbol library for Kicad v6.x (.kicad_
 ```bash
 easyeda2kicad --symbol --lcsc_id=C2040 --v5
 ```
+
+### Debug Mode
+
+Use `--debug` for detailed logging and automatic caching of API responses in `.easyeda_cache/`:
+
+```bash
+easyeda2kicad --full --lcsc_id=C2040 --debug
+```
+
+Cached data is reused on subsequent runs (faster, works offline). Clear cache: `rm -rf .easyeda_cache`
 
 ## 🔗 Add libraries in Kicad
 
@@ -103,5 +112,7 @@ easyeda2kicad --symbol --footprint --lcsc_id=C2040
 - Enjoy :wink:
 
 ## 🔥 Important Notes
+
 ### WARRANTY
+
 The correctness of the symbols and footprints converted by easyeda2kicad can't be guaranteed. Easyeda2kicad speeds up custom library design process, but you should remain careful and always double check the footprints and symbols generated.
