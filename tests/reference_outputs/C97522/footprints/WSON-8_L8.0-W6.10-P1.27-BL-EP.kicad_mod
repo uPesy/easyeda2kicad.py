@@ -32,10 +32,10 @@
 	(pad "" thru_hole circle (at 0.50 -0.50) (size 0.61 0.61) (drill 0.30) (layers *.Cu *.Paste *.Mask))
 	(pad "" thru_hole circle (at 0.50 0.50) (size 0.61 0.61) (drill 0.30) (layers *.Cu *.Paste *.Mask))
 	(pad "" thru_hole circle (at -0.50 0.50) (size 0.61 0.61) (drill 0.30) (layers *.Cu *.Paste *.Mask))
-	(fp_circle (center -3.00 4.00) (end -2.97 4.00) (layer F.Fab) (width 0.06))
-	(fp_circle (center -1.91 4.88) (end -1.81 4.88) (layer F.Fab) (width 0.20))
-	(fp_circle (center -2.16 4.32) (end -2.01 4.32) (layer F.Fab) (width 0.30))
-	(model "/tmp/easyeda2kicad_test_453x6kic/test_lib.3dshapes/WSON-8_L8.0-W6.0-H0.78-P1.27.wrl"
+	(fp_circle (center -3.00 4.00) (end -2.97 4.00) (layer F.SilkS) (width 0.06))
+	(fp_circle (center -1.91 4.88) (end -1.81 4.88) (layer F.SilkS) (width 0.20))
+	(fp_circle (center -2.16 4.32) (end -2.01 4.32) (layer Cmts.User) (width 0.30))
+	(model "/tmp/easyeda2kicad_test_02juww9c/test_lib.3dshapes/WSON-8_L8.0-W6.0-H0.78-P1.27.wrl"
 		(offset (xyz 0.000 -0.000 -0.000))
 		(scale (xyz 1 1 1))
 		(rotate (xyz 0 0 270))

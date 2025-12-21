@@ -9,107 +9,107 @@
         "Reference"
         "DC"
         (id 0)
-        (at 0 7.62 0)
+        (at 0 2.54 0)
         (effects (font (size 1.27 1.27) ) )
       )
       (property
         "Value"
         "DC-005-5A-2.0"
         (id 1)
-        (at 0 -7.62 0)
+        (at 0 -12.70 0)
         (effects (font (size 1.27 1.27) ) )
       )
       (property
         "Footprint"
         "test_lib:DC-IN-TH_DC-005-5A-2.0"
         (id 2)
-        (at 0 -10.16 0)
+        (at 0 -15.24 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
         "Datasheet"
         "https://lcsc.com/product-detail/New-Arrivals_XKB-Enterprise-DC-005-5A-2-0_C381116.html"
         (id 3)
-        (at 0 -12.70 0)
+        (at 0 -17.78 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
         "LCSC Part"
         "C381116"
         (id 5)
-        (at 0 -15.24 0)
+        (at 0 -20.32 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (symbol "DC-005-5A-2.0_0_1"
         (rectangle
-          (start -2.54 4.06)
-          (end -1.52 1.02)
+          (start 6.35 -1.27)
+          (end 7.62 -3.81)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type background))
         )
         (arc
-          (start -7.62 -1.52)
-          (mid -7.41 -1.55)
-          (end -7.62 -3.56)
+          (start 1.27 3.81)
+          (mid 1.48 3.53)
+          (end 1.27 1.27)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy 0.00 2.54) (xy -1.52 2.54)
+            (xy 8.89 -2.54) (xy 7.62 -2.54)
           )
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy -2.54 3.56) (xy -7.62 3.56)
+            (xy 6.35 -1.27) (xy 1.27 -1.27)
           )
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy -2.54 1.52) (xy -7.62 1.52)
+            (xy 6.35 -3.81) (xy 1.27 -3.81)
           )
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy 0.00 -2.54) (xy -7.37 -2.54) (xy -7.87 -1.52) (xy -8.38 -2.54)
+            (xy 8.89 -7.62) (xy 1.27 -7.62) (xy 1.27 -6.35) (xy 0.00 -7.62)
           )
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy 0.00 -0.00) (xy -4.32 -0.00) (xy -4.32 -2.54) (xy -4.57 -1.27)
+            (xy 8.89 -5.08) (xy 3.81 -5.08) (xy 3.81 -7.62) (xy 3.81 -6.35)
           )
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy -4.32 -2.54) (xy -4.06 -1.27)
+            (xy 3.81 -7.62) (xy 5.08 -6.35)
           )
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (pin unspecified line
-          (at 5.08 2.54 180)
+          (at 13.97 -2.54 180)
           (length 5.08)
           (name "1" (effects (font (size 1.27 1.27))))
           (number "1" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at 5.08 -2.54 180)
+          (at 13.97 -7.62 180)
           (length 5.08)
           (name "2" (effects (font (size 1.27 1.27))))
           (number "2" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at 5.08 -0.00 180)
+          (at 13.97 -5.08 180)
           (length 5.08)
           (name "3" (effects (font (size 1.27 1.27))))
           (number "3" (effects (font (size 1.27 1.27))))

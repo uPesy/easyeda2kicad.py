@@ -9,100 +9,100 @@
         "Reference"
         "U"
         (id 0)
-        (at 0 10.16 0)
+        (at 0 2.54 0)
         (effects (font (size 1.27 1.27) ) )
       )
       (property
         "Value"
         "W25Q256JVEIQTR"
         (id 1)
-        (at 0 -10.16 0)
+        (at 0 -17.78 0)
         (effects (font (size 1.27 1.27) ) )
       )
       (property
         "Footprint"
         "test_lib:WSON-8_L8.0-W6.10-P1.27-BL-EP"
         (id 2)
-        (at 0 -12.70 0)
+        (at 0 -20.32 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
         "Datasheet"
         "https://lcsc.com/product-detail/FLASH_Winbond-Elec-W25Q256JVEIQTR_C97522.html"
         (id 3)
-        (at 0 -15.24 0)
+        (at 0 -22.86 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
         "LCSC Part"
         "C97522"
         (id 5)
-        (at 0 -17.78 0)
+        (at 0 -25.40 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (symbol "W25Q256JVEIQTR_0_1"
         (rectangle
-          (start -24.13 7.62)
-          (end -23.62 7.11)
+          (start 2.54 -0.00)
+          (end 50.80 -15.24)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type background))
         )
         (circle
-          (center -22.86 6.35)
+          (center 3.81 -1.27)
           (radius 0.38)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (pin unspecified line
-          (at -26.67 2.54 0)
+          (at 0.00 -5.08 0)
           (length 2.54)
           (name "~{CS}" (effects (font (size 1.27 1.27))))
           (number "1" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at -26.67 -0.00 0)
+          (at 0.00 -7.62 0)
           (length 2.54)
           (name "DO(IO1)" (effects (font (size 1.27 1.27))))
           (number "2" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at -26.67 -2.54 0)
+          (at 0.00 -10.16 0)
           (length 2.54)
           (name "WP#(IO2)" (effects (font (size 1.27 1.27))))
           (number "3" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at -26.67 -5.08 0)
+          (at 0.00 -12.70 0)
           (length 2.54)
           (name "GND" (effects (font (size 1.27 1.27))))
           (number "4" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at 26.67 -5.08 180)
+          (at 53.34 -12.70 180)
           (length 2.54)
           (name "DI(IO0)" (effects (font (size 1.27 1.27))))
           (number "5" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at 26.67 -2.54 180)
+          (at 53.34 -10.16 180)
           (length 2.54)
           (name "CLK" (effects (font (size 1.27 1.27))))
           (number "6" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at 26.67 -0.00 180)
+          (at 53.34 -7.62 180)
           (length 2.54)
           (name "HOLD#orRESET#(IO3)" (effects (font (size 1.27 1.27))))
           (number "7" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at 26.67 2.54 180)
+          (at 53.34 -5.08 180)
           (length 2.54)
           (name "VCC" (effects (font (size 1.27 1.27))))
           (number "8" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at 26.67 5.08 180)
+          (at 53.34 -2.54 180)
           (length 2.54)
           (name "EP" (effects (font (size 1.27 1.27))))
           (number "9" (effects (font (size 1.27 1.27))))

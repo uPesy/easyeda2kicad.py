@@ -27,9 +27,9 @@
 	(pad 2 smd rect (at 1.50 2.50 90.00) (size 1.50 1.00) (layers F.Cu F.Paste F.Mask))
 	(pad 3 smd rect (at 1.50 -2.50 90.00) (size 1.50 1.00) (layers F.Cu F.Paste F.Mask))
 	(pad 4 smd rect (at -1.50 -2.50 90.00) (size 1.50 1.00) (layers F.Cu F.Paste F.Mask))
-	(fp_circle (center -2.50 2.70) (end -2.47 2.70) (layer F.Fab) (width 0.06))
-	(fp_circle (center 0.00 0.00) (end 1.50 0.00) (layer F.Fab) (width 0.25))
-	(model "/tmp/easyeda2kicad_test_26l4n0ni/test_lib.3dshapes/LED-SMD_4P-L5.0-W5.0-BL_XL-5050RGBC.wrl"
+	(fp_circle (center -2.50 2.70) (end -2.47 2.70) (layer F.SilkS) (width 0.06))
+	(fp_circle (center 0.00 0.00) (end 1.50 0.00) (layer F.SilkS) (width 0.25))
+	(model "/tmp/easyeda2kicad_test_1h6n4biy/test_lib.3dshapes/LED-SMD_4P-L5.0-W5.0-BL_XL-5050RGBC.wrl"
 		(offset (xyz 0.000 -0.000 -0.000))
 		(scale (xyz 1 1 1))
 		(rotate (xyz 0 0 90))

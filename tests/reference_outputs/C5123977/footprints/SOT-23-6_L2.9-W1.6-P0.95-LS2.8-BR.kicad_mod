@@ -17,10 +17,10 @@
 	(pad 6 smd rect (at -1.35 0.95 0.00) (size 1.10 0.60) (layers F.Cu F.Paste F.Mask))
 	(pad 5 smd rect (at -1.35 0.00 0.00) (size 1.10 0.60) (layers F.Cu F.Paste F.Mask))
 	(pad 4 smd rect (at -1.35 -0.95 0.00) (size 1.10 0.60) (layers F.Cu F.Paste F.Mask))
-	(fp_circle (center 1.40 1.45) (end 1.43 1.45) (layer F.Fab) (width 0.06))
-	(fp_circle (center 1.40 0.95) (end 1.50 0.95) (layer F.Fab) (width 0.20))
-	(fp_circle (center 1.40 1.65) (end 1.53 1.65) (layer F.Fab) (width 0.25))
-	(model "/tmp/easyeda2kicad_test_ofuldtpf/test_lib.3dshapes/SOT-23-6_L2.9-W1.6-H1.5-LS2.8-P0.95.wrl"
+	(fp_circle (center 1.40 1.45) (end 1.43 1.45) (layer F.SilkS) (width 0.06))
+	(fp_circle (center 1.40 0.95) (end 1.50 0.95) (layer Cmts.User) (width 0.20))
+	(fp_circle (center 1.40 1.65) (end 1.53 1.65) (layer F.SilkS) (width 0.25))
+	(model "/tmp/easyeda2kicad_test_7zqmpl8b/test_lib.3dshapes/SOT-23-6_L2.9-W1.6-H1.5-LS2.8-P0.95.wrl"
 		(offset (xyz 0.000 -0.000 -0.000))
 		(scale (xyz 1 1 1))
 		(rotate (xyz 0 0 180))

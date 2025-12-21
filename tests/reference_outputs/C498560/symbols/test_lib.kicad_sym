@@ -2,41 +2,41 @@
   (version 20211014)
   (generator https://github.com/uPesy/easyeda2kicad.py)
 
-    (symbol "LGS63032"
+    (symbol "1-770174-0"
       (in_bom yes)
       (on_board yes)
       (property
         "Reference"
-        "U"
+        "CN"
         (id 0)
         (at 0 2.54 0)
         (effects (font (size 1.27 1.27) ) )
       )
       (property
         "Value"
-        "LGS63032"
+        "1-770174-0"
         (id 1)
-        (at 0 -12.70 0)
+        (at 0 -10.16 0)
         (effects (font (size 1.27 1.27) ) )
       )
       (property
         "Footprint"
-        "test_lib:SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BR"
+        "test_lib:CONN-TH_TE_1-770174-0"
         (id 2)
-        (at 0 -15.24 0)
+        (at 0 -12.70 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
         "LCSC Part"
-        "C5123977"
+        "C498560"
         (id 5)
-        (at 0 -17.78 0)
+        (at 0 -15.24 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
-      (symbol "LGS63032_0_1"
+      (symbol "1-770174-0_0_1"
         (rectangle
           (start 2.54 -0.00)
-          (end 15.24 -10.16)
+          (end 7.62 -7.62)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type background))
         )
@@ -49,38 +49,26 @@
         (pin unspecified line
           (at 0.00 -2.54 0)
           (length 2.54)
-          (name "SW" (effects (font (size 1.27 1.27))))
+          (name "1" (effects (font (size 1.27 1.27))))
           (number "1" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
           (at 0.00 -5.08 0)
           (length 2.54)
-          (name "GND" (effects (font (size 1.27 1.27))))
+          (name "2" (effects (font (size 1.27 1.27))))
           (number "2" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at 0.00 -7.62 0)
+          (at 10.16 -5.08 180)
           (length 2.54)
-          (name "FB" (effects (font (size 1.27 1.27))))
+          (name "3" (effects (font (size 1.27 1.27))))
           (number "3" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at 17.78 -7.62 180)
+          (at 10.16 -2.54 180)
           (length 2.54)
-          (name "EN" (effects (font (size 1.27 1.27))))
+          (name "4" (effects (font (size 1.27 1.27))))
           (number "4" (effects (font (size 1.27 1.27))))
-        )
-        (pin unspecified line
-          (at 17.78 -5.08 180)
-          (length 2.54)
-          (name "OVP" (effects (font (size 1.27 1.27))))
-          (number "5" (effects (font (size 1.27 1.27))))
-        )
-        (pin unspecified line
-          (at 17.78 -2.54 180)
-          (length 2.54)
-          (name "VIN" (effects (font (size 1.27 1.27))))
-          (number "6" (effects (font (size 1.27 1.27))))
         )
       )
     )

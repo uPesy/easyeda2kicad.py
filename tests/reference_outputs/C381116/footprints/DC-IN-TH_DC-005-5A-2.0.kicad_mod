@@ -19,8 +19,8 @@
 	(pad 1 thru_hole oval (at 3.00 -2.35 90.00) (size 4.20 1.80) (layers *.Cu *.Mask)(drill oval 3.4999930000000004 0.9999979999999999))
 	(pad 2 thru_hole oval (at -3.00 -2.35 -90.00) (size 4.00 1.80) (layers *.Cu *.Mask)(drill oval 3.2999680000000002 0.9999979999999999))
 	(pad 3 thru_hole oval (at -0.00 2.35 0.00) (size 4.00 1.80) (layers *.Cu *.Mask)(drill oval 3.2999680000000002 0.9999979999999999))
-	(fp_circle (center 3.40 -6.85) (end 3.43 -6.85) (layer F.Fab) (width 0.06))
-	(model "/tmp/easyeda2kicad_test_s3kapzka/test_lib.3dshapes/DC-IN-TH_L14.4-W9.0-H11.0.wrl"
+	(fp_circle (center 3.40 -6.85) (end 3.43 -6.85) (layer F.SilkS) (width 0.06))
+	(model "/tmp/easyeda2kicad_test_0jvzmise/test_lib.3dshapes/DC-IN-TH_L14.4-W9.0-H11.0.wrl"
 		(offset (xyz -3.650 2.200 0.000))
 		(scale (xyz 1 1 1))
 		(rotate (xyz 0 0 90))

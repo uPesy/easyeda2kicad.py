@@ -12,23 +12,83 @@ from typing import List, Tuple
 import pytest
 from easyeda2kicad.__main__ import main
 
+# Test component IDs - these should be stable components from LCSC
+TEST_COMPONENTS = [
+    "C2856808",
+    "C381116",
+    "C167219",
+    "C2843785",
+    "C112537",
+    "C97522",
+    "C2838500",
+    "C5364646",
+    "C68740",
+    "C5123977",
+    "C498560",
+]
+
+
+class TestCreateReference:
+    """Helper to create reference files for regression testing."""
+
+    @pytest.mark.parametrize("component_id", TEST_COMPONENTS)
+    def test_create_reference_files(
+        self, component_id, temp_output_dir, reference_dir, create_reference
+    ):
+        """Create reference files for regression tests."""
+        if not create_reference:
+            pytest.skip("Run with --create-reference to generate reference files")
+
+        output_path = Path(temp_output_dir) / "test_lib"
+        ref_component_dir = reference_dir / component_id
+
+        # Generate all files
+        args = [
+            "--lcsc_id",
+            component_id,
+            "--output",
+            str(output_path),
+            "--full",
+            "--3d",
+        ]
+
+        try:
+            result = main(args)
+            assert result == 0, f"main() returned error code: {result}"
+        except SystemExit as e:
+            assert e.code == 0, f"main() exited with code: {e.code}"
+
+        # Copy generated files to reference directory
+        # Files are in temp_output_dir, not subdirectory
+        temp_path = Path(temp_output_dir)
+
+        # Symbols
+        symbol_dir = ref_component_dir / "symbols"
+        symbol_dir.mkdir(parents=True, exist_ok=True)
+        for file in temp_path.glob("*.kicad_sym"):
+            shutil.copy2(file, symbol_dir / file.name)
+            print(f"Created reference: {symbol_dir / file.name}")
+
+        # Footprints
+        footprint_dir = ref_component_dir / "footprints"
+        footprint_dir.mkdir(parents=True, exist_ok=True)
+        for file in temp_path.glob("*.pretty/*.kicad_mod"):
+            shutil.copy2(file, footprint_dir / file.name)
+            print(f"Created reference: {footprint_dir / file.name}")
+
+        # 3D Models
+        model_dir = ref_component_dir / "3dmodels"
+        model_dir.mkdir(parents=True, exist_ok=True)
+        for file in temp_path.glob("*.3dshapes/*"):
+            if file.is_file():
+                shutil.copy2(file, model_dir / file.name)
+                print(f"Created reference: {model_dir / file.name}")
+
+        print(f"\nReference files created for {component_id}")
+
 
 class TestRegression:
     """Regression tests for file generation consistency."""
-
-    # Test component IDs - these should be stable components from LCSC
-    TEST_COMPONENTS = [
-        "C2856808",
-        "C381116",
-        "C167219",
-        "C2843785",
-        "C112537",
-        "C97522",
-        "C2838500",
-        "C5364646",
-        "C68740",
-        "C5123977",
-    ]
 
     def normalize_file_content(self, content: str, file_ext: str) -> str:
         """
@@ -58,6 +118,8 @@ class TestRegression:
             # Normalize temporary paths to a standard format
             # Replace /tmp/easyeda2kicad_test_XXXXX/ with /tmp/test/
             line = re.sub(r"/tmp/easyeda2kicad_test_[^/]+/", "/tmp/test/", line)
+            # Also normalize other temp paths like /tmp/tmpXXXXX/
+            line = re.sub(r"/tmp/tmp[a-z0-9_]+/", "/tmp/test/", line)
 
             normalized.append(line.rstrip())
 
@@ -291,62 +353,3 @@ class TestRegression:
         print(f"\nGenerated files for {component_id}:")
         for ext, count in file_types.items():
             print(f"  {ext}: {count} file(s)")
-
-
-class TestCreateReference:
-    """Helper to create reference files for regression testing."""
-
-    @pytest.mark.parametrize("component_id", TestRegression.TEST_COMPONENTS)
-    def test_create_reference_files(
-        self, component_id, temp_output_dir, reference_dir, create_reference
-    ):
-        """Create reference files for regression tests."""
-        if not create_reference:
-            pytest.skip("Run with --create-reference to generate reference files")
-
-        output_path = Path(temp_output_dir) / "test_lib"
-        ref_component_dir = reference_dir / component_id
-
-        # Generate all files
-        args = [
-            "--lcsc_id",
-            component_id,
-            "--output",
-            str(output_path),
-            "--full",
-            "--3d",
-        ]
-
-        try:
-            result = main(args)
-            assert result == 0, f"main() returned error code: {result}"
-        except SystemExit as e:
-            assert e.code == 0, f"main() exited with code: {e.code}"
-
-        # Copy generated files to reference directory
-        # Files are in temp_output_dir, not subdirectory
-        temp_path = Path(temp_output_dir)
-
-        # Symbols
-        symbol_dir = ref_component_dir / "symbols"
-        symbol_dir.mkdir(parents=True, exist_ok=True)
-        for file in temp_path.glob("*.kicad_sym"):
-            shutil.copy2(file, symbol_dir / file.name)
-            print(f"Created reference: {symbol_dir / file.name}")
-
-        # Footprints
-        footprint_dir = ref_component_dir / "footprints"
-        footprint_dir.mkdir(parents=True, exist_ok=True)
-        for file in temp_path.glob("*.pretty/*.kicad_mod"):
-            shutil.copy2(file, footprint_dir / file.name)
-            print(f"Created reference: {footprint_dir / file.name}")
-
-        # 3D Models
-        model_dir = ref_component_dir / "3dmodels"
-        model_dir.mkdir(parents=True, exist_ok=True)
-        for file in temp_path.glob("*.3dshapes/*"):
-            if file.is_file():
-                shutil.copy2(file, model_dir / file.name)
-                print(f"Created reference: {model_dir / file.name}")
-
-        print(f"\nReference files created for {component_id}")
