@@ -101,7 +101,9 @@ KI_LAYERS = {
     13: "F.Fab",
     14: "B.Fab",
     15: "Dwgs.User",
-    101: "F.Fab",
+    99: "F.Fab",  # ComponentShapeLayer - component outline for fabrication
+    100: "F.Fab",  # LeadShapeLayer - lead shapes for fabrication
+    101: "F.SilkS",  # ComponentPolarityLayer - polarity markings on silkscreen
 }
 
 

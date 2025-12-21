@@ -553,6 +553,11 @@ class EeFootprintCircle:
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
+        self.cx = _safe_float(self.cx, 0.0)
+        self.cy = _safe_float(self.cy, 0.0)
+        self.radius = _safe_float(self.radius, 0.0)
+        self.stroke_width = _safe_float(self.stroke_width, 0.0)
+        self.layer_id = _safe_int(self.layer_id, 0)
         self.is_locked = _safe_bool(self.is_locked, False)
 
     def convert_to_mm(self) -> None:
@@ -606,7 +611,12 @@ class EeFootprintArc:
     __fields__ = property(lambda self: _get_field_names(self.__class__))
 
     def __post_init__(self):
+        self.stroke_width = _safe_float(self.stroke_width, 0.0)
+        self.layer_id = _safe_int(self.layer_id, 0)
         self.is_locked = _safe_bool(self.is_locked, False)
+
+    def convert_to_mm(self) -> None:
+        self.stroke_width = convert_to_mm(self.stroke_width)
 
 
 @dataclass
