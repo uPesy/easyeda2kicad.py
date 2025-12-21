@@ -7,7 +7,8 @@ import ssl
 import sys
 import urllib.error
 import urllib.request
-from typing import Optional
+from pathlib import Path
+from typing import Optional, Union
 
 # Local imports
 from .._version import __version__
@@ -39,6 +40,46 @@ class EasyedaApi:
             "User-Agent": f"easyeda2kicad v{__version__}",
         }
         self.ssl_context = self._create_ssl_context()
+        self.debug_cache_enabled = logging.getLogger().level <= logging.DEBUG
+        self.cache_dir = Path.cwd() / ".easyeda_cache"
+        if self.debug_cache_enabled:
+            logging.info(f"Debug cache enabled: {self.cache_dir}")
+
+    def _get_cache_path(self, identifier: str, extension: str) -> Path:
+        """Get the cache file path for a specific resource."""
+        safe_id = identifier.replace("/", "_").replace("\\", "_")
+        return self.cache_dir / f"{safe_id}.{extension}"
+
+    def _read_from_cache(
+        self, cache_path: Path, binary: bool = False
+    ) -> Optional[Union[str, bytes]]:
+        """Read data from cache if it exists."""
+        if not self.debug_cache_enabled or not cache_path.exists():
+            return None
+        try:
+            mode = "rb" if binary else "r"
+            with open(cache_path, mode) as f:
+                data = f.read()
+            logging.debug(f"Cache hit: {cache_path}")
+            return data
+        except Exception as e:
+            logging.warning(f"Failed to read cache {cache_path}: {e}")
+            return None
+
+    def _write_to_cache(
+        self, cache_path: Path, data: Union[str, bytes], binary: bool = False
+    ) -> None:
+        """Write data to cache."""
+        if not self.debug_cache_enabled:
+            return
+        try:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            mode = "wb" if binary else "w"
+            with open(cache_path, mode) as f:
+                f.write(data)
+            logging.debug(f"Cached: {cache_path}")
+        except Exception as e:
+            logging.warning(f"Failed to write cache {cache_path}: {e}")
 
     def _create_ssl_context(self) -> ssl.SSLContext:
         """Create SSL context with proper certificate handling for macOS."""
@@ -77,6 +118,17 @@ class EasyedaApi:
         return context
 
     def get_info_from_easyeda_api(self, lcsc_id: str) -> dict:
+        # Try to read from cache first
+        cache_path = self._get_cache_path(lcsc_id, "json")
+        cached_data = self._read_from_cache(cache_path, binary=False)
+        if cached_data is not None:
+            try:
+                return json.loads(cached_data)
+            except json.JSONDecodeError:
+                logging.warning(
+                    f"Invalid cached JSON for {lcsc_id}, fetching fresh data"
+                )
+
         try:
             req = urllib.request.Request(
                 url=API_ENDPOINT.format(lcsc_id=lcsc_id), headers=self.headers
@@ -102,6 +154,9 @@ class EasyedaApi:
                 logging.debug(f"{api_response}")
                 return {}
 
+            # Write to cache
+            self._write_to_cache(cache_path, data, binary=False)
+
             return api_response
         except (urllib.error.URLError, json.JSONDecodeError) as e:
             logging.error(f"API request failed: {e}")
@@ -114,6 +169,13 @@ class EasyedaApi:
         return cp_cad_info["result"]
 
     def get_raw_3d_model_obj(self, uuid: str) -> Optional[str]:
+        # Try to read from cache first
+        cache_path = self._get_cache_path(uuid, "obj")
+        cached_data = self._read_from_cache(cache_path, binary=False)
+        if cached_data is not None:
+            assert isinstance(cached_data, str)
+            return cached_data
+
         try:
             req = urllib.request.Request(
                 url=ENDPOINT_3D_MODEL.format(uuid=uuid),
@@ -127,12 +189,22 @@ class EasyedaApi:
                         f"No raw 3D model data found for uuid:{uuid} on easyeda"
                     )
                     return None
-                return response.read().decode()
+                data = response.read().decode()
+                # Write to cache
+                self._write_to_cache(cache_path, data, binary=False)
+                return data
         except urllib.error.URLError as e:
             logging.error(f"Failed to get 3D model for uuid:{uuid}: {e}")
             return None
 
     def get_step_3d_model(self, uuid: str) -> Optional[bytes]:
+        # Try to read from cache first
+        cache_path = self._get_cache_path(uuid, "step")
+        cached_data = self._read_from_cache(cache_path, binary=True)
+        if cached_data is not None:
+            assert isinstance(cached_data, bytes)
+            return cached_data
+
         try:
             req = urllib.request.Request(
                 url=ENDPOINT_3D_MODEL_STEP.format(uuid=uuid),
@@ -146,7 +218,10 @@ class EasyedaApi:
                         f"No step 3D model data found for uuid:{uuid} on easyeda"
                     )
                     return None
-                return response.read()
+                data = response.read()
+                # Write to cache
+                self._write_to_cache(cache_path, data, binary=True)
+                return data
         except urllib.error.URLError as e:
             logging.error(f"Failed to get STEP model for uuid:{uuid}: {e}")
             return None
