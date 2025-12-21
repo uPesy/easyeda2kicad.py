@@ -4,7 +4,7 @@ import re
 import textwrap
 from dataclasses import dataclass, field, fields
 from enum import Enum, auto
-from typing import List, Union
+from typing import Any, List, Union
 
 
 class KicadVersion(Enum):
@@ -326,7 +326,6 @@ class KiSymbolPin:
     pos_y: Union[int, float]
 
     def export_v5(self) -> str:
-
         return (
             "X {name} {num} {x} {y} {length:.0f} {orientation} {num_sz} {name_sz}"
             " {unit_num} 1 {pin_type} {pin_style}\n".format(
@@ -613,7 +612,7 @@ class KiSymbol:
         self.info.y_low = min(pin.pos_y for pin in self.pins) if self.pins else 0
         self.info.y_high = max(pin.pos_y for pin in self.pins) if self.pins else 0
 
-        sym_export_data = {}
+        sym_export_data: dict[str, Any] = {}
         for _field in fields(self):
             shapes = getattr(self, _field.name)
             if isinstance(shapes, list):

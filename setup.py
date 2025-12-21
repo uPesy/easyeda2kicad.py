@@ -3,9 +3,9 @@ from setuptools import find_packages, setup
 with open("README.md") as fh:
     long_description = fh.read()
 
-production_dependencies = []
+production_dependencies: list[str] = []
 
-development_dependencies = [
+development_dependencies: list[str] = [
     "pre-commit>=2.17.0",
 ]
 

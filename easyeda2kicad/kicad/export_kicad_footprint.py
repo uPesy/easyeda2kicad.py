@@ -5,7 +5,38 @@ from typing import Tuple, Union
 
 # Local imports
 from ..easyeda.parameters_easyeda import ee_footprint
-from .parameters_kicad_footprint import *
+from .parameters_kicad_footprint import (
+    KI_ARC,
+    KI_CIRCLE,
+    KI_END_FILE,
+    KI_FAB_REF,
+    KI_FP_TYPE,
+    KI_HOLE,
+    KI_LAYERS,
+    KI_LINE,
+    KI_MODEL_3D,
+    KI_MODULE_INFO,
+    KI_PACKAGE_VALUE,
+    KI_PAD,
+    KI_PAD_LAYER,
+    KI_PAD_LAYER_THT,
+    KI_PAD_SHAPE,
+    KI_REFERENCE,
+    KI_TEXT,
+    KI_VIA,
+    Ki3dModel,
+    Ki3dModelBase,
+    KiFootprint,
+    KiFootprintArc,
+    KiFootprintCircle,
+    KiFootprintHole,
+    KiFootprintInfo,
+    KiFootprintPad,
+    KiFootprintRectangle,
+    KiFootprintText,
+    KiFootprintTrack,
+    KiFootprintVia,
+)
 
 # ---------------------------------------
 
@@ -67,7 +98,7 @@ def compute_arc(
 
     # Step 2 : Compute (cx1, cy1)
     sign = -1 if large_arc_flag == sweep_flag else 1
-    sq = 0
+    sq = 0.0
     if Pradius_x * Py1 + Pradius_y * Px1 > 0:
         sq = (Pradius_x * Pradius_y - Pradius_x * Py1 - Pradius_y * Px1) / (
             Pradius_x * Py1 + Pradius_y * Px1
@@ -137,9 +168,9 @@ def drill_to_ki(
         max_distance = max(pos_0, pos_90)
 
         if max_distance == pos_0:
-            return f"(drill oval {hole_radius*2} {hole_length})"
+            return f"(drill oval {hole_radius * 2} {hole_length})"
         else:
-            return f"(drill oval {hole_length} {hole_radius*2})"
+            return f"(drill oval {hole_length} {hole_radius * 2})"
     if hole_radius > 0:
         return f"(drill {2 * hole_radius})"
     return ""
@@ -384,7 +415,12 @@ class ExporterFootprintKicad:
                 start_x + width,
                 start_x,
             ]
-            ki_rectangle.points_start_y = [start_y, start_y, start_y + height, start_y + height]
+            ki_rectangle.points_start_y = [
+                start_y,
+                start_y,
+                start_y + height,
+                start_y + height,
+            ]
             ki_rectangle.points_end_x = [
                 start_x + width,
                 start_x + width,
@@ -406,9 +442,9 @@ class ExporterFootprintKicad:
                 ee_arc.path.replace(",", " ").replace("M ", "M").replace("A ", "A")
             )
 
-            start_x, start_y = arc_path.split("A")[0][1:].split(" ", 1)
-            start_x = fp_to_ki(start_x) - self.input.bbox.x
-            start_y = fp_to_ki(start_y) - self.input.bbox.y
+            start_x_str, start_y_str = arc_path.split("A")[0][1:].split(" ", 1)
+            start_x = fp_to_ki(start_x_str) - self.input.bbox.x
+            start_y = fp_to_ki(start_y_str) - self.input.bbox.y
 
             arc_parameters = arc_path.split("A")[1].replace("  ", " ")
             (
@@ -417,13 +453,13 @@ class ExporterFootprintKicad:
                 x_axis_rotation,
                 large_arc,
                 sweep,
-                end_x,
-                end_y,
+                end_x_str,
+                end_y_str,
             ) = arc_parameters.split(" ", 6)
             rx, ry = rotate(fp_to_ki(svg_rx), fp_to_ki(svg_ry), 0)
 
-            end_x = fp_to_ki(end_x) - self.input.bbox.x
-            end_y = fp_to_ki(end_y) - self.input.bbox.y
+            end_x = fp_to_ki(end_x_str) - self.input.bbox.x
+            end_y = fp_to_ki(end_y_str) - self.input.bbox.y
             if ry != 0:
                 cx, cy, extent = compute_arc(
                     start_x,

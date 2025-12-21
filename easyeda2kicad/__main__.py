@@ -29,7 +29,6 @@ from .kicad.parameters_kicad_symbol import KicadVersion
 
 
 def get_parser() -> argparse.ArgumentParser:
-
     parser = argparse.ArgumentParser(
         description=(
             "A Python script that convert any electronic components from LCSC or"
@@ -108,7 +107,6 @@ def get_parser() -> argparse.ArgumentParser:
 
 
 def valid_arguments(arguments: dict) -> bool:
-
     if not arguments["lcsc_id"].startswith("C"):
         logging.error("lcsc_id should start by C....")
         return False

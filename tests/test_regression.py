@@ -5,10 +5,7 @@ This test compares the output of the current version with reference files
 from a known-good version to detect any unintended changes in output.
 """
 
-import json
-import os
 import shutil
-import tempfile
 from pathlib import Path
 from typing import List, Tuple
 
@@ -108,7 +105,7 @@ class TestRegression:
             new_line = new_lines[i] if i < len(new_lines) else "<missing>"
 
             if ref_line != new_line:
-                diff_lines.append(f"Line {i+1}:")
+                diff_lines.append(f"Line {i + 1}:")
                 diff_lines.append(f"  REF: {ref_line}")
                 diff_lines.append(f"  NEW: {new_line}")
 
