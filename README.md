@@ -111,6 +111,14 @@ easyeda2kicad --symbol --footprint --lcsc_id=C2040
 - Go to Preferences > Manage Footprint Libraries, and Add the global library `easyeda2kicad` : `${EASYEDA2KICAD}/easyeda2kicad.pretty`
 - Enjoy :wink:
 
+## 📚 Documentation
+
+For detailed information about the EasyEDA data format and how commands are parsed:
+
+- **[CMD_FOOTPRINT.md](CMD_FOOTPRINT.md)** - Compact reference for all footprint commands (PAD, TRACK, RECT, etc.) with field definitions and real examples
+- **[CMD_SYMBOL.md](CMD_SYMBOL.md)** - Compact reference for all symbol commands (P, R, C, E, A, PL, PG, PT) with field definitions and real examples
+- **[CMD_3D_MODEL.md](CMD_3D_MODEL.md)** - Reference for 3D model download, OBJ/STEP formats, and WRL conversion
+
 ## 🔥 Important Notes
 
 ### WARRANTY
