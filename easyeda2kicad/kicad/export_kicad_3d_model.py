@@ -19,7 +19,6 @@ VRML_HEADER = """#VRML V2.0 utf8
 
 
 def get_materials(obj_data: str) -> dict:
-
     material_regex = "newmtl .*?endmtl"
     matchs = re.findall(pattern=material_regex, string=obj_data, flags=re.DOTALL)
 
@@ -98,8 +97,8 @@ def generate_wrl_model(model_3d: Ee3dModel) -> Ki3dModel:
             Shape{{
                 appearance Appearance {{
                     material  Material 	{{
-                        diffuseColor {' '.join(material['diffuse_color'])}
-                        specularColor {' '.join(material['specular_color'])}
+                        diffuseColor {" ".join(material["diffuse_color"])}
+                        specularColor {" ".join(material["specular_color"])}
                         ambientIntensity 0.2
                         transparency 0
                         shininess 0.5

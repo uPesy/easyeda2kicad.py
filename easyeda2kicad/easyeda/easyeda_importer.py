@@ -2,11 +2,42 @@
 import json
 import logging
 from dataclasses import fields
-from typing import get_args, get_origin, get_type_hints
+from typing import Union, get_args, get_origin, get_type_hints
 
 # Local imports
 from .easyeda_api import EasyedaApi
-from .parameters_easyeda import *
+from .parameters_easyeda import (
+    Ee3dModel,
+    Ee3dModelBase,
+    EeFootprintArc,
+    EeFootprintBbox,
+    EeFootprintCircle,
+    EeFootprintHole,
+    EeFootprintInfo,
+    EeFootprintPad,
+    EeFootprintRectangle,
+    EeFootprintText,
+    EeFootprintTrack,
+    EeFootprintVia,
+    EeSymbol,
+    EeSymbolArc,
+    EeSymbolBbox,
+    EeSymbolCircle,
+    EeSymbolEllipse,
+    EeSymbolInfo,
+    EeSymbolPath,
+    EeSymbolPin,
+    EeSymbolPinClock,
+    EeSymbolPinDot,
+    EeSymbolPinDotBis,
+    EeSymbolPinName,
+    EeSymbolPinPath,
+    EeSymbolPinSettings,
+    EeSymbolPolygon,
+    EeSymbolPolyline,
+    EeSymbolRectangle,
+    ee_footprint,
+)
 
 
 # Safe conversion helpers
@@ -72,11 +103,11 @@ def convert_fields_to_types(field_dict, dataclass_type):
                 field_type = next((arg for arg in args if arg is not type(None)), str)
 
         # Convert based on type
-        if field_type == float or field_type == "float":
+        if field_type is float or field_type == "float":
             converted[key] = _safe_float(value)
-        elif field_type == int or field_type == "int":
+        elif field_type is int or field_type == "int":
             converted[key] = _safe_int(value)
-        elif field_type == bool or field_type == "bool":
+        elif field_type is bool or field_type == "bool":
             converted[key] = _safe_bool(value)
         else:
             converted[key] = value
@@ -226,9 +257,9 @@ def add_easyeda_rectangle(rectangle_data: str, ee_symbol: EeSymbol):
 
     # Add rx, ry at the end if they were extracted
     if rx is not None:
-        rectangle_dict['rx'] = rx
+        rectangle_dict["rx"] = rx
     if ry is not None:
-        rectangle_dict['ry'] = ry
+        rectangle_dict["ry"] = ry
 
     ee_symbol.rectangles.append(
         EeSymbolRectangle(**convert_fields_to_types(rectangle_dict, EeSymbolRectangle))

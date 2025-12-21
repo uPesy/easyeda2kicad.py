@@ -16,7 +16,7 @@ exclude="(.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|b
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
-python_version = 3.8
+python_version = "3.9"
 ignore_missing_imports = true
 check_untyped_defs = true
 disallow_any_expr = false
