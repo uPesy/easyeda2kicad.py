@@ -74,6 +74,20 @@ class EasyedaApi:
             return
         try:
             cache_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # For JSON files, pretty-print with indentation
+            if not binary and cache_path.suffix == ".json":
+                try:
+                    # Try to parse as JSON and write with indentation
+                    json_data = json.loads(data) if isinstance(data, str) else data
+                    with open(cache_path, "w") as f:
+                        json.dump(json_data, f, indent=2, ensure_ascii=False)
+                    logging.debug(f"Cached (formatted): {cache_path}")
+                    return
+                except (json.JSONDecodeError, TypeError):
+                    # If not valid JSON, fall back to normal write
+                    pass
+
             mode = "wb" if binary else "w"
             with open(cache_path, mode) as f:
                 f.write(data)
