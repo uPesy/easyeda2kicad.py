@@ -590,6 +590,7 @@ class EeFootprintRectangle:
         self.y = convert_to_mm(self.y)
         self.width = convert_to_mm(self.width)
         self.height = convert_to_mm(self.height)
+        self.stroke_width = convert_to_mm(self.stroke_width)
 
 
 @dataclass
