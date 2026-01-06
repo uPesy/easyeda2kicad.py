@@ -189,9 +189,9 @@ def convert_ee_arcs(
                 ),  # doesn't support elliptical arc
                 angle_start=float(ee_arc.path[1].x_axis_rotation),
                 start_x=to_ki(float(ee_arc.path[0].start_x) - ee_bbox.x),
-                start_y=to_ki(float(ee_arc.path[0].start_y) - ee_bbox.y),
+                start_y=-to_ki(float(ee_arc.path[0].start_y) - ee_bbox.y),
                 end_x=to_ki(float(ee_arc.path[1].end_x) - ee_bbox.x),
-                end_y=to_ki(float(ee_arc.path[1].end_y) - ee_bbox.y),
+                end_y=-to_ki(float(ee_arc.path[1].end_y) - ee_bbox.y),
             )
 
             center_x, center_y, angle_end = compute_arc(

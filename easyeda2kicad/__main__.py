@@ -258,6 +258,12 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         easyeda_symbol: EeSymbol = importer.get_symbol()
         # print(easyeda_symbol)
 
+        # Process sub-symbols if they exist
+        easyeda_sub_symbols: list[EeSymbol] = []
+        for cad_data_subpart in cad_data.get("subparts", []):
+            importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data_subpart)
+            easyeda_sub_symbols.append(importer.get_symbol())
+
         is_id_already_in_symbol_lib = id_already_in_symbol_lib(
             lib_path=f"{arguments['output']}.{sym_lib_ext}",
             component_name=easyeda_symbol.info.name,
@@ -276,6 +282,55 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             footprint_lib_name=arguments["output"].split("/")[-1].split(".")[0],
         )
 
+        # Export sub-symbols
+        # Main symbol has no valid BBox (0,0,0,0), so sub-symbols should not be shifted
+        # Reset BBox to prevent coordinate shifting during export
+        kicad_sub_symbols_lib = []
+        for symbol in easyeda_sub_symbols:
+            # Reset BBox to 0 so no coordinate shift is applied during export
+            symbol.bbox.x = 0
+            symbol.bbox.y = 0
+
+            exporter = ExporterSymbolKicad(symbol=symbol, kicad_version=kicad_version)
+            kicad_sub_symbols_lib.append(
+                exporter.export(
+                    footprint_lib_name=arguments["output"].split("/")[-1].split(".")[0]
+                )
+            )
+
+        # Integrate sub-units into main symbol BEFORE adding to library
+        if kicad_sub_symbols_lib and kicad_version == KicadVersion.v6:
+            import re
+            from .helpers import sanitize_for_regex
+
+            # Extract sub-unit definitions and rename them
+            sub_units = []
+            for i, sub_component_content in enumerate(kicad_sub_symbols_lib, 1):
+                pattern = rf'( +)\(symbol "{sanitize_for_regex(easyeda_symbol.info.name)}_0_1".*?\n\1\)(?=\n)'
+                match = re.search(pattern, sub_component_content, re.DOTALL)
+                if match:
+                    renamed = match.group(0).replace(
+                        f'"{easyeda_symbol.info.name}_0_1"',
+                        f'"{easyeda_symbol.info.name}_{i}_1"',
+                    )
+                    sub_units.append(renamed)
+
+            # Replace empty _0_1 with sub-units in the main symbol content
+            if sub_units:
+                empty_unit_pattern = rf'( *)\(symbol "{sanitize_for_regex(easyeda_symbol.info.name)}_0_1".*?\n\1\)'
+                replacement_text = "\n".join(sub_units)
+                kicad_symbol_lib = re.sub(
+                    empty_unit_pattern,
+                    replacement_text,
+                    kicad_symbol_lib,
+                    count=1,
+                    flags=re.DOTALL,
+                )
+                logging.info(
+                    f"Integrated {len(sub_units)} sub-symbols into main symbol"
+                )
+
+        # Now add/update the complete symbol (with sub-units) to the library
         if is_id_already_in_symbol_lib:
             update_component_in_symbol_lib_file(
                 lib_path=f"{arguments['output']}.{sym_lib_ext}",
