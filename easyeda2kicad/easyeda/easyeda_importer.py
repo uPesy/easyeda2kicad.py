@@ -367,8 +367,8 @@ class EasyedaSymbolImporter:
                 prefix=ee_data_info["pre"],
                 package=ee_data_info.get("package", ""),
                 manufacturer=ee_data_info.get("BOM_Manufacturer", ""),
-                datasheet=ee_data["lcsc"].get("url", ""),
-                lcsc_id=ee_data["lcsc"].get("number", ""),
+                datasheet=ee_data.get("lcsc", {}).get("url", ""),
+                lcsc_id=ee_data.get("lcsc", {}).get("number", ""),
                 jlc_id=ee_data_info.get("BOM_JLCPCB Part Class", ""),
             ),
             bbox=EeSymbolBbox(

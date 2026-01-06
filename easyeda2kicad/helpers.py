@@ -13,7 +13,7 @@ from .kicad.parameters_kicad_symbol import KicadVersion
 
 sym_lib_regex_pattern = {
     "v5": r"(#\n# {component_name}\n#\n.*?ENDDEF\n)",
-    "v6": r'\n( *)\(symbol "{component_name}".*?\n\1\)(?=\n|$)',
+    "v6": r'\n(\s*)\(symbol "{component_name}".*?\n\1\)(?=\n|$)',
     "v6_99": r"",
 }
 
@@ -184,3 +184,55 @@ def get_middle_arc_pos(
     middle_x = center_x + radius * math.cos((angle_start + angle_end) / 2)
     middle_y = center_y + radius * math.sin((angle_start + angle_end) / 2)
     return middle_x, middle_y
+
+
+def add_sub_components_in_symbol_lib_file(
+    lib_path: str,
+    component_name: str,
+    sub_components_content: list[str],
+    kicad_version: KicadVersion,
+) -> None:
+    """Add sub-components to a symbol library file for multi-unit symbols."""
+    with open(lib_path, encoding="utf-8") as my_lib:
+        my_lib_content = my_lib.read()
+
+    # Extract sub-component unit definitions (keep _0_1 name for now)
+    sub_units_to_add = []
+    for sub_component_content in sub_components_content:
+        # Extract the unit definition (nested symbol with _0_1 suffix)
+        # This matches: (symbol "Name_0_1" ... )
+        pattern = (
+            rf'( +)\(symbol "{sanitize_for_regex(component_name)}_0_1".*?\n\1\)(?=\n)'
+        )
+        match = re.search(pattern, sub_component_content, re.DOTALL)
+        if match:
+            sub_units_to_add.append(match.group(0))
+
+    # Replace the empty main unit (_0_1) with the extracted sub-units
+    if sub_units_to_add:
+        # Find the empty _0_1 unit including its closing parenthesis
+        # Pattern matches: (symbol "Name_0_1"\n      ) or (symbol "Name_0_1")
+        empty_unit_pattern = (
+            rf'( *)\(symbol "{sanitize_for_regex(component_name)}_0_1".*?\n\1\)'
+        )
+
+        # Rename each sub-unit from _0_1 to _{i}_1 and join them
+        renamed_units = []
+        for i, sub_unit in enumerate(sub_units_to_add, 1):
+            renamed = sub_unit.replace(
+                f'"{component_name}_0_1"', f'"{component_name}_{i}_1"'
+            )
+            renamed_units.append(renamed)
+
+        # Replace the empty _0_1 with all renamed sub-units joined with newlines
+        replacement_text = "\n".join(renamed_units)
+        my_lib_content = re.sub(
+            empty_unit_pattern,
+            replacement_text,
+            my_lib_content,
+            count=1,
+            flags=re.DOTALL,
+        )
+
+    with open(lib_path, "w", encoding="utf-8") as my_lib:
+        my_lib.write(my_lib_content)
