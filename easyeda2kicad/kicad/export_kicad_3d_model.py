@@ -28,17 +28,17 @@ def get_materials(obj_data: str) -> dict:
         material_id = None
         for value in match.splitlines():
             if value.startswith("newmtl"):
-                material_id = value.split(" ")[1]
+                material_id = value.split()[1]
             elif value.startswith("Ka"):
-                material["ambient_color"] = value.split(" ")[1:]
+                material["ambient_color"] = value.split()[1:]
             elif value.startswith("Kd"):
-                material["diffuse_color"] = value.split(" ")[1:]
+                material["diffuse_color"] = value.split()[1:]
             elif value.startswith("Ks"):
-                material["specular_color"] = value.split(" ")[1:]
+                material["specular_color"] = value.split()[1:]
             elif value.startswith("d"):
                 # This isn't exactly the same as transparency, is dissolve
                 # I.e. part C115366 (SW-TH_SPEF110100) has d=1, and isn't transparent
-                material["transparency"] = value.split(" ")[1]
+                material["transparency"] = value.split()[1]
 
         if material_id is not None:
             materials[material_id] = material
@@ -50,7 +50,7 @@ def get_vertices(obj_data: str) -> list:
     matchs = re.findall(pattern=vertices_regex, string=obj_data, flags=re.DOTALL)
 
     return [
-        " ".join([str(round(float(coord) / 2.54, 4)) for coord in vertice.split(" ")])
+        " ".join([str(round(float(coord) / 2.54, 4)) for coord in vertice.split()])
         for vertice in matchs
     ]
 
@@ -78,7 +78,7 @@ def generate_wrl_model(model_3d: Ee3dModel) -> Ki3dModel:
         points = []
         for line in lines[1:]:
             if len(line) > 0:
-                face = [int(index) for index in line.replace("//", "").split(" ")[1:]]
+                face = [int(index) for index in line.replace("//", "").split()[1:]]
                 face_index = []
                 for index in face:
                     if index not in link_dict:

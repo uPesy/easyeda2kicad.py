@@ -51,7 +51,7 @@ def parse_svg_path(svg_path: str) -> list:
     for path_command in path_splited:
         if cmd_class_info := svg_path_handlers.get(path_command[0]):
             cmd_class, cmd_nb_arguments = cmd_class_info
-            arguments = path_command[1].strip().split(" ")
+            arguments = path_command[1].strip().split()
             # if multiple (x y) in a command
             # Create instances using dataclass fields
 
