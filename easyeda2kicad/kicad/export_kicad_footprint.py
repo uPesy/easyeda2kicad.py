@@ -297,7 +297,7 @@ class ExporterFootprintKicad:
 
             # For custom polygon
             is_custom_shape = ki_pad.shape == "custom"
-            point_list = [fp_to_ki(point) for point in ee_pad.points.split(" ")]
+            point_list = [fp_to_ki(point) for point in ee_pad.points.split()]
             if is_custom_shape:
                 if len(point_list) <= 0:
                     logging.warning(
@@ -342,7 +342,7 @@ class ExporterFootprintKicad:
             )
 
             # Generate line
-            point_list = [fp_to_ki(point) for point in ee_track.points.split(" ")]
+            point_list = [fp_to_ki(point) for point in ee_track.points.split()]
             for i in range(0, len(point_list) - 2, 2):
                 ki_track.points_start_x.append(
                     round(point_list[i] - self.input.bbox.x, 2)
