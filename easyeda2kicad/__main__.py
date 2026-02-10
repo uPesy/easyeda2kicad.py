@@ -111,6 +111,17 @@ def get_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--format",
+        required=False,
+        choices=["kicad", "eagle"],
+        default="kicad",
+        help=(
+            "Output format: 'kicad' (default) for separate .kicad_sym / .kicad_mod"
+            " files, or 'eagle' for a single .lbr library file"
+        ),
+    )
+
+    parser.add_argument(
         "--debug",
         help="set the logging level to debug",
         required=False,
@@ -147,6 +158,25 @@ def valid_arguments(arguments: dict[str, Any]) -> bool:
 
     if arguments["full"]:
         arguments["symbol"], arguments["footprint"], arguments["3d"] = True, True, True
+
+    # ── Eagle format: always export symbol + footprint, skip 3D ──
+    if arguments.get("format") == "eagle":
+        arguments["symbol"] = True
+        arguments["footprint"] = True
+        arguments["3d"] = False
+        arguments["svg"] = False
+
+        if arguments["output"]:
+            eagle_dir = Path(arguments["output"])
+            if not eagle_dir.is_dir():
+                logging.error(f"Can't find the folder : {eagle_dir}")
+                return False
+        else:
+            eagle_dir = Path.home() / "Documents" / "Eagle" / "libraries" / "easyeda2kicad"
+            eagle_dir.mkdir(parents=True, exist_ok=True)
+
+        arguments["output"] = str(eagle_dir)
+        return True
 
     if not any(
         [arguments["symbol"], arguments["footprint"], arguments["3d"], arguments["svg"]]
@@ -212,6 +242,40 @@ def _process_component(
         return False
 
     output = arguments["output"]
+
+    # ---------------- Eagle Format ----------------
+    if arguments.get("format") == "eagle":
+        from .eagle.export_eagle_library import ExporterEagleLibrary
+
+        easyeda_symbol = EasyedaSymbolImporter(
+            easyeda_cp_cad_data=cad_data
+        ).get_symbol()
+        easyeda_footprint = EasyedaFootprintImporter(
+            easyeda_cp_cad_data=cad_data
+        ).get_footprint()
+
+        exporter = ExporterEagleLibrary(
+            symbol=easyeda_symbol,
+            footprint=easyeda_footprint,
+        )
+
+        lbr_path = (Path(output) / f"{component_id}.lbr").as_posix()
+
+        if Path(lbr_path).is_file() and not arguments["overwrite"]:
+            logging.warning(
+                f"Eagle library already exists: {lbr_path}\n"
+                "       Use --overwrite to replace it"
+            )
+            return False
+
+        exporter.export(lbr_path=lbr_path)
+
+        logging.info(
+            f"Created Eagle library for ID : {component_id}\n"
+            f"       Component name : {easyeda_symbol.info.name}\n"
+            f"       Library path : {lbr_path}"
+        )
+        return True
 
     if arguments["symbol"]:
         # ---------------- SYMBOL ----------------
