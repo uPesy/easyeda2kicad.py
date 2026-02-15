@@ -5,6 +5,7 @@ Convert 3D model from .obj format to .wrl with colors
 from __future__ import annotations
 
 # Global imports
+import logging
 import re
 import textwrap
 from typing import Optional
@@ -45,17 +46,47 @@ def get_materials(obj_data: str) -> dict:
     return materials
 
 
-def get_vertices(obj_data: str) -> list:
+def get_vertices(
+    obj_data: str,
+    offset_x: float = 0.0,
+    offset_y: float = 0.0,
+    offset_z: float = 0.0,
+) -> list:
     vertices_regex = "v (.*?)\n"
     matchs = re.findall(pattern=vertices_regex, string=obj_data, flags=re.DOTALL)
 
     return [
-        " ".join([str(round(float(coord) / 2.54, 4)) for coord in vertice.split()])
+        " ".join([
+            str(round((float(coords[0]) + offset_x) / 2.54, 4)),
+            str(round((float(coords[1]) + offset_y) / 2.54, 4)),
+            str(round((float(coords[2]) + offset_z) / 2.54, 4)),
+        ])
         for vertice in matchs
+        for coords in [vertice.split()]
     ]
 
 
-def generate_wrl_model(model_3d: Ee3dModel) -> Ki3dModel:
+def _get_obj_bbox(raw_obj: str) -> tuple:
+    """Returns ((x_min, x_max), (y_min, y_max), (z_min, z_max)) from OBJ vertices."""
+    x_vals, y_vals, z_vals = [], [], []
+    for match in re.finditer(
+        r"^v\s+([\d.e+-]+)\s+([\d.e+-]+)\s+([\d.e+-]+)", raw_obj, re.MULTILINE
+    ):
+        x_vals.append(float(match.group(1)))
+        y_vals.append(float(match.group(2)))
+        z_vals.append(float(match.group(3)))
+
+    if not x_vals:
+        return (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)
+
+    return (
+        (min(x_vals), max(x_vals)),
+        (min(y_vals), max(y_vals)),
+        (min(z_vals), max(z_vals)),
+    )
+
+
+def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
     if not model_3d.raw_obj:
         return Ki3dModel(
             translation=Ki3dModelBase(),
@@ -65,7 +96,25 @@ def generate_wrl_model(model_3d: Ee3dModel) -> Ki3dModel:
         )
 
     materials = get_materials(obj_data=model_3d.raw_obj)
-    vertices = get_vertices(obj_data=model_3d.raw_obj)
+
+    # For SMD parts: center XY on (0,0) and shift Z so bottom sits at z=0
+    offset_x, offset_y, offset_z = 0.0, 0.0, 0.0
+    if fp_type == "smd":
+        (x_min, x_max), (y_min, y_max), (z_min, _z_max) = _get_obj_bbox(model_3d.raw_obj)
+        offset_x = -(x_min + x_max) / 2.0
+        offset_y = -(y_min + y_max) / 2.0
+        offset_z = -z_min
+        logging.debug(
+            f"3D SMD centering offset: "
+            f"X={offset_x:.2f} Y={offset_y:.2f} Z={offset_z:.2f}"
+        )
+
+    vertices = get_vertices(
+        obj_data=model_3d.raw_obj,
+        offset_x=offset_x,
+        offset_y=offset_y,
+        offset_z=offset_z,
+    )
 
     raw_wrl = VRML_HEADER
     shapes = model_3d.raw_obj.split("usemtl")[1:]
@@ -129,11 +178,36 @@ def generate_wrl_model(model_3d: Ee3dModel) -> Ki3dModel:
     )
 
 
+def _log_obj_bbox(raw_obj: str) -> None:
+    """Log the OBJ vertex bounding box at DEBUG level."""
+    x_vals, y_vals, z_vals = [], [], []
+    for match in re.finditer(
+        r"^v\s+([\d.e+-]+)\s+([\d.e+-]+)\s+([\d.e+-]+)", raw_obj, re.MULTILINE
+    ):
+        x_vals.append(float(match.group(1)))
+        y_vals.append(float(match.group(2)))
+        z_vals.append(float(match.group(3)))
+
+    if not x_vals:
+        logging.debug("3D OBJ: no vertices found")
+        return
+
+    logging.debug(
+        "3D OBJ bbox: "
+        f"X [{min(x_vals):.2f} .. {max(x_vals):.2f}] "
+        f"Y [{min(y_vals):.2f} .. {max(y_vals):.2f}] "
+        f"Z [{min(z_vals):.2f} .. {max(z_vals):.2f}]"
+    )
+
+
 class Exporter3dModelKicad:
-    def __init__(self, model_3d: Optional[Ee3dModel]):
+    def __init__(self, model_3d: Optional[Ee3dModel], fp_type: str = ""):
         self.input = model_3d
+        self.fp_type = fp_type
+        if model_3d and model_3d.raw_obj:
+            _log_obj_bbox(model_3d.raw_obj)
         self.output = (
-            generate_wrl_model(model_3d=model_3d)
+            generate_wrl_model(model_3d=model_3d, fp_type=fp_type)
             if model_3d and model_3d.raw_obj
             else None
         )

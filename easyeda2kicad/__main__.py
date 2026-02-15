@@ -389,10 +389,18 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
 
     # ---------------- 3D MODEL ----------------
     if arguments["3d"]:
+        # Determine fp_type for 3D model centering (SMD vs THT)
+        _is_smd = (
+            bool(cad_data.get("SMT"))
+            and "-TH_" not in cad_data.get("packageDetail", {}).get("title", "")
+        )
+        _fp_type = "smd" if _is_smd else "tht"
+
         exporter = Exporter3dModelKicad(
             model_3d=Easyeda3dModelImporter(
                 easyeda_cp_cad_data=cad_data, download_raw_3d_model=True
-            ).output
+            ).output,
+            fp_type=_fp_type,
         )
         exporter.export(lib_path=arguments["output"])
         if exporter.output:

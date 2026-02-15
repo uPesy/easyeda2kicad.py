@@ -235,24 +235,15 @@ class ExporterFootprintKicad:
         if self.input.model_3d is not None:
             self.input.model_3d.convert_to_mm()
 
-            # if self.input.model_3d.translation.z != 0:
-            #     self.input.model_3d.translation.z -= 1
+            # SMD: offset is baked into WRL vertices, so KiCad translation = (0,0,0)
+            # THT: use API z-offset so pins extend below the board
+            is_smd = self.input.info.fp_type == "smd"
             ki_3d_model_info = Ki3dModel(
                 name=self.input.model_3d.name,
                 translation=Ki3dModelBase(
-                    # Original calculation (disabled - 3D models are already correctly positioned)
-                    # x=round((self.input.model_3d.translation.x - self.input.bbox.x), 2),
-                    # y=-round(
-                    #     (self.input.model_3d.translation.y - self.input.bbox.y), 2
-                    # ),
-                    # z=(
-                    #     -round(self.input.model_3d.translation.z, 2)
-                    #     if self.input.info.fp_type == "smd"
-                    #     else 0
-                    # ),
                     x=0.0,
                     y=0.0,
-                    z=0.0,
+                    z=0.0 if is_smd else -round(self.input.model_3d.translation.z, 2),
                 ),
                 rotation=Ki3dModelBase(
                     x=(360 - self.input.model_3d.rotation.x) % 360,
