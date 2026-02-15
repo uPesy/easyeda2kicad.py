@@ -283,14 +283,8 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         )
 
         # Export sub-symbols
-        # Main symbol has no valid BBox (0,0,0,0), so sub-symbols should not be shifted
-        # Reset BBox to prevent coordinate shifting during export
         kicad_sub_symbols_lib = []
         for symbol in easyeda_sub_symbols:
-            # Reset BBox to 0 so no coordinate shift is applied during export
-            symbol.bbox.x = 0
-            symbol.bbox.y = 0
-
             exporter = ExporterSymbolKicad(symbol=symbol, kicad_version=kicad_version)
             kicad_sub_symbols_lib.append(
                 exporter.export(

@@ -350,16 +350,25 @@ class EasyedaSymbolImporter:
         return self.output
 
     def extract_easyeda_data(self, ee_data: dict, ee_data_info: dict) -> EeSymbol:
-        # Try to get BBox from dataStr.BBox first (correct geometry bounds)
-        # Fall back to head.x/y for backward compatibility
+        # Determine the symbol origin (used to center coordinates in KiCad).
+        # Prefer the BBox center (geometry bounds) when available, otherwise
+        # fall back to head.x/y (EasyEDA canvas origin).
         bbox_data = ee_data["dataStr"].get("BBox", {})
         head_data = ee_data["dataStr"]["head"]
 
-        # Use BBox.x/y if available, otherwise fall back to head.x/y
-        bbox_x = _safe_float(bbox_data.get("x", head_data.get("x")))
-        bbox_y = _safe_float(bbox_data.get("y", head_data.get("y")))
-        bbox_width = _safe_float(bbox_data.get("width", 0.0))
-        bbox_height = _safe_float(bbox_data.get("height", 0.0))
+        bbox_x = _safe_float(bbox_data.get("x"))
+        bbox_y = _safe_float(bbox_data.get("y"))
+        bbox_width = _safe_float(bbox_data.get("width"))
+        bbox_height = _safe_float(bbox_data.get("height"))
+
+        if bbox_width > 0 or bbox_height > 0:
+            # BBox available — use its center as the origin offset
+            origin_x = bbox_x + bbox_width / 2.0
+            origin_y = bbox_y + bbox_height / 2.0
+        else:
+            # No valid BBox — fall back to head position (canvas origin)
+            origin_x = _safe_float(head_data.get("x"))
+            origin_y = _safe_float(head_data.get("y"))
 
         new_ee_symbol = EeSymbol(
             info=EeSymbolInfo(
@@ -372,8 +381,8 @@ class EasyedaSymbolImporter:
                 jlc_id=ee_data_info.get("BOM_JLCPCB Part Class", ""),
             ),
             bbox=EeSymbolBbox(
-                x=bbox_x,
-                y=bbox_y,
+                x=origin_x,
+                y=origin_y,
                 width=bbox_width,
                 height=bbox_height,
             ),
