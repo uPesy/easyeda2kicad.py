@@ -61,6 +61,19 @@ def _safe_int(value, default=0):
         return default
 
 
+def _sanitize_component_name(name: str) -> str:
+    """Clean up component name from EasyEDA API.
+
+    Removes packaging suffixes that start with '(' or '[' (e.g. '(T', '(TR)',
+    '[Cut tape]') and strips whitespace.  Returns the base component name.
+    """
+    for ch in ("(", "["):
+        idx = name.find(ch)
+        if idx >= 0:
+            name = name[:idx]
+    return name.strip()
+
+
 def _safe_bool(value, default=False):
     """Convert value to bool, return default if conversion fails."""
     if value is None or value == "":
@@ -372,7 +385,7 @@ class EasyedaSymbolImporter:
 
         new_ee_symbol = EeSymbol(
             info=EeSymbolInfo(
-                name=ee_data_info["name"],
+                name=_sanitize_component_name(ee_data_info["name"]),
                 prefix=ee_data_info["pre"],
                 package=ee_data_info.get("package", ""),
                 manufacturer=ee_data_info.get("BOM_Manufacturer", ""),
