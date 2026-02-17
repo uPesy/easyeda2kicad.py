@@ -94,7 +94,7 @@ Before configuring KiCad, run the script at least once to create lib files. For 
 ```bash
 easyeda2kicad --symbol --footprint --lcsc_id=C2040
 ```
-
+**NB! Please do not re-edit the library symbols to suit any datashheet symbol  after using this scriptt as it will corrupt , and you will not be able to view proceeding additions**
 - In KiCad, Go to Preferences > Configure Paths, and add the environment variables `EASYEDA2KICAD` :
   - Windows : `C:/Users/your_username/Documents/Kicad/easyeda2kicad/`,
   - Linux : `/home/your_username/Documents/Kicad/easyeda2kicad/`
