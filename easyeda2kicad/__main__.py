@@ -19,6 +19,7 @@ from .easyeda.parameters_easyeda import EeSymbol
 from .helpers import (
     add_component_in_symbol_lib_file,
     id_already_in_symbol_lib,
+    sanitize_for_regex,
     set_logger,
     update_component_in_symbol_lib_file,
 )
@@ -36,7 +37,9 @@ def get_parser() -> argparse.ArgumentParser:
         )
     )
 
-    parser.add_argument("--lcsc_id", help="LCSC id", required=True, type=str)
+    parser.add_argument(
+        "--lcsc_id", help="LCSC id(s)", required=True, type=str, nargs="+"
+    )
 
     parser.add_argument(
         "--symbol", help="Get symbol of this id", required=False, action="store_true"
@@ -107,9 +110,10 @@ def get_parser() -> argparse.ArgumentParser:
 
 
 def valid_arguments(arguments: dict) -> bool:
-    if not arguments["lcsc_id"].startswith("C"):
-        logging.error("lcsc_id should start by C....")
-        return False
+    for lcsc_id in arguments["lcsc_id"]:
+        if not lcsc_id.startswith("C"):
+            logging.error(f"lcsc_id '{lcsc_id}' should start with C")
+            return False
 
     if arguments["full"]:
         arguments["symbol"], arguments["footprint"], arguments["3d"] = True, True, True
@@ -136,14 +140,16 @@ def valid_arguments(arguments: dict) -> bool:
         return False
 
     if arguments["output"]:
-        base_folder = "/".join(arguments["output"].replace("\\", "/").split("/")[:-1])
+        output_normalized = arguments["output"].replace("\\", "/").rstrip("/")
+        base_folder = "/".join(output_normalized.split("/")[:-1])
         lib_name = (
-            arguments["output"]
-            .replace("\\", "/")
-            .split("/")[-1]
-            .split(".lib")[0]
-            .split(".kicad_sym")[0]
+            output_normalized.split("/")[-1].split(".lib")[0].split(".kicad_sym")[0]
         )
+
+        # If the user passed a directory (no filename), use default lib name
+        if os.path.isdir(output_normalized) or not lib_name:
+            base_folder = output_normalized
+            lib_name = "EasyEDA"
 
         if not os.path.isdir(base_folder):
             logging.error(f"Can't find the folder : {base_folder}")
@@ -218,39 +224,19 @@ def fp_already_in_footprint_lib(lib_path: str, package_name: str) -> bool:
     return False
 
 
-def main(argv: List[str] = sys.argv[1:]) -> int:
-    print(f"-- easyeda2kicad.py v{__version__} --")
-
-    # cli interface
-    parser = get_parser()
-    try:
-        args = parser.parse_args(argv)
-    except SystemExit as err:
-        return err.code if isinstance(err.code, int) else 1
-    arguments = vars(args)
-
-    if arguments["debug"]:
-        set_logger(log_file=None, log_level=logging.DEBUG)
-    else:
-        set_logger(log_file=None, log_level=logging.INFO)
-
-    if not valid_arguments(arguments=arguments):
-        return 1
-
-    # conf = get_local_config()
-
-    component_id = arguments["lcsc_id"]
-    kicad_version = arguments["kicad_version"]
+def _process_component(
+    component_id: str, arguments: dict, kicad_version: KicadVersion, api: EasyedaApi
+) -> bool:
+    """Process a single LCSC component. Returns True on success, False on error."""
     sym_lib_ext = "kicad_sym" if kicad_version == KicadVersion.v6 else "lib"
 
     # Get CAD data of the component using easyeda API
-    api = EasyedaApi()
     cad_data = api.get_cad_data_of_component(lcsc_id=component_id)
 
     # API returned no data
     if not cad_data:
         logging.error(f"Failed to fetch data from EasyEDA API for part {component_id}")
-        return 1
+        return False
 
     # ---------------- SYMBOL ----------------
     if arguments["symbol"]:
@@ -271,8 +257,10 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         )
 
         if not arguments["overwrite"] and is_id_already_in_symbol_lib:
-            logging.error("Use --overwrite to update the older symbol lib")
-            return 1
+            logging.error(
+                f"Symbol for {component_id} already exists. Use --overwrite to update"
+            )
+            return False
 
         exporter = ExporterSymbolKicad(
             symbol=easyeda_symbol, kicad_version=kicad_version
@@ -294,9 +282,6 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
 
         # Integrate sub-units into main symbol BEFORE adding to library
         if kicad_sub_symbols_lib and kicad_version == KicadVersion.v6:
-            import re
-            from .helpers import sanitize_for_regex
-
             # Extract sub-unit definitions and rename them
             sub_units = []
             for i, sub_component_content in enumerate(kicad_sub_symbols_lib, 1):
@@ -355,8 +340,11 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
             package_name=easyeda_footprint.info.name,
         )
         if not arguments["overwrite"] and is_id_already_in_footprint_lib:
-            logging.error("Use --overwrite to replace the older footprint lib")
-            return 1
+            logging.error(
+                f"Footprint for {component_id} already exists."
+                " Use --overwrite to replace"
+            )
+            return False
 
         ki_footprint = ExporterFootprintKicad(footprint=easyeda_footprint)
         footprint_filename = f"{easyeda_footprint.info.name}.kicad_mod"
@@ -384,10 +372,9 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
     # ---------------- 3D MODEL ----------------
     if arguments["3d"]:
         # Determine fp_type for 3D model centering (SMD vs THT)
-        _is_smd = (
-            bool(cad_data.get("SMT"))
-            and "-TH_" not in cad_data.get("packageDetail", {}).get("title", "")
-        )
+        _is_smd = bool(cad_data.get("SMT")) and "-TH_" not in cad_data.get(
+            "packageDetail", {}
+        ).get("title", "")
         _fp_type = "smd" if _is_smd else "tht"
 
         exporter = Exporter3dModelKicad(
@@ -419,9 +406,37 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
                 )
             )
 
-        # logging.info(f"3D model: {os.path.join(lib_path, filename)}")
+    return True
 
-    return 0
+
+def main(argv: List[str] = sys.argv[1:]) -> int:
+    print(f"-- easyeda2kicad.py v{__version__} --")
+
+    # cli interface
+    parser = get_parser()
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit as err:
+        return err.code if isinstance(err.code, int) else 1
+    arguments = vars(args)
+
+    if arguments["debug"]:
+        set_logger(log_file=None, log_level=logging.DEBUG)
+    else:
+        set_logger(log_file=None, log_level=logging.INFO)
+
+    if not valid_arguments(arguments=arguments):
+        return 1
+
+    kicad_version = arguments["kicad_version"]
+    api = EasyedaApi()
+    had_errors = False
+
+    for component_id in arguments["lcsc_id"]:
+        if not _process_component(component_id, arguments, kicad_version, api):
+            had_errors = True
+
+    return 1 if had_errors else 0
 
 
 if __name__ == "__main__":

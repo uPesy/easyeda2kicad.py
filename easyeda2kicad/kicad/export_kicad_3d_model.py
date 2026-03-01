@@ -52,32 +52,37 @@ def get_vertices(
     offset_y: float = 0.0,
     offset_z: float = 0.0,
 ) -> list:
-    vertices_regex = "v (.*?)\n"
-    matchs = re.findall(pattern=vertices_regex, string=obj_data, flags=re.DOTALL)
+    result = []
+    for line in obj_data.splitlines():
+        parts = line.split()
+        if len(parts) < 4 or parts[0] != "v":
+            continue
+        x, y, z = float(parts[1]), float(parts[2]), float(parts[3])
+        result.append(
+            " ".join(
+                [
+                    str(round((x + offset_x) / 2.54, 4)),
+                    str(round((y + offset_y) / 2.54, 4)),
+                    str(round((z + offset_z) / 2.54, 4)),
+                ]
+            )
+        )
+    return result
 
-    return [
-        " ".join([
-            str(round((float(coords[0]) + offset_x) / 2.54, 4)),
-            str(round((float(coords[1]) + offset_y) / 2.54, 4)),
-            str(round((float(coords[2]) + offset_z) / 2.54, 4)),
-        ])
-        for vertice in matchs
-        for coords in [vertice.split()]
-    ]
 
-
-def _get_obj_bbox(raw_obj: str) -> tuple:
-    """Returns ((x_min, x_max), (y_min, y_max), (z_min, z_max)) from OBJ vertices."""
+def _get_obj_bbox(raw_obj: str) -> Optional[tuple]:
+    """Returns ((x_min, x_max), (y_min, y_max), (z_min, z_max)) or None if no vertices."""
     x_vals, y_vals, z_vals = [], [], []
-    for match in re.finditer(
-        r"^v\s+([\d.e+-]+)\s+([\d.e+-]+)\s+([\d.e+-]+)", raw_obj, re.MULTILINE
-    ):
-        x_vals.append(float(match.group(1)))
-        y_vals.append(float(match.group(2)))
-        z_vals.append(float(match.group(3)))
+    for line in raw_obj.splitlines():
+        parts = line.split()
+        if len(parts) < 4 or parts[0] != "v":
+            continue
+        x_vals.append(float(parts[1]))
+        y_vals.append(float(parts[2]))
+        z_vals.append(float(parts[3]))
 
     if not x_vals:
-        return (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)
+        return None
 
     return (
         (min(x_vals), max(x_vals)),
@@ -100,10 +105,12 @@ def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
     # For SMD parts: center XY on (0,0) and shift Z so bottom sits at z=0
     offset_x, offset_y, offset_z = 0.0, 0.0, 0.0
     if fp_type == "smd":
-        (x_min, x_max), (y_min, y_max), (z_min, _z_max) = _get_obj_bbox(model_3d.raw_obj)
-        offset_x = -(x_min + x_max) / 2.0
-        offset_y = -(y_min + y_max) / 2.0
-        offset_z = -z_min
+        bbox = _get_obj_bbox(model_3d.raw_obj)
+        if bbox:
+            (x_min, x_max), (y_min, y_max), (z_min, _) = bbox
+            offset_x = -(x_min + x_max) / 2.0
+            offset_y = -(y_min + y_max) / 2.0
+            offset_z = -z_min
         logging.debug(
             f"3D SMD centering offset: "
             f"X={offset_x:.2f} Y={offset_y:.2f} Z={offset_z:.2f}"
@@ -126,8 +133,8 @@ def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
         coord_index = []
         points = []
         for line in lines[1:]:
-            if len(line) > 0:
-                face = [int(index) for index in line.replace("//", "").split()[1:]]
+            if line.strip() and line.split()[0] == "f":
+                face = [int(tok.split("/")[0]) for tok in line.split()[1:]]
                 face_index = []
                 for index in face:
                     if index not in link_dict:
@@ -180,23 +187,17 @@ def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
 
 def _log_obj_bbox(raw_obj: str) -> None:
     """Log the OBJ vertex bounding box at DEBUG level."""
-    x_vals, y_vals, z_vals = [], [], []
-    for match in re.finditer(
-        r"^v\s+([\d.e+-]+)\s+([\d.e+-]+)\s+([\d.e+-]+)", raw_obj, re.MULTILINE
-    ):
-        x_vals.append(float(match.group(1)))
-        y_vals.append(float(match.group(2)))
-        z_vals.append(float(match.group(3)))
-
-    if not x_vals:
+    bbox = _get_obj_bbox(raw_obj)
+    if not bbox:
         logging.debug("3D OBJ: no vertices found")
         return
 
+    (x_min, x_max), (y_min, y_max), (z_min, z_max) = bbox
     logging.debug(
         "3D OBJ bbox: "
-        f"X [{min(x_vals):.2f} .. {max(x_vals):.2f}] "
-        f"Y [{min(y_vals):.2f} .. {max(y_vals):.2f}] "
-        f"Z [{min(z_vals):.2f} .. {max(z_vals):.2f}]"
+        f"X [{x_min:.6g} .. {x_max:.6g}] "
+        f"Y [{y_min:.6g} .. {y_max:.6g}] "
+        f"Z [{z_min:.6g} .. {z_max:.6g}]"
     )
 
 
