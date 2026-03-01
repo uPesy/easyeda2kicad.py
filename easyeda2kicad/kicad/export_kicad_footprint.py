@@ -519,7 +519,12 @@ class ExporterFootprintKicad:
     def get_ki_footprint(self) -> KiFootprint:
         return self.output
 
-    def export(self, footprint_full_path: str, model_3d_path: str, model_3d_extension: str = "wrl") -> None:
+    def export(
+        self,
+        footprint_full_path: str,
+        model_3d_path: str,
+        model_3d_extension: str = "wrl",
+    ) -> None:
         ki = self.output
         ki_lib = ""
 
