@@ -40,7 +40,9 @@ svg_path_handlers = {
 }
 
 
-def parse_svg_path(svg_path: str) -> list:
+def parse_svg_path(
+    svg_path: str,
+) -> list[SvgPathMoveTo | SvgPathEllipticalArc | SvgPathLineTo | SvgPathClosePath]:
     if not svg_path.endswith(" "):
         svg_path += " "
     svg_path = svg_path.replace(",", " ")

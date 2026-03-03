@@ -1,6 +1,6 @@
 # Global imports
 import logging
-from typing import Callable, List, Sequence, Tuple, Union
+from typing import Callable, Sequence
 
 # Local imports
 from ..easyeda.parameters_easyeda import (
@@ -41,29 +41,26 @@ ee_pin_type_to_ki_pin_type = {
 }
 
 
-def px_to_mil(dim: Union[int, float, str]) -> int:
+def px_to_mil(dim: int | float | str) -> int:
     return int(10 * float(dim))
 
 
-def px_to_mm(dim: Union[int, float, str]) -> float:
+def px_to_mm(dim: int | float | str) -> float:
     return 10.0 * float(dim) * 0.0254
 
 
-def px_to_mm_grid(dim: Union[int, float, str], grid: float = 1.27) -> float:
+def px_to_mm_grid(dim: int | float | str, grid: float = 1.27) -> float:
     """Convert EasyEDA pixels to KiCad mm and snap to grid (default 50mil = 1.27mm)."""
     mm_value = 10.0 * float(dim) * 0.0254
     return round(mm_value / grid) * grid
 
 
 def convert_ee_pins(
-    ee_pins: List[EeSymbolPin], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
-) -> List[KiSymbolPin]:
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
-    # pin_spacing = (
-    #     KiExportConfigV5.PIN_SPACING.value
-    #     if kicad_version == KicadVersion.v5
-    #     else KiExportConfigV6.PIN_SPACING.value
-    # )
+    ee_pins: list[EeSymbolPin], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
+) -> list[KiSymbolPin]:
+    to_ki: Callable[[int | float | str], float] = (
+        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    )
 
     kicad_pins = []
     for ee_pin in ee_pins:
@@ -87,27 +84,19 @@ def convert_ee_pins(
         elif ee_pin.clock.is_displayed:
             ki_pin.style = KiPinStyle.clock
 
-        # Deal with different pin length
-        # if ee_pin.settings.rotation == 0:
-        #     ki_pin.pos_x -= to_ki(pin_length) - pin_spacing
-        # elif ee_pin.settings.rotation == 180:
-        #     ki_pin.pos_x += to_ki(pin_length) - pin_spacing
-        # elif ee_pin.settings.rotation == 90:
-        #     ki_pin.pos_y -= to_ki(pin_length) - pin_spacing
-        # elif ee_pin.settings.rotation == 270:
-        #     ki_pin.pos_y += to_ki(pin_length) - pin_spacing
-
         kicad_pins.append(ki_pin)
 
     return kicad_pins
 
 
 def convert_ee_rectangles(
-    ee_rectangles: List[EeSymbolRectangle],
+    ee_rectangles: list[EeSymbolRectangle],
     ee_bbox: EeSymbolBbox,
     kicad_version: KicadVersion,
-) -> List[KiSymbolRectangle]:
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+) -> list[KiSymbolRectangle]:
+    to_ki: Callable[[int | float | str], float] = (
+        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    )
 
     kicad_rectangles = []
     for ee_rectangle in ee_rectangles:
@@ -124,11 +113,13 @@ def convert_ee_rectangles(
 
 
 def convert_ee_circles(
-    ee_circles: List[EeSymbolCircle], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
-):
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    ee_circles: list[EeSymbolCircle], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
+) -> list[KiSymbolCircle]:
+    to_ki: Callable[[int | float | str], float] = (
+        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    )
     # For dimensions like radius, use px_to_mm without grid snapping
-    to_ki_dimension: Callable = (
+    to_ki_dimension: Callable[[int | float | str], float] = (
         px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
     )
 
@@ -144,13 +135,15 @@ def convert_ee_circles(
 
 
 def convert_ee_ellipses(
-    ee_ellipses: List[EeSymbolEllipse],
+    ee_ellipses: list[EeSymbolEllipse],
     ee_bbox: EeSymbolBbox,
     kicad_version: KicadVersion,
-) -> List[KiSymbolCircle]:
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+) -> list[KiSymbolCircle]:
+    to_ki: Callable[[int | float | str], float] = (
+        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    )
     # For dimensions like radius, use px_to_mm without grid snapping
-    to_ki_dimension: Callable = (
+    to_ki_dimension: Callable[[int | float | str], float] = (
         px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
     )
 
@@ -167,21 +160,25 @@ def convert_ee_ellipses(
 
 
 def convert_ee_arcs(
-    ee_arcs: List[EeSymbolArc], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
-) -> List[KiSymbolArc]:
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    ee_arcs: list[EeSymbolArc], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
+) -> list[KiSymbolArc]:
+    to_ki: Callable[[int | float | str], float] = (
+        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    )
     # For dimensions like radius, use px_to_mm without grid snapping
-    to_ki_dimension: Callable = (
+    to_ki_dimension: Callable[[int | float | str], float] = (
         px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
     )
 
     kicad_arcs = []
     for ee_arc in ee_arcs:
-        if not (
-            isinstance(ee_arc.path[0], SvgPathMoveTo)
-            or isinstance(ee_arc.path[1], SvgPathEllipticalArc)
+        if (
+            len(ee_arc.path) < 2
+            or not isinstance(ee_arc.path[0], SvgPathMoveTo)
+            or not isinstance(ee_arc.path[1], SvgPathEllipticalArc)
         ):
-            logging.error("Can't convert this arc")
+            logging.error("Can't convert this arc: unexpected SVG path structure")
+            continue
         else:
             ki_arc = KiSymbolArc(
                 radius=to_ki_dimension(
@@ -232,11 +229,13 @@ def convert_ee_arcs(
 
 
 def convert_ee_polylines(
-    ee_polylines: Sequence[Union[EeSymbolPolyline, EeSymbolPolygon]],
+    ee_polylines: Sequence[EeSymbolPolyline | EeSymbolPolygon],
     ee_bbox: EeSymbolBbox,
     kicad_version: KicadVersion,
-) -> List[KiSymbolPolygon]:
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+) -> list[KiSymbolPolygon]:
+    to_ki: Callable[[int | float | str], float] = (
+        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    )
     kicad_polygons = []
     for ee_polyline in ee_polylines:
         raw_pts = ee_polyline.points.split()
@@ -271,21 +270,33 @@ def convert_ee_polylines(
 
 
 def convert_ee_polygons(
-    ee_polygons: List[EeSymbolPolygon],
+    ee_polygons: list[EeSymbolPolygon],
     ee_bbox: EeSymbolBbox,
     kicad_version: KicadVersion,
-) -> List[KiSymbolPolygon]:
+) -> list[KiSymbolPolygon]:
     return convert_ee_polylines(
         ee_polylines=ee_polygons, ee_bbox=ee_bbox, kicad_version=kicad_version
     )
 
 
 def convert_ee_paths(
-    ee_paths: List[EeSymbolPath], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
-) -> Tuple[List[KiSymbolPolygon], List[KiSymbolPolygon]]:
-    kicad_polygons: List[KiSymbolPolygon] = []
-    kicad_beziers: List[KiSymbolPolygon] = []
-    to_ki: Callable = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    ee_paths: list[EeSymbolPath], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
+) -> list[KiSymbolPolygon]:
+    # TODO: PT path support is simplified — curves are silently dropped.
+    # EasyEDA's PT command supports M, L, C (cubic bezier), Q (quadratic bezier),
+    # A (arc), and Z. Currently only M/L/Z are converted to straight-line polygon
+    # segments; C/Q/A tokens are skipped along with their coordinate values.
+    # This produces correct output for paths made of straight lines, but symbols
+    # with curves will appear as polygons with missing segments.
+    # Note: the EasyEDA PT format documentation (CMD_SYMBOL.md) is not fully
+    # verified — implement curve support only once test cases are confirmed.
+    kicad_polygons: list[KiSymbolPolygon] = []
+    to_ki: Callable[[int | float | str], float] = (
+        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
+    )
+
+    # Token counts consumed by each SVG path command (excluding the command letter itself)
+    _curve_tokens = {"C": 6, "Q": 4, "A": 7}
 
     for ee_path in ee_paths:
         raw_pts = ee_path.paths.split()
@@ -293,24 +304,29 @@ def convert_ee_paths(
         x_points = []
         y_points = []
 
-        # Small svg path parser : doc -> https://www.w3.org/TR/SVG11/paths.html#PathElement
+        # Minimal SVG path parser: https://www.w3.org/TR/SVG11/paths.html#PathElement
+        idx = 0
+        while idx < len(raw_pts):
+            token = raw_pts[idx]
+            if token in ("M", "L"):
+                x_points.append(to_ki(int(float(raw_pts[idx + 1])) - int(ee_bbox.x)))
+                y_points.append(-to_ki(int(float(raw_pts[idx + 2])) - int(ee_bbox.y)))
+                idx += 3
+            elif token == "Z":
+                if x_points:
+                    x_points.append(x_points[0])
+                    y_points.append(y_points[0])
+                idx += 1
+            elif token in _curve_tokens:
+                logging.debug(
+                    f"PT path: '{token}' curve command not supported, "
+                    f"skipping {_curve_tokens[token]} coordinate tokens"
+                )
+                idx += 1 + _curve_tokens[token]
+            else:
+                idx += 1  # unknown token or stray coordinate
 
-        for i in range(len(raw_pts)):
-            if raw_pts[i] in ["M", "L"]:
-                x_points.append(to_ki(int(float(raw_pts[i + 1])) - int(ee_bbox.x)))
-                y_points.append(-to_ki(int(float(raw_pts[i + 2])) - int(ee_bbox.y)))
-                i += 2
-            elif raw_pts[i] == "Z":
-                x_points.append(x_points[0])
-                y_points.append(y_points[0])
-            elif raw_pts[i] == "C":
-                ...
-                # TODO : Add bezier support
-
-        # if ee_path.fill_color:
-        #     x_points.append(x_points[0])
-        #     y_points.append(y_points[0])
-        if len(x_points) > 0 and len(y_points) > 0:
+        if x_points:
             ki_polygon = KiSymbolPolygon(
                 points=[
                     [x_points[i], y_points[i]]
@@ -319,12 +335,11 @@ def convert_ee_paths(
                 points_number=min(len(x_points), len(y_points)),
                 is_closed=x_points[0] == x_points[-1] and y_points[0] == y_points[-1],
             )
-
             kicad_polygons.append(ki_polygon)
         else:
-            logging.warning("Skipping path with no parseable points")
+            logging.warning("PT path: skipping shape with no parseable points")
 
-    return kicad_polygons, kicad_beziers
+    return kicad_polygons
 
 
 def convert_to_kicad(ee_symbol: EeSymbol, kicad_version: KicadVersion) -> KiSymbol:
@@ -363,11 +378,9 @@ def convert_to_kicad(ee_symbol: EeSymbol, kicad_version: KicadVersion) -> KiSymb
         kicad_version=kicad_version,
     )
 
-    polygons_from_paths, beziers_from_paths = convert_ee_paths(
+    kicad_symbol.polygons = convert_ee_paths(
         ee_paths=ee_symbol.paths, ee_bbox=ee_symbol.bbox, kicad_version=kicad_version
     )
-    kicad_symbol.polygons = polygons_from_paths
-    kicad_symbol.beziers = beziers_from_paths  # type: ignore[assignment]
     kicad_symbol.polygons += convert_ee_polylines(
         ee_polylines=ee_symbol.polylines,
         ee_bbox=ee_symbol.bbox,
@@ -382,12 +395,12 @@ def convert_to_kicad(ee_symbol: EeSymbol, kicad_version: KicadVersion) -> KiSymb
     return kicad_symbol
 
 
-def tune_footprint_ref_path(ki_symbol: KiSymbol, footprint_lib_name: str):
+def tune_footprint_ref_path(ki_symbol: KiSymbol, footprint_lib_name: str) -> None:
     ki_symbol.info.package = f"{footprint_lib_name}:{ki_symbol.info.package}"
 
 
 class ExporterSymbolKicad:
-    def __init__(self, symbol, kicad_version: KicadVersion):
+    def __init__(self, symbol: EeSymbol, kicad_version: KicadVersion) -> None:
         self.input: EeSymbol = symbol
         self.version = kicad_version
         if isinstance(self.input, EeSymbol):

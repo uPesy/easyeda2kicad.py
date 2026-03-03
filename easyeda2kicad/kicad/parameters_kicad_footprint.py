@@ -1,6 +1,6 @@
 # Global imports
 from dataclasses import dataclass, field, fields
-from typing import List, Optional
+from typing import Any
 
 # ---------------------------- FOOTPRINT PART ----------------------------
 
@@ -108,7 +108,7 @@ KI_LAYERS = {
 
 
 # Round all float values contained in the dataclass
-def round_float_values(self) -> None:
+def round_float_values(self: Any) -> None:
     for _field in fields(self):
         current_value = getattr(self, _field.name)
         if isinstance(current_value, float):
@@ -137,10 +137,10 @@ class KiFootprintPad:
 # ---------------- TRACK ----------------
 @dataclass
 class KiFootprintTrack:
-    points_start_x: List[float] = field(default_factory=list)
-    points_start_y: List[float] = field(default_factory=list)
-    points_end_x: List[float] = field(default_factory=list)
-    points_end_y: List[float] = field(default_factory=list)
+    points_start_x: list[float] = field(default_factory=list)
+    points_start_y: list[float] = field(default_factory=list)
+    points_end_x: list[float] = field(default_factory=list)
+    points_end_y: list[float] = field(default_factory=list)
     stroke_width: float = 0
     layers: str = ""
 
@@ -172,14 +172,7 @@ class KiFootprintCircle:
 
 # ---------------- RECTANGLE ----------------
 @dataclass
-class KiFootprintRectangle(KiFootprintTrack):
-    ...
-    # points_start_x:List[float] = field(default_factory=list)
-    # points_start_y:List[float] = field(default_factory=list)
-    # points_end_x:List[float] = field(default_factory=list)
-    # points_end_y:List[float] = field(default_factory=list)
-    # stroke_width:float = 0
-    # layers:str = ''
+class KiFootprintRectangle(KiFootprintTrack): ...
 
 
 # ---------------- ARC ----------------
@@ -193,7 +186,7 @@ class KiFootprintArc:
     layers: str
     stroke_width: float
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         round_float_values(self)
 
 
@@ -210,7 +203,7 @@ class KiFootprintText:
     display: str
     mirror: str
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         round_float_values(self)
 
 
@@ -229,17 +222,19 @@ class KiFootprintVia:
 
 
 # ---------------- SOLID REGION ----------------
+# EasyEDA SOLIDREGION: filled copper polygon (e.g. exposed pad of QFN/DFN, heat slug).
+# In KiCad this maps to a zone or filled polygon. Not yet implemented.
 @dataclass
 class KiFootprintSolidRegion:
     name: str = ""
-    # TODO
 
 
 # ---------------- COPPER AREA ----------------
+# EasyEDA COPPERAREA: copper fill zone (ground plane, thermal relief area).
+# In KiCad this maps to a zone. Not yet implemented.
 @dataclass
 class KiFootprintCopperArea:
     name: str = ""
-    # TODO
 
 
 # ---------------- FOOTPRINT INFO ----------------
@@ -262,21 +257,21 @@ class Ki3dModel:
     name: str
     translation: Ki3dModelBase
     rotation: Ki3dModelBase
-    raw_wrl: Optional[str] = None
+    raw_wrl: str | None = None
 
 
 # ---------------- FOOTPRINT  ----------------
 @dataclass
 class KiFootprint:
     info: KiFootprintInfo
-    model_3d: Optional[Ki3dModel]
-    pads: List[KiFootprintPad] = field(default_factory=list)
-    tracks: List[KiFootprintTrack] = field(default_factory=list)
-    vias: List[KiFootprintVia] = field(default_factory=list)
-    holes: List[KiFootprintHole] = field(default_factory=list)
-    circles: List[KiFootprintCircle] = field(default_factory=list)
-    arcs: List[KiFootprintArc] = field(default_factory=list)
-    rectangles: List[KiFootprintRectangle] = field(default_factory=list)
-    texts: List[KiFootprintText] = field(default_factory=list)
-    solid_regions: List[KiFootprintSolidRegion] = field(default_factory=list)
-    copper_areas: List[KiFootprintCopperArea] = field(default_factory=list)
+    model_3d: Ki3dModel | None
+    pads: list[KiFootprintPad] = field(default_factory=list)
+    tracks: list[KiFootprintTrack] = field(default_factory=list)
+    vias: list[KiFootprintVia] = field(default_factory=list)
+    holes: list[KiFootprintHole] = field(default_factory=list)
+    circles: list[KiFootprintCircle] = field(default_factory=list)
+    arcs: list[KiFootprintArc] = field(default_factory=list)
+    rectangles: list[KiFootprintRectangle] = field(default_factory=list)
+    texts: list[KiFootprintText] = field(default_factory=list)
+    solid_regions: list[KiFootprintSolidRegion] = field(default_factory=list)
+    copper_areas: list[KiFootprintCopperArea] = field(default_factory=list)

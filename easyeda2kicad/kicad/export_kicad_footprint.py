@@ -1,10 +1,9 @@
 # Global imports
 import logging
 from math import acos, cos, isnan, pi, sin, sqrt
-from typing import Tuple, Union
 
 # Local imports
-from ..easyeda.parameters_easyeda import ee_footprint
+from ..easyeda.parameters_easyeda import EeFootprint
 from .parameters_kicad_footprint import (
     KI_ARC,
     KI_CIRCLE,
@@ -63,7 +62,7 @@ def compute_arc(
     sweep_flag: bool,
     end_x: float,
     end_y: float,
-) -> Tuple[float, float, float]:
+) -> tuple[float, float, float]:
     # Compute the half distance between the current and the final point
     dx2 = (start_x - end_x) / 2.0
     dy2 = (start_y - end_y) / 2.0
@@ -80,28 +79,25 @@ def compute_arc(
     # Ensure radii are large enough
     radius_x = abs(radius_x)
     radius_y = abs(radius_y)
-    Pradius_x = radius_x * radius_x
-    Pradius_y = radius_y * radius_y
-    Px1 = x1 * x1
-    Py1 = y1 * y1
+    rx_sq = radius_x * radius_x
+    ry_sq = radius_y * radius_y
+    x1_sq = x1 * x1
+    y1_sq = y1 * y1
 
-    # check that radii are large enough
-
-    radiiCheck = (
-        Px1 / Pradius_x + Py1 / Pradius_y if Pradius_x != 0 and Pradius_y != 0 else 0
-    )
-    if radiiCheck > 1:
-        radius_x = sqrt(radiiCheck) * radius_x
-        radius_y = sqrt(radiiCheck) * radius_y
-        Pradius_x = radius_x * radius_x
-        Pradius_y = radius_y * radius_y
+    # Check that radii are large enough; scale up if not (per SVG spec §10.7)
+    radii_check = x1_sq / rx_sq + y1_sq / ry_sq if rx_sq != 0 and ry_sq != 0 else 0
+    if radii_check > 1:
+        radius_x = sqrt(radii_check) * radius_x
+        radius_y = sqrt(radii_check) * radius_y
+        rx_sq = radius_x * radius_x
+        ry_sq = radius_y * radius_y
 
     # Step 2 : Compute (cx1, cy1)
     sign = -1 if large_arc_flag == sweep_flag else 1
     sq = 0.0
-    if Pradius_x * Py1 + Pradius_y * Px1 > 0:
-        sq = (Pradius_x * Pradius_y - Pradius_x * Py1 - Pradius_y * Px1) / (
-            Pradius_x * Py1 + Pradius_y * Px1
+    if rx_sq * y1_sq + ry_sq * x1_sq > 0:
+        sq = (rx_sq * ry_sq - rx_sq * y1_sq - ry_sq * x1_sq) / (
+            rx_sq * y1_sq + ry_sq * x1_sq
         )
     sq = max(sq, 0)
     coef = sign * sqrt(sq)
@@ -111,7 +107,6 @@ def compute_arc(
     # Step 3 : Compute (cx, cy) from (cx1, cy1)
     sx2 = (start_x + end_x) / 2.0
     sy2 = (start_y + end_y) / 2.0
-    # print(start_x, end_x)
     cx = sx2 + (cos_angle * cx1 - sin_angle * cy1)
     cy = sy2 + (sin_angle * cx1 + cos_angle * cy1)
 
@@ -143,11 +138,15 @@ def compute_arc(
 # ---------------------------------------
 
 
-def fp_to_ki(dim: Union[float, str]) -> float:
-    """Convert EasyEDA footprint dimension to KiCad. Handles both float and string input."""
-    if dim not in ["", None] and isnan(float(dim)) is False:
-        return round(float(dim) * 10 * 0.0254, 2)
-    return 0.0 if dim in ["", None] else float(dim)
+def fp_to_ki(dim: float | str) -> float:
+    """Convert EasyEDA footprint dimension to KiCad mm. Returns 0.0 for empty/invalid input."""
+    if dim in ("", None):
+        return 0.0
+    try:
+        val = float(dim)
+        return round(val * 10 * 0.0254, 2) if not isnan(val) else 0.0
+    except (ValueError, TypeError):
+        return 0.0
 
 
 # ---------------------------------------
@@ -156,12 +155,7 @@ def fp_to_ki(dim: Union[float, str]) -> float:
 def drill_to_ki(
     hole_radius: float, hole_length: float, pad_height: float, pad_width: float
 ) -> str:
-    if (
-        hole_radius > 0
-        and hole_length != ""
-        and hole_length is not None
-        and hole_length != 0
-    ):
+    if hole_radius > 0 and hole_length != 0:
         max_distance_hole = max(hole_radius * 2, hole_length)
         pos_0 = pad_height - max_distance_hole
         pos_90 = pad_width - max_distance_hole
@@ -179,7 +173,7 @@ def drill_to_ki(
 # ---------------------------------------
 
 
-def angle_to_ki(rotation: Union[float, str]) -> float:
+def angle_to_ki(rotation: float | str) -> float:
     """Convert EasyEDA rotation angle to KiCad. Handles both float and string input."""
     try:
         rot_float = float(rotation) if isinstance(rotation, str) else rotation
@@ -193,7 +187,7 @@ def angle_to_ki(rotation: Union[float, str]) -> float:
 # ---------------------------------------
 
 
-def rotate(x: float, y: float, degrees: float) -> Tuple[float, float]:
+def rotate(x: float, y: float, degrees: float) -> tuple[float, float]:
     radians = (degrees / 180) * 2 * pi
     new_x = x * cos(radians) - y * sin(radians)
     new_y = x * sin(radians) + y * cos(radians)
@@ -204,9 +198,9 @@ def rotate(x: float, y: float, degrees: float) -> Tuple[float, float]:
 
 
 class ExporterFootprintKicad:
-    def __init__(self, footprint: ee_footprint):
+    def __init__(self, footprint: EeFootprint):
         self.input = footprint
-        if not isinstance(self.input, ee_footprint):
+        if not isinstance(self.input, EeFootprint):
             logging.error("Unsupported conversion")
         else:
             self.generate_kicad_footprint()
@@ -252,7 +246,6 @@ class ExporterFootprintKicad:
                 ),
                 raw_wrl=None,
             )
-            # print(ki_3d_model_info)
         else:
             ki_3d_model_info = None
 
@@ -283,8 +276,14 @@ class ExporterFootprintKicad:
             ki_pad.drill = drill_to_ki(
                 ee_pad.hole_radius, ee_pad.hole_length, ki_pad.height, ki_pad.width
             )
+            # EasyEDA sometimes encodes pad numbers as "name(number)" (e.g. "A(1)").
+            # Extract the part inside the parentheses as the canonical pad number.
             if "(" in ki_pad.number and ")" in ki_pad.number:
-                ki_pad.number = ki_pad.number.split("(")[1].split(")")[0]
+                normalized = ki_pad.number.split("(")[1].split(")")[0]
+                logging.debug(
+                    f"PAD: normalized pad number '{ki_pad.number}' → '{normalized}'"
+                )
+                ki_pad.number = normalized
 
             # For custom polygon
             is_custom_shape = ki_pad.shape == "custom"
@@ -301,7 +300,8 @@ class ExporterFootprintKicad:
                     ki_pad.width = 0.005
                     ki_pad.height = 0.005
 
-                    # The points of the polygon always seem to correspond to coordinates when orientation=0.
+                    # FIXME: Polygon anchor points are set at orientation=0; empirically correct for all
+                    # observed EasyEDA parts, but not formally verified across all pad variants.
                     ki_pad.orientation = 0
 
                     # Generate polygon with coordinates relative to the base pad's position.
@@ -390,9 +390,10 @@ class ExporterFootprintKicad:
             self.output.circles.append(ki_circle)
 
         # For rectangles
-        # NOTE: RECT stroke_width requires fp_to_ki() conversion even though convert_to_mm() was already called.
-        # This double conversion appears intentional - RECT stroke_width may be stored in different units in EasyEDA.
-        # Example: RECT stroke_width=3 → 0.194mm (not 0.762mm like other shapes)
+        # FIXME: RECT stroke_width is passed through fp_to_ki() even though convert_to_mm() was already called.
+        # Empirically, RECT stroke_width uses a different unit than other shapes in EasyEDA
+        # (e.g. stroke_width=3 → ~0.194 mm here vs ~0.762 mm via convert_to_mm() alone).
+        # The exact unit origin is unknown; the double conversion is a workaround.
         for ee_rectangle in self.input.rectangles:
             ki_rectangle = KiFootprintRectangle(
                 layers=(
@@ -537,9 +538,9 @@ class ExporterFootprintKicad:
                 component_type=("smd" if ki.info.fp_type == "smd" else "through_hole")
             )
 
-        # Get y_min and y_max to put component info
-        y_low = min(pad.pos_y for pad in ki.pads)
-        y_high = max(pad.pos_y for pad in ki.pads)
+        # Get y_min and y_max to place reference and value text
+        y_low = min((pad.pos_y for pad in ki.pads), default=0)
+        y_high = max((pad.pos_y for pad in ki.pads), default=0)
 
         ki_lib += KI_REFERENCE.format(pos_x="0", pos_y=y_low - 4)
 

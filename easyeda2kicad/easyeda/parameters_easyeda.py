@@ -1,21 +1,15 @@
 # Global imports
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Union
+from typing import Any
 
 # Local imports
 from .svg_path_parser import parse_svg_path
 
 
-# Helper function to maintain pydantic-like __fields__ compatibility
-def _get_field_names(cls):
-    """Get field names for dataclass to maintain __fields__ compatibility"""
-    return [f.name for f in fields(cls)]
-
-
-# Safe conversion helpers
-def _safe_float(value, default=0.0):
-    """Safely convert to float with fallback"""
+# Safe conversion helpers – used by all EasyEDA dataclass __post_init__ methods.
+# EasyEDA API returns all field values as strings; these helpers handle the conversion.
+def _safe_float(value: str | float | int | bool | None, default: float = 0.0) -> float:
     if value is None or value == "":
         return default
     try:
@@ -24,23 +18,26 @@ def _safe_float(value, default=0.0):
         return default
 
 
-def _safe_int(value, default=0):
-    """Safely convert to int with fallback"""
+def _safe_int(value: str | float | int | bool | None, default: int = 0) -> int:
     if value is None or value == "":
         return default
     try:
-        return int(float(value))  # Handle "1.0" -> 1
+        return int(float(value))  # float first to handle "1.0" -> 1
     except (ValueError, TypeError):
         return default
 
 
-def _safe_bool(value, default=False):
-    """Safely convert to bool with fallback"""
+def _safe_bool(value: str | float | int | bool | None, default: bool = False) -> bool:
+    if value is None or value == "":
+        return default
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
         return value.lower() in ("true", "1", "yes", "on", "show")
-    return bool(value) if value else default
+    try:
+        return bool(int(value))
+    except (ValueError, TypeError):
+        return default
 
 
 class EasyedaPinType(Enum):
@@ -59,9 +56,7 @@ class EeSymbolBbox:
     width: float = 0.0  # Added: BBox width from JSON
     height: float = 0.0  # Added: BBox height from JSON
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.x = _safe_float(self.x, 0.0)
         self.y = _safe_float(self.y, 0.0)
@@ -81,9 +76,7 @@ class EeSymbolPinSettings:
     id: str
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Convert string values safely
         self.is_displayed = _safe_bool(self.is_displayed, False)
         self.is_locked = _safe_bool(self.is_locked, False)
@@ -107,9 +100,7 @@ class EeSymbolPinDot:
     dot_x: float
     dot_y: float
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.dot_x = _safe_float(self.dot_x, 0.0)
         self.dot_y = _safe_float(self.dot_y, 0.0)
 
@@ -119,9 +110,7 @@ class EeSymbolPinPath:
     path: str
     color: str
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if isinstance(self.path, str):
             self.path = self.path.replace("v", "h")
 
@@ -137,9 +126,7 @@ class EeSymbolPinName:
     font: str
     font_size: float
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.pos_x = _safe_float(self.pos_x, 0.0)
         self.pos_y = _safe_float(self.pos_y, 0.0)
@@ -157,9 +144,7 @@ class EeSymbolPinDotBis:
     circle_x: float
     circle_y: float
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.circle_x = _safe_float(self.circle_x, 0.0)
         self.circle_y = _safe_float(self.circle_y, 0.0)
         self.is_displayed = _safe_bool(self.is_displayed, True)
@@ -170,9 +155,7 @@ class EeSymbolPinClock:
     is_displayed: bool
     path: str
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.is_displayed = _safe_bool(self.is_displayed, True)
 
 
@@ -184,8 +167,6 @@ class EeSymbolPin:
     name: EeSymbolPinName
     dot: EeSymbolPinDotBis
     clock: EeSymbolPinClock
-
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
 
 
 # ---------------- RECTANGLE ----------------
@@ -201,12 +182,10 @@ class EeSymbolRectangle:
     fill_color: str
     id: str
     is_locked: bool
-    rx: Union[float, None] = None
-    ry: Union[float, None] = None
+    rx: float | None = None
+    ry: float | None = None
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.pos_x = _safe_float(self.pos_x, 0.0)
         self.pos_y = _safe_float(self.pos_y, 0.0)
@@ -241,9 +220,7 @@ class EeSymbolCircle:
     id: str
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.center_x = _safe_float(self.center_x, 0.0)
         self.center_y = _safe_float(self.center_y, 0.0)
@@ -260,7 +237,7 @@ class EeSymbolCircle:
 # ---------------- ARC ----------------
 @dataclass
 class EeSymbolArc:
-    path: list
+    path: list[Any]
     helper_dots: str
     stroke_color: str
     stroke_width: str
@@ -269,9 +246,7 @@ class EeSymbolArc:
     id: str
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all fields
         self.is_locked = _safe_bool(self.is_locked, False)
         if isinstance(self.fill_color, str):
@@ -297,9 +272,7 @@ class EeSymbolEllipse:
     id: str
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.center_x = _safe_float(self.center_x, 0.0)
         self.center_y = _safe_float(self.center_y, 0.0)
@@ -325,9 +298,7 @@ class EeSymbolPolyline:
     id: str
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all fields
         self.is_locked = _safe_bool(self.is_locked, False)
         if isinstance(self.fill_color, str):
@@ -341,14 +312,13 @@ class EeSymbolPolyline:
 # ---------------- POLYGON ----------------
 @dataclass
 class EeSymbolPolygon(EeSymbolPolyline):
-    # Inherit __fields__ from parent
     pass
 
 
 # ---------------- PATH ----------------
-# TODO : EeSymbolPath.paths should be a SVG PATH https://www.w3.org/TR/SVG11/paths.html#PathElement
-# TODO : small svg parser and then convert to kicad
-# TODO: support bezier curve, currently paths are seen as polygone
+# Known limitation: only M/L/Z commands are converted (as polygon segments).
+# Curve commands (C/Q/A) are skipped; paths are approximated as straight-line polygons.
+# Full SVG path spec: https://www.w3.org/TR/SVG11/paths.html#PathElement
 @dataclass
 class EeSymbolPath:
     paths: str
@@ -359,9 +329,7 @@ class EeSymbolPath:
     id: str
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all fields
         self.is_locked = _safe_bool(self.is_locked, False)
         if isinstance(self.fill_color, str):
@@ -383,23 +351,19 @@ class EeSymbolInfo:
     lcsc_id: str = ""
     jlc_id: str = ""
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
 
 @dataclass
 class EeSymbol:
     info: EeSymbolInfo
     bbox: EeSymbolBbox
-    pins: List[EeSymbolPin] = field(default_factory=list)
-    rectangles: List[EeSymbolRectangle] = field(default_factory=list)
-    circles: List[EeSymbolCircle] = field(default_factory=list)
-    arcs: List[EeSymbolArc] = field(default_factory=list)
-    ellipses: List[EeSymbolEllipse] = field(default_factory=list)
-    polylines: List[EeSymbolPolyline] = field(default_factory=list)
-    polygons: List[EeSymbolPolygon] = field(default_factory=list)
-    paths: List[EeSymbolPath] = field(default_factory=list)
-
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
+    pins: list[EeSymbolPin] = field(default_factory=list)
+    rectangles: list[EeSymbolRectangle] = field(default_factory=list)
+    circles: list[EeSymbolCircle] = field(default_factory=list)
+    arcs: list[EeSymbolArc] = field(default_factory=list)
+    ellipses: list[EeSymbolEllipse] = field(default_factory=list)
+    polylines: list[EeSymbolPolyline] = field(default_factory=list)
+    polygons: list[EeSymbolPolygon] = field(default_factory=list)
+    paths: list[EeSymbolPath] = field(default_factory=list)
 
 
 # ------------------------- Footprint -------------------------
@@ -414,9 +378,7 @@ class EeFootprintBbox:
     x: float
     y: float
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.x = _safe_float(self.x, 0.0)
         self.y = _safe_float(self.y, 0.0)
@@ -445,9 +407,7 @@ class EeFootprintPad:
     is_plated: bool
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.center_x = _safe_float(self.center_x, 0.0)
         self.center_y = _safe_float(self.center_y, 0.0)
@@ -478,9 +438,7 @@ class EeFootprintTrack:
     id: str
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.stroke_width = _safe_float(self.stroke_width, 0.0)
         self.layer_id = _safe_int(self.layer_id, 0)
@@ -498,9 +456,7 @@ class EeFootprintHole:
     id: str
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.center_x = _safe_float(self.center_x, 0.0)
         self.center_y = _safe_float(self.center_y, 0.0)
@@ -523,9 +479,7 @@ class EeFootprintVia:
     id: str
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.center_x = _safe_float(self.center_x, 0.0)
         self.center_y = _safe_float(self.center_y, 0.0)
@@ -550,9 +504,7 @@ class EeFootprintCircle:
     id: str
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.cx = _safe_float(self.cx, 0.0)
         self.cy = _safe_float(self.cy, 0.0)
         self.radius = _safe_float(self.radius, 0.0)
@@ -578,9 +530,7 @@ class EeFootprintRectangle:
     layer_id: int
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.x = _safe_float(self.x, 0.0)
         self.y = _safe_float(self.y, 0.0)
@@ -590,7 +540,7 @@ class EeFootprintRectangle:
         self.layer_id = _safe_int(self.layer_id, 0)
         self.is_locked = _safe_bool(self.is_locked, False)
 
-    def convert_to_mm(self):
+    def convert_to_mm(self) -> None:
         self.x = convert_to_mm(self.x)
         self.y = convert_to_mm(self.y)
         self.width = convert_to_mm(self.width)
@@ -608,9 +558,7 @@ class EeFootprintArc:
     id: str
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.stroke_width = _safe_float(self.stroke_width, 0.0)
         self.layer_id = _safe_int(self.layer_id, 0)
         self.is_locked = _safe_bool(self.is_locked, False)
@@ -626,7 +574,7 @@ class EeFootprintText:
     center_y: float
     stroke_width: float
     rotation: int
-    miror: str
+    mirror: str
     layer_id: int
     net: str
     font_size: float
@@ -636,9 +584,7 @@ class EeFootprintText:
     id: str
     is_locked: bool
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.center_x = _safe_float(self.center_x, 0.0)
         self.center_y = _safe_float(self.center_y, 0.0)
@@ -649,7 +595,7 @@ class EeFootprintText:
         self.is_displayed = _safe_bool(self.is_displayed, True)
         self.is_locked = _safe_bool(self.is_locked, False)
 
-    def convert_to_mm(self):
+    def convert_to_mm(self) -> None:
         self.center_x = convert_to_mm(self.center_x)
         self.center_y = convert_to_mm(self.center_y)
         self.stroke_width = convert_to_mm(self.stroke_width)
@@ -665,8 +611,6 @@ class EeFootprintInfo:
     fp_type: str
     model_3d_name: str
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
 
 # ------------------------- 3D MODEL -------------------------
 @dataclass
@@ -675,9 +619,7 @@ class Ee3dModelBase:
     y: float = 0.0
     z: float = 0.0
 
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
-
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
         self.x = _safe_float(self.x, 0.0)
         self.y = _safe_float(self.y, 0.0)
@@ -695,28 +637,23 @@ class Ee3dModel:
     uuid: str
     translation: Ee3dModelBase
     rotation: Ee3dModelBase
-    raw_obj: Optional[str] = None
-    step: Optional[bytes] = None
-
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
+    raw_obj: str | None = None
+    step: bytes | None = None
 
     def convert_to_mm(self) -> None:
         self.translation.convert_to_mm()
-        # self.translation.z = self.translation.z
 
 
 @dataclass
-class ee_footprint:
+class EeFootprint:
     info: EeFootprintInfo
     bbox: EeFootprintBbox
-    model_3d: Optional[Ee3dModel]
-    pads: List[EeFootprintPad] = field(default_factory=list)
-    tracks: List[EeFootprintTrack] = field(default_factory=list)
-    holes: List[EeFootprintHole] = field(default_factory=list)
-    vias: List[EeFootprintVia] = field(default_factory=list)
-    circles: List[EeFootprintCircle] = field(default_factory=list)
-    arcs: List[EeFootprintArc] = field(default_factory=list)
-    rectangles: List[EeFootprintRectangle] = field(default_factory=list)
-    texts: List[EeFootprintText] = field(default_factory=list)
-
-    __fields__ = property(lambda self: _get_field_names(self.__class__))
+    model_3d: Ee3dModel | None
+    pads: list[EeFootprintPad] = field(default_factory=list)
+    tracks: list[EeFootprintTrack] = field(default_factory=list)
+    holes: list[EeFootprintHole] = field(default_factory=list)
+    vias: list[EeFootprintVia] = field(default_factory=list)
+    circles: list[EeFootprintCircle] = field(default_factory=list)
+    arcs: list[EeFootprintArc] = field(default_factory=list)
+    rectangles: list[EeFootprintRectangle] = field(default_factory=list)
+    texts: list[EeFootprintText] = field(default_factory=list)
