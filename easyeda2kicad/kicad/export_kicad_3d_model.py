@@ -230,17 +230,18 @@ class Exporter3dModelKicad:
         )
         self.output_step = model_3d.step if model_3d else None
 
-    def export(self, lib_path: str) -> None:
+    def export(self, output_dir: str) -> None:
+        """Write WRL and/or STEP files into *output_dir* (the .3dshapes folder)."""
         if self.output and self.output.raw_wrl:
             with open(
-                file=f"{lib_path}.3dshapes/{self.output.name}.wrl",
+                file=f"{output_dir}/{self.output.name}.wrl",
                 mode="w",
                 encoding="utf-8",
             ) as my_lib:
                 my_lib.write(self.output.raw_wrl)
         if self.output_step and self.output:
             with open(
-                file=f"{lib_path}.3dshapes/{self.output.name}.step",
+                file=f"{output_dir}/{self.output.name}.step",
                 mode="wb",
             ) as my_lib:
                 my_lib.write(self.output_step)

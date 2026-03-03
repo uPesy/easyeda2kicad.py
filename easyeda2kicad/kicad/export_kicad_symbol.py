@@ -1,8 +1,10 @@
 # Global imports
 import logging
+import re
 from typing import Callable, Sequence
 
 # Local imports
+from ..helpers import sanitize_for_regex
 from ..easyeda.parameters_easyeda import (
     EasyedaPinType,
     EeSymbol,
@@ -399,21 +401,69 @@ def tune_footprint_ref_path(ki_symbol: KiSymbol, footprint_lib_name: str) -> Non
     ki_symbol.info.package = f"{footprint_lib_name}:{ki_symbol.info.package}"
 
 
+def integrate_sub_units(
+    main_symbol: str,
+    sub_symbols: list[str],
+    component_name: str,
+) -> str:
+    """Integrate sub-unit symbols into a multi-unit KiCad symbol string.
+
+    Extracts the _0_1 body block from each sub_symbol, renames it to _1_1,
+    _2_1, ... and replaces the placeholder _0_1 block in main_symbol.
+    Returns main_symbol unchanged if sub_symbols is empty or no match is found.
+    """
+    if not sub_symbols:
+        return main_symbol
+
+    name = sanitize_for_regex(component_name)
+    sub_units = []
+    for i, sub_content in enumerate(sub_symbols, 1):
+        match = re.search(
+            rf'( +)\(symbol "{name}_0_1".*?\n\1\)(?=\n)', sub_content, re.DOTALL
+        )
+        if match:
+            sub_units.append(
+                match.group(0).replace(
+                    f'"{component_name}_0_1"', f'"{component_name}_{i}_1"'
+                )
+            )
+
+    if not sub_units:
+        return main_symbol
+
+    return re.sub(
+        rf'( *)\(symbol "{name}_0_1".*?\n\1\)',
+        "\n".join(sub_units),
+        main_symbol,
+        count=1,
+        flags=re.DOTALL,
+    )
+
+
 class ExporterSymbolKicad:
     def __init__(self, symbol: EeSymbol, kicad_version: KicadVersion) -> None:
         self.input: EeSymbol = symbol
         self.version = kicad_version
-        if isinstance(self.input, EeSymbol):
-            self.output = convert_to_kicad(
-                ee_symbol=self.input, kicad_version=kicad_version
-            )
-        else:
-            logging.error("Unknown input symbol format")
-            raise ValueError("Unknown input symbol format")
+        self.output = convert_to_kicad(ee_symbol=self.input, kicad_version=kicad_version)
 
     def export(self, footprint_lib_name: str) -> str:
         tune_footprint_ref_path(
             ki_symbol=self.output,
             footprint_lib_name=footprint_lib_name,
         )
-        return self.output.export(kicad_version=self.version)
+        main_content = self.output.export(kicad_version=self.version)
+
+        if not self.input.sub_symbols or self.version != KicadVersion.v6:
+            return main_content
+
+        sub_contents = [
+            ExporterSymbolKicad(symbol=sub, kicad_version=self.version).export(
+                footprint_lib_name=footprint_lib_name
+            )
+            for sub in self.input.sub_symbols
+        ]
+        return integrate_sub_units(
+            main_symbol=main_content,
+            sub_symbols=sub_contents,
+            component_name=self.input.info.name,
+        )

@@ -331,26 +331,54 @@ easyeda_handlers = {
 
 
 class EasyedaSymbolImporter:
-    def __init__(
-        self,
-        easyeda_cp_cad_data: dict[str, Any],
-        shared_origin: tuple[float, float] | None = None,
-    ):
+    def __init__(self, easyeda_cp_cad_data: dict[str, Any]):
         self.input = easyeda_cp_cad_data
-        self.output: EeSymbol = self.extract_easyeda_data(
-            ee_data=easyeda_cp_cad_data,
-            ee_data_info=easyeda_cp_cad_data["dataStr"]["head"]["c_para"],
-            shared_origin=shared_origin,
-        )
+        self.output: EeSymbol = self._extract(easyeda_cp_cad_data)
 
     def get_symbol(self) -> EeSymbol:
         return self.output
 
-    def extract_easyeda_data(
+    @staticmethod
+    def _shared_origin(
+        subparts: list[dict[str, Any]],
+    ) -> tuple[float, float] | None:
+        """Derive the shared canvas origin from the first sub-part's head position.
+
+        All sub-parts of a multi-unit symbol carry the same head.x/y value which
+        EasyEDA uses as the common reference point.  Using this shared origin for
+        every unit keeps their geometry aligned in KiCad.
+        """
+        if not subparts:
+            return None
+        head = subparts[0]["dataStr"]["head"]
+        return (float(head.get("x") or 0), float(head.get("y") or 0))
+
+    def _extract(self, ee_data: dict[str, Any]) -> EeSymbol:
+        subparts: list[dict[str, Any]] = ee_data.get("subparts", [])
+        shared_origin = self._shared_origin(subparts)
+
+        symbol = self._extract_unit(
+            ee_data=ee_data,
+            ee_data_info=ee_data["dataStr"]["head"]["c_para"],
+            shared_origin=shared_origin,
+        )
+
+        for subpart in subparts:
+            symbol.sub_symbols.append(
+                self._extract_unit(
+                    ee_data=subpart,
+                    ee_data_info=subpart["dataStr"]["head"]["c_para"],
+                    shared_origin=shared_origin,
+                )
+            )
+
+        return symbol
+
+    def _extract_unit(
         self,
         ee_data: dict[str, Any],
         ee_data_info: dict[str, Any],
-        shared_origin: tuple[float, float] | None = None,
+        shared_origin: tuple[float, float] | None,
     ) -> EeSymbol:
         bbox_data = ee_data["dataStr"].get("BBox", {})
 
