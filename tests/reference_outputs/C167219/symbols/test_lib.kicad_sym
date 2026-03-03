@@ -9,74 +9,74 @@
         "Reference"
         "L"
         (id 0)
-        (at 0 3.81 0)
+        (at 0 5.08 0)
         (effects (font (size 1.27 1.27) ) )
       )
       (property
         "Value"
         "FXL0630-3R3-M"
         (id 1)
-        (at 0 -6.35 0)
+        (at 0 -5.08 0)
         (effects (font (size 1.27 1.27) ) )
       )
       (property
         "Footprint"
         "test_lib:IND-SMD_L7.0-W6.6"
         (id 2)
-        (at 0 -8.89 0)
+        (at 0 -7.62 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
         "Datasheet"
         "https://lcsc.com/product-detail/Power-Inductors_3-3uH-20_C167219.html"
         (id 3)
-        (at 0 -11.43 0)
+        (at 0 -10.16 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
         "LCSC Part"
         "C167219"
         (id 5)
-        (at 0 -13.97 0)
+        (at 0 -12.70 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (symbol "FXL0630-3R3-M_0_1"
         (arc
-          (start 1.27 1.27)
-          (mid 2.75 2.26)
-          (end 3.81 1.27)
+          (start -3.81 -0.00)
+          (mid -2.52 0.01)
+          (end -2.54 -0.00)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (arc
-          (start 3.81 1.27)
-          (mid 5.10 1.28)
-          (end 5.08 1.27)
+          (start -2.54 -0.00)
+          (mid -1.06 0.99)
+          (end 0.00 -0.00)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (arc
-          (start 5.08 1.27)
-          (mid 6.56 2.26)
-          (end 7.62 1.27)
+          (start 0.00 -0.00)
+          (mid 1.48 0.99)
+          (end 2.54 -0.00)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (arc
-          (start 7.62 1.27)
-          (mid 9.10 2.26)
-          (end 10.16 1.27)
+          (start 2.54 -0.00)
+          (mid 3.83 0.01)
+          (end 3.81 -0.00)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (pin unspecified line
-          (at 10.16 -1.27 180)
+          (at 5.08 -0.00 180)
           (length 1.27)
           (name "2" (effects (font (size 1.27 1.27))))
           (number "2" (effects (font (size 1.27 1.27))))
         )
         (pin unspecified line
-          (at 0.00 -1.27 0)
+          (at -5.08 -0.00 0)
           (length 1.27)
           (name "1" (effects (font (size 1.27 1.27))))
           (number "1" (effects (font (size 1.27 1.27))))
