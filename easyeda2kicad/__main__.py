@@ -232,13 +232,28 @@ def _process_symbol(
     sym_lib_ext: str,
 ) -> bool:
     # ---------------- SYMBOL ----------------
-    importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data)
+    subparts = cad_data.get("subparts", [])
+
+    # Multi-unit symbols: derive the shared canvas origin from the first
+    # sub-part so all units are placed relative to the same reference point.
+    shared_origin: tuple[float, float] | None = None
+    if subparts:
+        first_head = subparts[0]["dataStr"]["head"]
+        shared_origin = (
+            float(first_head.get("x") or 0),
+            float(first_head.get("y") or 0),
+        )
+
+    importer = EasyedaSymbolImporter(
+        easyeda_cp_cad_data=cad_data, shared_origin=shared_origin
+    )
     easyeda_symbol: EeSymbol = importer.get_symbol()
 
-    # Process sub-symbols if they exist
     easyeda_sub_symbols: list[EeSymbol] = []
-    for cad_data_subpart in cad_data.get("subparts", []):
-        importer = EasyedaSymbolImporter(easyeda_cp_cad_data=cad_data_subpart)
+    for cad_data_subpart in subparts:
+        importer = EasyedaSymbolImporter(
+            easyeda_cp_cad_data=cad_data_subpart, shared_origin=shared_origin
+        )
         easyeda_sub_symbols.append(importer.get_symbol())
 
     is_id_already_in_symbol_lib = id_already_in_symbol_lib(
