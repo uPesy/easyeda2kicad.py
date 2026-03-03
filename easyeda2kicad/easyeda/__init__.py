@@ -21,7 +21,7 @@ from .parameters_easyeda import (
     EeSymbolPolygon,
     EeSymbolPolyline,
     EeSymbolRectangle,
-    ee_footprint,
+    EeFootprint,
 )
 
 __all__ = [
@@ -42,6 +42,6 @@ __all__ = [
     "EeSymbolPolyline",
     "EeSymbolPolygon",
     "EeSymbolPath",
-    "ee_footprint",
+    "EeFootprint",
     "Ee3dModel",
 ]

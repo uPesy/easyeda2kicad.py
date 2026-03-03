@@ -2,11 +2,16 @@
 import json
 import logging
 from dataclasses import fields
-from typing import Union, get_args, get_origin, get_type_hints
+from typing import Any, Union, get_args, get_origin, get_type_hints
+
+from types import UnionType as _UnionType
 
 # Local imports
 from .easyeda_api import EasyedaApi
 from .parameters_easyeda import (
+    _safe_bool,
+    _safe_float,
+    _safe_int,
     Ee3dModel,
     Ee3dModelBase,
     EeFootprintArc,
@@ -36,29 +41,8 @@ from .parameters_easyeda import (
     EeSymbolPolygon,
     EeSymbolPolyline,
     EeSymbolRectangle,
-    ee_footprint,
+    EeFootprint,
 )
-
-
-# Safe conversion helpers
-def _safe_float(value, default=0.0):
-    """Convert value to float, return default if conversion fails."""
-    if value is None or value == "":
-        return default
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        return default
-
-
-def _safe_int(value, default=0):
-    """Convert value to int, return default if conversion fails."""
-    if value is None or value == "":
-        return default
-    try:
-        return int(float(value))  # float first to handle "1.0" -> 1
-    except (ValueError, TypeError):
-        return default
 
 
 def _sanitize_component_name(name: str) -> str:
@@ -74,24 +58,13 @@ def _sanitize_component_name(name: str) -> str:
     return name.strip()
 
 
-def _safe_bool(value, default=False):
-    """Convert value to bool, return default if conversion fails."""
-    if value is None or value == "":
-        return default
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, str):
-        return value.lower() in ("true", "1", "yes", "on")
-    try:
-        return bool(int(value))
-    except (ValueError, TypeError):
-        return default
-
-
-def convert_fields_to_types(field_dict, dataclass_type):
+def convert_fields_to_types(
+    field_dict: dict[str, Any], dataclass_type: type
+) -> dict[str, Any]:
     """
-    Convert string values in field_dict to appropriate types based on dataclass_type annotations.
-    This is the ROOT CAUSE FIX for EasyEDA string data.
+    Convert string values in field_dict to appropriate Python types based on
+    the dataclass type annotations. Needed because EasyEDA API returns all
+    field values as strings regardless of their intended type.
     """
     try:
         type_hints = get_type_hints(dataclass_type)
@@ -107,9 +80,8 @@ def convert_fields_to_types(field_dict, dataclass_type):
 
         field_type = type_hints[key]
 
-        # Handle Optional types
         origin = get_origin(field_type)
-        if origin is type(None) or str(origin) == "typing.Union":
+        if origin is Union or isinstance(field_type, _UnionType):
             args = get_args(field_type)
             if args and type(None) in args:
                 # It's Optional[T], get the non-None type
@@ -128,7 +100,7 @@ def convert_fields_to_types(field_dict, dataclass_type):
     return converted
 
 
-def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
+def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol) -> None:
     segments = pin_data.split("^^")
     ee_segments = [seg.split("~") for seg in segments]
 
@@ -230,7 +202,7 @@ def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol):
     )
 
 
-def add_easyeda_rectangle(rectangle_data: str, ee_symbol: EeSymbol):
+def add_easyeda_rectangle(rectangle_data: str, ee_symbol: EeSymbol) -> None:
     parts = rectangle_data.split("~")[1:]
 
     # Handle EasyEDA format inconsistency with TWO different formats:
@@ -279,7 +251,7 @@ def add_easyeda_rectangle(rectangle_data: str, ee_symbol: EeSymbol):
     )
 
 
-def add_easyeda_polyline(polyline_data: str, ee_symbol: EeSymbol):
+def add_easyeda_polyline(polyline_data: str, ee_symbol: EeSymbol) -> None:
     polyline_dict = dict(
         zip(
             [f.name for f in fields(EeSymbolPolyline)],
@@ -291,7 +263,7 @@ def add_easyeda_polyline(polyline_data: str, ee_symbol: EeSymbol):
     )
 
 
-def add_easyeda_polygon(polygon_data: str, ee_symbol: EeSymbol):
+def add_easyeda_polygon(polygon_data: str, ee_symbol: EeSymbol) -> None:
     polygon_dict = dict(
         zip(
             [f.name for f in fields(EeSymbolPolygon)],
@@ -303,7 +275,7 @@ def add_easyeda_polygon(polygon_data: str, ee_symbol: EeSymbol):
     )
 
 
-def add_easyeda_path(path_data: str, ee_symbol: EeSymbol):
+def add_easyeda_path(path_data: str, ee_symbol: EeSymbol) -> None:
     path_dict = dict(
         zip([f.name for f in fields(EeSymbolPath)], path_data.split("~")[1:])
     )
@@ -312,7 +284,7 @@ def add_easyeda_path(path_data: str, ee_symbol: EeSymbol):
     )
 
 
-def add_easyeda_circle(circle_data: str, ee_symbol: EeSymbol):
+def add_easyeda_circle(circle_data: str, ee_symbol: EeSymbol) -> None:
     circle_dict = dict(
         zip([f.name for f in fields(EeSymbolCircle)], circle_data.split("~")[1:])
     )
@@ -321,7 +293,7 @@ def add_easyeda_circle(circle_data: str, ee_symbol: EeSymbol):
     )
 
 
-def add_easyeda_ellipse(ellipse_data: str, ee_symbol: EeSymbol):
+def add_easyeda_ellipse(ellipse_data: str, ee_symbol: EeSymbol) -> None:
     ellipse_dict = dict(
         zip(
             [f.name for f in fields(EeSymbolEllipse)],
@@ -333,7 +305,7 @@ def add_easyeda_ellipse(ellipse_data: str, ee_symbol: EeSymbol):
     )
 
 
-def add_easyeda_arc(arc_data: str, ee_symbol: EeSymbol):
+def add_easyeda_arc(arc_data: str, ee_symbol: EeSymbol) -> None:
     arc_dict = dict(zip([f.name for f in fields(EeSymbolArc)], arc_data.split("~")[1:]))
     ee_symbol.arcs.append(EeSymbolArc(**convert_fields_to_types(arc_dict, EeSymbolArc)))
 
@@ -352,7 +324,7 @@ easyeda_handlers = {
 
 
 class EasyedaSymbolImporter:
-    def __init__(self, easyeda_cp_cad_data: dict):
+    def __init__(self, easyeda_cp_cad_data: dict[str, Any]):
         self.input = easyeda_cp_cad_data
         self.output: EeSymbol = self.extract_easyeda_data(
             ee_data=easyeda_cp_cad_data,
@@ -362,7 +334,9 @@ class EasyedaSymbolImporter:
     def get_symbol(self) -> EeSymbol:
         return self.output
 
-    def extract_easyeda_data(self, ee_data: dict, ee_data_info: dict) -> EeSymbol:
+    def extract_easyeda_data(
+        self, ee_data: dict[str, Any], ee_data_info: dict[str, Any]
+    ) -> EeSymbol:
         # Determine the symbol origin (used to center coordinates in KiCad).
         # Prefer the BBox center (geometry bounds) when available, otherwise
         # fall back to head.x/y (EasyEDA canvas origin).
@@ -406,13 +380,13 @@ class EasyedaSymbolImporter:
             if designator in easyeda_handlers:
                 easyeda_handlers[designator](line, new_ee_symbol)
             else:
-                logging.warning(f"Unknow symbol designator : {designator}")
+                logging.warning(f"Unknown symbol designator: {designator}")
 
         return new_ee_symbol
 
 
 class EasyedaFootprintImporter:
-    def __init__(self, easyeda_cp_cad_data: dict):
+    def __init__(self, easyeda_cp_cad_data: dict[str, Any]):
         self.input = easyeda_cp_cad_data
         self.output = self.extract_easyeda_data(
             ee_data_str=self.input["packageDetail"]["dataStr"],
@@ -421,13 +395,13 @@ class EasyedaFootprintImporter:
             and "-TH_" not in self.input["packageDetail"]["title"],
         )
 
-    def get_footprint(self):
+    def get_footprint(self) -> EeFootprint:
         return self.output
 
     def extract_easyeda_data(
-        self, ee_data_str: dict, ee_data_info: dict, is_smd: bool
-    ) -> ee_footprint:
-        new_ee_footprint = ee_footprint(
+        self, ee_data_str: dict[str, Any], ee_data_info: dict[str, Any], is_smd: bool
+    ) -> EeFootprint:
+        new_ee_footprint = EeFootprint(
             info=EeFootprintInfo(
                 name=ee_data_info["package"],
                 fp_type="smd" if is_smd else "tht",
@@ -494,9 +468,9 @@ class EasyedaFootprintImporter:
                 ).output
 
             elif ee_designator == "SOLIDREGION":
-                ...
+                pass  # Not yet implemented; see KiFootprintSolidRegion
             else:
-                logging.warning(f"Unknow footprint designator : {ee_designator}")
+                logging.warning(f"Unknown footprint designator: {ee_designator}")
 
         return new_ee_footprint
 
@@ -505,12 +479,18 @@ class EasyedaFootprintImporter:
 
 
 class Easyeda3dModelImporter:
-    def __init__(self, easyeda_cp_cad_data, download_raw_3d_model: bool):
+    def __init__(
+        self,
+        easyeda_cp_cad_data: dict[str, Any] | list[str],
+        download_raw_3d_model: bool,
+        api: EasyedaApi | None = None,
+    ):
         self.input = easyeda_cp_cad_data
         self.download_raw_3d_model = download_raw_3d_model
+        self.api = api
         self.output = self.create_3d_model()
 
-    def create_3d_model(self) -> Union[Ee3dModel, None]:
+    def create_3d_model(self) -> Ee3dModel | None:
         ee_data = (
             self.input["packageDetail"]["dataStr"]["shape"]
             if isinstance(self.input, dict)
@@ -520,14 +500,15 @@ class Easyeda3dModelImporter:
         if model_3d_info := self.get_3d_model_info(ee_data=ee_data):
             model_3d: Ee3dModel = self.parse_3d_model_info(info=model_3d_info)
             if self.download_raw_3d_model:
-                model_3d.raw_obj = EasyedaApi().get_raw_3d_model_obj(uuid=model_3d.uuid)
-                model_3d.step = EasyedaApi().get_step_3d_model(uuid=model_3d.uuid)
+                api = self.api or EasyedaApi()
+                model_3d.raw_obj = api.get_raw_3d_model_obj(uuid=model_3d.uuid)
+                model_3d.step = api.get_step_3d_model(uuid=model_3d.uuid)
             return model_3d
 
         logging.warning("No 3D model available for this component")
         return None
 
-    def get_3d_model_info(self, ee_data: str) -> dict:
+    def get_3d_model_info(self, ee_data: list[str]) -> dict[str, Any]:
         for line in ee_data:
             ee_designator = line.split("~")[0]
             if ee_designator == "SVGNODE":
@@ -536,13 +517,14 @@ class Easyeda3dModelImporter:
                     raw_json = split_data[0]
                     try:
                         parsed_json = json.loads(raw_json)
-                        return parsed_json.get("attrs", {})
+                        result: dict[str, Any] = parsed_json.get("attrs", {})
+                        return result
                     except json.JSONDecodeError as e:
                         logging.error(f"Failed to parse 3D model JSON: {e}")
                         return {}
         return {}
 
-    def parse_3d_model_info(self, info: dict) -> Ee3dModel:
+    def parse_3d_model_info(self, info: dict[str, Any]) -> Ee3dModel:
         return Ee3dModel(
             name=info["title"],
             uuid=info["uuid"],

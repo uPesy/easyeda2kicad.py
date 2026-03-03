@@ -8,7 +8,6 @@ from __future__ import annotations
 import logging
 import re
 import textwrap
-from typing import Optional
 
 # Local imports
 from ..easyeda.parameters_easyeda import Ee3dModel
@@ -19,7 +18,7 @@ VRML_HEADER = """#VRML V2.0 utf8
 """
 
 
-def get_materials(obj_data: str) -> dict:
+def get_materials(obj_data: str) -> dict[str, dict[str, str | list[str]]]:
     material_regex = "newmtl .*?endmtl"
     matchs = re.findall(pattern=material_regex, string=obj_data, flags=re.DOTALL)
 
@@ -51,7 +50,7 @@ def get_vertices(
     offset_x: float = 0.0,
     offset_y: float = 0.0,
     offset_z: float = 0.0,
-) -> list:
+) -> list[str]:
     result = []
     for line in obj_data.splitlines():
         parts = line.split()
@@ -70,7 +69,9 @@ def get_vertices(
     return result
 
 
-def _get_obj_bbox(raw_obj: str) -> Optional[tuple]:
+def _get_obj_bbox(
+    raw_obj: str,
+) -> tuple[tuple[float, float], tuple[float, float], tuple[float, float]] | None:
     """Returns ((x_min, x_max), (y_min, y_max), (z_min, z_max)) or None if no vertices."""
     x_vals, y_vals, z_vals = [], [], []
     for line in raw_obj.splitlines():
@@ -125,9 +126,25 @@ def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
 
     raw_wrl = VRML_HEADER
     shapes = model_3d.raw_obj.split("usemtl")[1:]
+    if not shapes:
+        logging.warning(
+            f"3D model '{model_3d.name}': OBJ has no 'usemtl' sections; no geometry exported"
+        )
+        return Ki3dModel(
+            translation=Ki3dModelBase(),
+            rotation=Ki3dModelBase(),
+            name=model_3d.name,
+            raw_wrl=None,
+        )
     for shape in shapes:
         lines = shape.splitlines()
-        material = materials[lines[0].replace(" ", "")]
+        material_name = lines[0].replace(" ", "")
+        material = materials.get(material_name)
+        if material is None:
+            logging.warning(
+                f"3D model material '{material_name}' not found, skipping shape"
+            )
+            continue
         index_counter = 0
         link_dict = {}
         coord_index = []
@@ -146,7 +163,6 @@ def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
                         face_index.append(str(link_dict[index]))
                 face_index.append("-1")
                 coord_index.append(",".join(face_index) + ",")
-        points.insert(-1, points[-1])
 
         shape_str = textwrap.dedent(
             f"""
@@ -202,7 +218,7 @@ def _log_obj_bbox(raw_obj: str) -> None:
 
 
 class Exporter3dModelKicad:
-    def __init__(self, model_3d: Optional[Ee3dModel], fp_type: str = ""):
+    def __init__(self, model_3d: Ee3dModel | None, fp_type: str = ""):
         self.input = model_3d
         self.fp_type = fp_type
         if model_3d and model_3d.raw_obj:

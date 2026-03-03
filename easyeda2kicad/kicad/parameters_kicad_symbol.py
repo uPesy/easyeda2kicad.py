@@ -4,13 +4,11 @@ import re
 import textwrap
 from dataclasses import dataclass, field, fields
 from enum import Enum, auto
-from typing import Any, List, Union
 
 
 class KicadVersion(Enum):
     v5 = auto()
-    v6 = auto()
-    v6_99 = auto()
+    v6 = auto()  # covers KiCad 6+ (.kicad_sym S-Expression, stable since 6.0)
 
 
 class KiPinType(Enum):
@@ -140,12 +138,12 @@ class KiSymbolInfo:
     datasheet: str
     lcsc_id: str
     jlc_id: str
-    y_low: Union[int, float] = 0
-    y_high: Union[int, float] = 0
+    y_low: int | float = 0
+    y_high: int | float = 0
 
     def export_v5(self) -> str:
         field_offset_y = KiExportConfigV5.FIELD_OFFSET_START.value
-        header: List[str] = [
+        header: list[str] = [
             "DEF {name} {ref} 0 {pin_name_offset} {show_pin_number} {show_pin_name}"
             " {num_units} L N".format(
                 name=sanitize_fields(self.name),
@@ -208,7 +206,7 @@ class KiSymbolInfo:
 
         return "\n".join(header)
 
-    def export_v6(self) -> List[str]:
+    def export_v6(self) -> list[str]:
         property_template = textwrap.indent(
             textwrap.dedent(
                 """
@@ -224,7 +222,7 @@ class KiSymbolInfo:
         )
 
         field_offset_y = KiExportConfigV6.FIELD_OFFSET_START.value
-        header: List[str] = [
+        header: list[str] = [
             property_template.format(
                 key="Reference",
                 value=self.prefix,
@@ -322,8 +320,8 @@ class KiSymbolPin:
     length: float
     type: KiPinType
     orientation: float
-    pos_x: Union[int, float]
-    pos_y: Union[int, float]
+    pos_x: int | float
+    pos_y: int | float
 
     def export_v5(self) -> str:
         return (
@@ -363,9 +361,9 @@ class KiSymbolPin:
             pin_style=self.style.name,
             x=self.pos_x,
             y=self.pos_y,
-            orientation=(180 + self.orientation) % 360,  # TODO: 360 - ?
+            # KiCad v6 pin orientation is offset by 180° from EasyEDA's convention
+            orientation=(180 + self.orientation) % 360,
             pin_length=self.length,
-            # pin_length=KiExportConfigV6.PIN_LENGTH.value,
             pin_name=apply_pin_name_style(
                 pin_name=self.name, kicad_version=KicadVersion.v6
             ),
@@ -378,10 +376,10 @@ class KiSymbolPin:
 # ---------------- RECTANGLE ----------------
 @dataclass
 class KiSymbolRectangle:
-    pos_x0: Union[int, float] = 0
-    pos_y0: Union[int, float] = 0
-    pos_x1: Union[int, float] = 0
-    pos_y1: Union[int, float] = 0
+    pos_x0: int | float = 0
+    pos_y0: int | float = 0
+    pos_x1: int | float = 0
+    pos_y1: int | float = 0
 
     def export_v5(self) -> str:
         return "S {x0:.0f} {y0:.0f} {x1:.0f} {y1:.0f} {unit_num} 1 {line_width} {fill}\n".format(
@@ -414,7 +412,7 @@ class KiSymbolRectangle:
 # ---------------- POLYGON ----------------
 @dataclass
 class KiSymbolPolygon:
-    points: List[List[float]] = field(default_factory=List[List[float]])
+    points: list[list[float]] = field(default_factory=list)
     points_number: int = 0
     is_closed: bool = False
 
@@ -455,9 +453,9 @@ class KiSymbolPolygon:
 # ---------------- CIRCLE ----------------
 @dataclass
 class KiSymbolCircle:
-    pos_x: Union[int, float] = 0
-    pos_y: Union[int, float] = 0
-    radius: Union[int, float] = 0
+    pos_x: int | float = 0
+    pos_y: int | float = 0
+    radius: int | float = 0
     background_filling: bool = False
 
     def export_v5(self) -> str:
@@ -560,7 +558,7 @@ class KiSymbolArc:
 # ---------------- BEZIER CURVE ----------------
 @dataclass
 class KiSymbolBezier:
-    points: List[List[float]] = field(default_factory=List[List[float]])
+    points: list[list[float]] = field(default_factory=list)
     points_number: int = 0
     is_closed: bool = False
 
@@ -600,35 +598,42 @@ class KiSymbolBezier:
 @dataclass
 class KiSymbol:
     info: KiSymbolInfo
-    pins: List[KiSymbolPin] = field(default_factory=lambda: [])
-    rectangles: List[KiSymbolRectangle] = field(default_factory=lambda: [])
-    circles: List[KiSymbolCircle] = field(default_factory=lambda: [])
-    arcs: List[KiSymbolArc] = field(default_factory=lambda: [])
-    polygons: List[KiSymbolPolygon] = field(default_factory=lambda: [])
-    beziers: List[KiSymbolBezier] = field(default_factory=lambda: [])
+    pins: list[KiSymbolPin] = field(default_factory=lambda: [])
+    rectangles: list[KiSymbolRectangle] = field(default_factory=lambda: [])
+    circles: list[KiSymbolCircle] = field(default_factory=lambda: [])
+    arcs: list[KiSymbolArc] = field(default_factory=lambda: [])
+    polygons: list[KiSymbolPolygon] = field(default_factory=lambda: [])
+    beziers: list[KiSymbolBezier] = field(default_factory=lambda: [])
 
-    def export_handler(self, kicad_version: str):
+    def export_handler(self, kicad_version: KicadVersion) -> dict[str, str | list[str]]:
+        method_name = f"export_{kicad_version.name}"  # e.g. "export_v6"
+
         # Get y_min and y_max to put component info
         self.info.y_low = min(pin.pos_y for pin in self.pins) if self.pins else 0
         self.info.y_high = max(pin.pos_y for pin in self.pins) if self.pins else 0
 
-        sym_export_data: dict[str, Any] = {}
+        sym_export_data: dict[str, str | list[str]] = {}
         for _field in fields(self):
             shapes = getattr(self, _field.name)
             if isinstance(shapes, list):
-                sym_export_data.setdefault(_field.name, [])
+                values: list[str] = []
                 for sub_symbol in shapes:
-                    sym_export_data[_field.name].append(
-                        getattr(sub_symbol, f"export_v{kicad_version}")()
-                    )
+                    method = getattr(sub_symbol, method_name, None)
+                    if method is None:
+                        raise ValueError(
+                            f"{type(sub_symbol).__name__} has no {method_name}()"
+                        )
+                    values.append(method())
+                sym_export_data[_field.name] = values
             else:
-                sym_export_data[_field.name] = getattr(
-                    shapes, f"export_v{kicad_version}"
-                )()
+                method = getattr(shapes, method_name, None)
+                if method is None:
+                    raise ValueError(f"{type(shapes).__name__} has no {method_name}()")
+                sym_export_data[_field.name] = method()
         return sym_export_data
 
-    def export_v5(self):
-        sym_export_data = self.export_handler(kicad_version="5")
+    def export_v5(self) -> str:
+        sym_export_data = self.export_handler(kicad_version=KicadVersion.v5)
         sym_info = sym_export_data.pop("info")
         sym_graphic_items = itertools.chain.from_iterable(sym_export_data.values())
 
@@ -637,8 +642,8 @@ class KiSymbol:
             f" {sanitize_fields(self.info.name)}\n#\n{sym_info}{''.join(sym_graphic_items)}ENDDRAW\nENDDEF\n"
         )
 
-    def export_v6(self):
-        sym_export_data = self.export_handler(kicad_version="6")
+    def export_v6(self) -> str:
+        sym_export_data = self.export_handler(kicad_version=KicadVersion.v6)
         sym_info = sym_export_data.pop("info")
         sym_pins = sym_export_data.pop("pins")
         sym_graphic_items = itertools.chain.from_iterable(sym_export_data.values())

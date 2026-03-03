@@ -1,27 +1,28 @@
 # Global imports
+import glob  # noqa: F401  # used inside sys.platform=="darwin" block
 import gzip
 import json
 import logging
-import os
 import ssl
 import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
-from typing import Optional, Union
+from types import ModuleType
+from typing import Any
 
 # Local imports
 from .._version import __version__
 
 # Optional import for SSL certificate verification
+_certifi: ModuleType | None = None
 try:
-    import certifi  # type: ignore[import]
+    import certifi
 
     HAS_CERTIFI = True
-    _certifi = certifi  # Store reference to avoid possibly unbound warnings
+    _certifi = certifi
 except ImportError:
     HAS_CERTIFI = False
-    _certifi = None  # type: ignore[assignment]
 
 API_ENDPOINT = "https://easyeda.com/api/products/{lcsc_id}/components?version=6.4.19.5"
 ENDPOINT_3D_MODEL = "https://modules.easyeda.com/3dmodel/{uuid}"
@@ -40,10 +41,12 @@ class EasyedaApi:
             "User-Agent": f"easyeda2kicad v{__version__}",
         }
         self.ssl_context = self._create_ssl_context()
-        self.debug_cache_enabled = logging.getLogger().level <= logging.DEBUG
         self.cache_dir = Path.cwd() / ".easyeda_cache"
-        if self.debug_cache_enabled:
-            logging.info(f"Debug cache enabled: {self.cache_dir}")
+
+    @property
+    def debug_cache_enabled(self) -> bool:
+        # Evaluated lazily so the log level set after __init__ is respected.
+        return logging.getLogger().level <= logging.DEBUG
 
     def _get_cache_path(self, identifier: str, extension: str) -> Path:
         """Get the cache file path for a specific resource."""
@@ -52,14 +55,14 @@ class EasyedaApi:
 
     def _read_from_cache(
         self, cache_path: Path, binary: bool = False
-    ) -> Optional[Union[str, bytes]]:
+    ) -> str | bytes | None:
         """Read data from cache if it exists."""
         if not self.debug_cache_enabled or not cache_path.exists():
             return None
         try:
             mode = "rb" if binary else "r"
             with open(cache_path, mode) as f:
-                data = f.read()
+                data: str | bytes = f.read()
             logging.debug(f"Cache hit: {cache_path}")
             return data
         except Exception as e:
@@ -67,7 +70,7 @@ class EasyedaApi:
             return None
 
     def _write_to_cache(
-        self, cache_path: Path, data: Union[str, bytes], binary: bool = False
+        self, cache_path: Path, data: str | bytes, binary: bool = False
     ) -> None:
         """Write data to cache."""
         if not self.debug_cache_enabled:
@@ -99,16 +102,19 @@ class EasyedaApi:
         """Create SSL context with proper certificate handling for macOS."""
         context = ssl.create_default_context()
 
-        # macOS-specific: Try to use KiCad's embedded Python certifi first
+        # macOS-specific: Try to use KiCad's embedded Python certifi first.
+        # Use a glob so future KiCad versions are found automatically.
         if sys.platform == "darwin":
-            kicad_certifi_paths = [
-                "/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/3.9/lib/python3.9/site-packages/certifi/cacert.pem",
-                "/Applications/KiCad-9.0/KiCad.app/Contents/Frameworks/Python.framework/Versions/3.9/lib/python3.9/site-packages/certifi/cacert.pem",
-                "/Applications/KiCad-10.0/KiCad.app/Contents/Frameworks/Python.framework/Versions/3.9/lib/python3.9/site-packages/certifi/cacert.pem",
-            ]
+            kicad_certifi_paths = sorted(
+                glob.glob(
+                    "/Applications/KiCad*/KiCad.app/Contents/Frameworks/"
+                    "Python.framework/Versions/*/lib/python*/site-packages/certifi/cacert.pem"
+                ),
+                reverse=True,  # prefer newer KiCad versions first
+            )
 
             for cert_path in kicad_certifi_paths:
-                if os.path.isfile(cert_path):
+                if Path(cert_path).is_file():
                     try:
                         context.load_verify_locations(cafile=cert_path)
                         logging.info(f"Using KiCad certificate bundle: {cert_path}")
@@ -131,13 +137,14 @@ class EasyedaApi:
         logging.info("Using system default SSL certificates")
         return context
 
-    def get_info_from_easyeda_api(self, lcsc_id: str) -> dict:
+    def get_info_from_easyeda_api(self, lcsc_id: str) -> dict[str, Any]:
         # Try to read from cache first
         cache_path = self._get_cache_path(lcsc_id, "json")
         cached_data = self._read_from_cache(cache_path, binary=False)
         if cached_data is not None:
             try:
-                return json.loads(cached_data)
+                cached: dict[str, Any] = json.loads(cached_data)
+                return cached
             except json.JSONDecodeError:
                 logging.warning(
                     f"Invalid cached JSON for {lcsc_id}, fetching fresh data"
@@ -157,14 +164,12 @@ class EasyedaApi:
                 else:
                     data = raw_data.decode("utf-8")
                 try:
-                    api_response = json.loads(data)
+                    api_response: dict[str, Any] = json.loads(data)
                 except json.JSONDecodeError as e:
                     logging.error(f"Invalid JSON response from API: {e}")
                     return {}
 
-            if not api_response or (
-                "code" in api_response and api_response["success"] is False
-            ):
+            if not api_response or api_response.get("success") is False:
                 logging.debug(f"{api_response}")
                 return {}
 
@@ -176,18 +181,20 @@ class EasyedaApi:
             logging.error(f"API request failed: {e}")
             return {}
 
-    def get_cad_data_of_component(self, lcsc_id: str) -> dict:
+    def get_cad_data_of_component(self, lcsc_id: str) -> dict[str, Any]:
         cp_cad_info = self.get_info_from_easyeda_api(lcsc_id=lcsc_id)
         if cp_cad_info == {}:
             return {}
-        return cp_cad_info["result"]
+        result: dict[str, Any] = cp_cad_info["result"]
+        return result
 
-    def get_raw_3d_model_obj(self, uuid: str) -> Optional[str]:
+    def get_raw_3d_model_obj(self, uuid: str) -> str | None:
         # Try to read from cache first
         cache_path = self._get_cache_path(uuid, "obj")
         cached_data = self._read_from_cache(cache_path, binary=False)
         if cached_data is not None:
-            assert isinstance(cached_data, str)
+            if not isinstance(cached_data, str):
+                return None
             return cached_data
 
         try:
@@ -203,7 +210,7 @@ class EasyedaApi:
                         f"No raw 3D model data found for uuid:{uuid} on easyeda"
                     )
                     return None
-                data = response.read().decode()
+                data: str = response.read().decode()
                 # Write to cache
                 self._write_to_cache(cache_path, data, binary=False)
                 return data
@@ -211,12 +218,13 @@ class EasyedaApi:
             logging.error(f"Failed to get 3D model for uuid:{uuid}: {e}")
             return None
 
-    def get_step_3d_model(self, uuid: str) -> Optional[bytes]:
+    def get_step_3d_model(self, uuid: str) -> bytes | None:
         # Try to read from cache first
         cache_path = self._get_cache_path(uuid, "step")
         cached_data = self._read_from_cache(cache_path, binary=True)
         if cached_data is not None:
-            assert isinstance(cached_data, bytes)
+            if not isinstance(cached_data, bytes):
+                return None
             return cached_data
 
         try:
@@ -232,7 +240,7 @@ class EasyedaApi:
                         f"No step 3D model data found for uuid:{uuid} on easyeda"
                     )
                     return None
-                data = response.read()
+                data: bytes = response.read()
                 # Write to cache
                 self._write_to_cache(cache_path, data, binary=True)
                 return data
