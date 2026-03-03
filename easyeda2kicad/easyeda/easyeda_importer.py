@@ -331,38 +331,45 @@ easyeda_handlers = {
 
 
 class EasyedaSymbolImporter:
-    def __init__(self, easyeda_cp_cad_data: dict[str, Any]):
+    def __init__(
+        self,
+        easyeda_cp_cad_data: dict[str, Any],
+        shared_origin: tuple[float, float] | None = None,
+    ):
         self.input = easyeda_cp_cad_data
         self.output: EeSymbol = self.extract_easyeda_data(
             ee_data=easyeda_cp_cad_data,
             ee_data_info=easyeda_cp_cad_data["dataStr"]["head"]["c_para"],
+            shared_origin=shared_origin,
         )
 
     def get_symbol(self) -> EeSymbol:
         return self.output
 
     def extract_easyeda_data(
-        self, ee_data: dict[str, Any], ee_data_info: dict[str, Any]
+        self,
+        ee_data: dict[str, Any],
+        ee_data_info: dict[str, Any],
+        shared_origin: tuple[float, float] | None = None,
     ) -> EeSymbol:
-        # Determine the symbol origin (used to center coordinates in KiCad).
-        # Prefer the BBox center (geometry bounds) when available, otherwise
-        # fall back to head.x/y (EasyEDA canvas origin).
         bbox_data = ee_data["dataStr"].get("BBox", {})
-        head_data = ee_data["dataStr"]["head"]
 
         bbox_x = _safe_float(bbox_data.get("x"))
         bbox_y = _safe_float(bbox_data.get("y"))
         bbox_width = _safe_float(bbox_data.get("width"))
         bbox_height = _safe_float(bbox_data.get("height"))
 
-        if bbox_width > 0 or bbox_height > 0:
-            # BBox available — use its center as the origin offset
+        if shared_origin is not None:
+            # Multi-unit symbol: all units use the same canvas origin so their
+            # geometry stays aligned when placed together in a schematic.
+            origin_x, origin_y = shared_origin
+        elif bbox_width > 0 or bbox_height > 0:
             origin_x = bbox_x + bbox_width / 2.0
             origin_y = bbox_y + bbox_height / 2.0
         else:
-            # No valid BBox — fall back to head position (canvas origin)
-            origin_x = _safe_float(head_data.get("x"))
-            origin_y = _safe_float(head_data.get("y"))
+            head_data = ee_data["dataStr"]["head"]
+            origin_x = _safe_float(head_data.get("x")) or 0.0
+            origin_y = _safe_float(head_data.get("y")) or 0.0
 
         new_ee_symbol = EeSymbol(
             info=EeSymbolInfo(

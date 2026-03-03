@@ -180,7 +180,7 @@ class TestRegression:
 
     def get_generated_files(self, output_dir: Path, component_id: str) -> List[Path]:
         """Get list of all generated files for a component."""
-        files = []
+        files: list[Path] = []
         output_dir = Path(output_dir)
 
         # Look for symbol files
@@ -345,7 +345,7 @@ class TestRegression:
         assert len(generated_files) > 0, f"No files were generated in {temp_output_dir}"
 
         # Create a summary of what was generated
-        file_types = {}
+        file_types: dict[str, int] = {}
         for file in generated_files:
             ext = file.suffix
             file_types[ext] = file_types.get(ext, 0) + 1
