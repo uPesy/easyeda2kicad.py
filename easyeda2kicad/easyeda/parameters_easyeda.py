@@ -53,8 +53,8 @@ class EasyedaPinType(Enum):
 class EeSymbolBbox:
     x: float
     y: float
-    width: float = 0.0  # Added: BBox width from JSON
-    height: float = 0.0  # Added: BBox height from JSON
+    width: float = 0.0
+    height: float = 0.0
 
     def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
@@ -364,6 +364,8 @@ class EeSymbol:
     polylines: list[EeSymbolPolyline] = field(default_factory=list)
     polygons: list[EeSymbolPolygon] = field(default_factory=list)
     paths: list[EeSymbolPath] = field(default_factory=list)
+    # Sub-units of a multi-unit symbol (e.g. op-amp body + power pins as separate units)
+    sub_symbols: list["EeSymbol"] = field(default_factory=list)
 
 
 # ------------------------- Footprint -------------------------

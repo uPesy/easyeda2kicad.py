@@ -8,18 +8,17 @@ from textwrap import dedent
 from typing import Any
 
 # Local imports
-from ._version import __version__
+from ._version import GENERATOR_URL, __version__
 from .easyeda.easyeda_api import EasyedaApi
 from .easyeda.easyeda_importer import (
     Easyeda3dModelImporter,
     EasyedaFootprintImporter,
     EasyedaSymbolImporter,
 )
-from .easyeda.parameters_easyeda import EeSymbol
+from .easyeda.parameters_easyeda import EeSymbol  # noqa: F401 – re-exported
 from .helpers import (
     add_component_in_symbol_lib_file,
     id_already_in_symbol_lib,
-    sanitize_for_regex,
     set_logger,
     update_component_in_symbol_lib_file,
 )
@@ -187,10 +186,10 @@ def valid_arguments(arguments: dict[str, Any]) -> bool:
         ) as my_lib:
             my_lib.write(
                 dedent(
-                    """\
+                    f"""\
                 (kicad_symbol_lib
                   (version 20211014)
-                  (generator https://github.com/uPesy/easyeda2kicad.py)
+                  (generator {GENERATOR_URL})
                 )"""
                 )
                 if kicad_version == KicadVersion.v6
@@ -231,30 +230,9 @@ def _process_symbol(
     kicad_version: KicadVersion,
     sym_lib_ext: str,
 ) -> bool:
-    # ---------------- SYMBOL ----------------
-    subparts = cad_data.get("subparts", [])
-
-    # Multi-unit symbols: derive the shared canvas origin from the first
-    # sub-part so all units are placed relative to the same reference point.
-    shared_origin: tuple[float, float] | None = None
-    if subparts:
-        first_head = subparts[0]["dataStr"]["head"]
-        shared_origin = (
-            float(first_head.get("x") or 0),
-            float(first_head.get("y") or 0),
-        )
-
-    importer = EasyedaSymbolImporter(
-        easyeda_cp_cad_data=cad_data, shared_origin=shared_origin
-    )
-    easyeda_symbol: EeSymbol = importer.get_symbol()
-
-    easyeda_sub_symbols: list[EeSymbol] = []
-    for cad_data_subpart in subparts:
-        importer = EasyedaSymbolImporter(
-            easyeda_cp_cad_data=cad_data_subpart, shared_origin=shared_origin
-        )
-        easyeda_sub_symbols.append(importer.get_symbol())
+    easyeda_symbol: EeSymbol = EasyedaSymbolImporter(
+        easyeda_cp_cad_data=cad_data
+    ).get_symbol()
 
     is_id_already_in_symbol_lib = id_already_in_symbol_lib(
         lib_path=f"{arguments['output']}.{sym_lib_ext}",
@@ -268,49 +246,11 @@ def _process_symbol(
         )
         return False
 
-    exporter = ExporterSymbolKicad(symbol=easyeda_symbol, kicad_version=kicad_version)
-    kicad_symbol_lib = exporter.export(
-        footprint_lib_name=arguments["output"].split("/")[-1].split(".")[0],
-    )
+    footprint_lib_name = arguments["output"].split("/")[-1].split(".")[0]
+    kicad_symbol_lib = ExporterSymbolKicad(
+        symbol=easyeda_symbol, kicad_version=kicad_version
+    ).export(footprint_lib_name=footprint_lib_name)
 
-    # Export sub-symbols
-    kicad_sub_symbols_lib = []
-    for symbol in easyeda_sub_symbols:
-        exporter = ExporterSymbolKicad(symbol=symbol, kicad_version=kicad_version)
-        kicad_sub_symbols_lib.append(
-            exporter.export(
-                footprint_lib_name=arguments["output"].split("/")[-1].split(".")[0]
-            )
-        )
-
-    # Integrate sub-units into main symbol BEFORE adding to library
-    if kicad_sub_symbols_lib and kicad_version == KicadVersion.v6:
-        # Extract sub-unit definitions and rename them
-        sub_units = []
-        for i, sub_component_content in enumerate(kicad_sub_symbols_lib, 1):
-            pattern = rf'( +)\(symbol "{sanitize_for_regex(easyeda_symbol.info.name)}_0_1".*?\n\1\)(?=\n)'
-            match = re.search(pattern, sub_component_content, re.DOTALL)
-            if match:
-                renamed = match.group(0).replace(
-                    f'"{easyeda_symbol.info.name}_0_1"',
-                    f'"{easyeda_symbol.info.name}_{i}_1"',
-                )
-                sub_units.append(renamed)
-
-        # Replace empty _0_1 with sub-units in the main symbol content
-        if sub_units:
-            empty_unit_pattern = rf'( *)\(symbol "{sanitize_for_regex(easyeda_symbol.info.name)}_0_1".*?\n\1\)'
-            replacement_text = "\n".join(sub_units)
-            kicad_symbol_lib = re.sub(
-                empty_unit_pattern,
-                replacement_text,
-                kicad_symbol_lib,
-                count=1,
-                flags=re.DOTALL,
-            )
-            logging.info(f"Integrated {len(sub_units)} sub-symbols into main symbol")
-
-    # Now add/update the complete symbol (with sub-units) to the library
     if is_id_already_in_symbol_lib:
         update_component_in_symbol_lib_file(
             lib_path=f"{arguments['output']}.{sym_lib_ext}",
@@ -325,6 +265,10 @@ def _process_symbol(
             kicad_version=kicad_version,
         )
 
+    if easyeda_symbol.sub_symbols:
+        logging.info(
+            f"Integrated {len(easyeda_symbol.sub_symbols)} sub-symbols into main symbol"
+        )
     logging.info(
         f"Created Kicad symbol for ID : {component_id}\n"
         f"       Symbol name : {easyeda_symbol.info.name}\n"
@@ -394,7 +338,7 @@ def _process_3d_model(
         ).output,
         fp_type=_fp_type,
     )
-    model_exporter.export(lib_path=arguments["output"])
+    model_exporter.export(output_dir=f"{arguments['output']}.3dshapes")
     if model_exporter.output:
         filename_wrl = f"{model_exporter.output.name}.wrl"
         filename_step = f"{model_exporter.output.name}.step"
