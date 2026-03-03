@@ -3,6 +3,8 @@ import logging
 import math
 import re
 
+__all__ = ["KicadVersion"]
+
 # Local imports
 from .kicad.parameters_kicad_symbol import KicadVersion
 
