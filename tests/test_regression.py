@@ -33,8 +33,12 @@ class TestCreateReference:
 
     @pytest.mark.parametrize("component_id", TEST_COMPONENTS)
     def test_create_reference_files(
-        self, component_id, temp_output_dir, reference_dir, create_reference
-    ):
+        self,
+        component_id: str,
+        temp_output_dir: str,
+        reference_dir: Path,
+        create_reference: bool,
+    ) -> None:
         """Create reference files for regression tests."""
         if not create_reference:
             pytest.skip("Run with --create-reference to generate reference files")
@@ -198,7 +202,9 @@ class TestRegression:
         return files
 
     @pytest.mark.parametrize("component_id", TEST_COMPONENTS)
-    def test_symbol_generation(self, component_id, temp_output_dir, reference_dir):
+    def test_symbol_generation(
+        self, component_id: str, temp_output_dir: str, reference_dir: Path
+    ) -> None:
         """Test that symbol files are generated consistently."""
         output_path = Path(temp_output_dir) / "test_lib"
 
@@ -237,7 +243,9 @@ class TestRegression:
             assert is_equal, f"Symbol file differs from reference:\n{message}"
 
     @pytest.mark.parametrize("component_id", TEST_COMPONENTS)
-    def test_footprint_generation(self, component_id, temp_output_dir, reference_dir):
+    def test_footprint_generation(
+        self, component_id: str, temp_output_dir: str, reference_dir: Path
+    ) -> None:
         """Test that footprint files are generated consistently."""
         output_path = Path(temp_output_dir) / "test_lib"
 
@@ -275,7 +283,9 @@ class TestRegression:
             assert is_equal, f"Footprint file differs from reference:\n{message}"
 
     @pytest.mark.parametrize("component_id", TEST_COMPONENTS)
-    def test_3d_model_generation(self, component_id, temp_output_dir, reference_dir):
+    def test_3d_model_generation(
+        self, component_id: str, temp_output_dir: str, reference_dir: Path
+    ) -> None:
         """Test that 3D model files are generated consistently."""
         output_path = Path(temp_output_dir) / "test_lib"
 
@@ -317,7 +327,9 @@ class TestRegression:
             assert is_equal, f"3D model file differs from reference:\n{message}"
 
     @pytest.mark.parametrize("component_id", TEST_COMPONENTS)
-    def test_full_generation(self, component_id, temp_output_dir, reference_dir):
+    def test_full_generation(
+        self, component_id: str, temp_output_dir: str, reference_dir: Path
+    ) -> None:
         """Test that all files together are generated consistently."""
         output_name = "test_lib"
         output_path = Path(temp_output_dir) / output_name
