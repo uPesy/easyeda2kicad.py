@@ -304,7 +304,13 @@ def _process_footprint(
     if arguments.get("use_default_folder"):
         model_3d_path = "${EASYEDA2KICAD}/easyeda2kicad.3dshapes"
     if arguments["project_relative"]:
-        model_3d_path = "${KIPRJMOD}" + model_3d_path
+        # Use a path relative to CWD so ${KIPRJMOD} is not prepended with an
+        # absolute filesystem path. os.path.relpath converts the absolute
+        # model_3d_path to a path relative to the current working directory,
+        # which is the project root when running from a KiCad project folder.
+        model_3d_path = "${KIPRJMOD}/" + os.path.relpath(model_3d_path).replace(
+            "\\", "/"
+        )
 
     ki_footprint.export(
         footprint_full_path=f"{footprint_path}/{footprint_filename}",

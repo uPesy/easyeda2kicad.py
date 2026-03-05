@@ -1,4 +1,4 @@
-# easyeda2kicad v0.9.0
+# easyeda2kicad v1.0.0
 
 [![PyPI version](https://badge.fury.io/py/easyeda2kicad.svg)](https://badge.fury.io/py/easyeda2kicad)
 [![License](https://img.shields.io/github/license/upesy/easyeda2kicad.py.svg)](https://pypi.org/project/isort/)
@@ -35,6 +35,30 @@ If this tool has saved you a lot of time when designing a PCB, please consider s
 pip install easyeda2kicad
 ```
 
+### Installation using the KiCad Command Prompt
+
+KiCad ships with its own Python interpreter. If you don't have a separate Python installation, you can use the **KiCad Command Prompt** to install easyeda2kicad into KiCad's Python environment.
+
+**Windows:** Open the KiCad Command Prompt via *Start Menu → KiCad → KiCad Command Prompt*, then run:
+
+```bash
+pip install easyeda2kicad
+```
+
+**Linux / macOS:** KiCad's Python is typically not on the system PATH. Use the full path to KiCad's pip, for example:
+
+```bash
+/usr/lib/kicad/lib/python3/dist-packages/../../../bin/python3 -m pip install easyeda2kicad
+```
+
+Or locate it with:
+
+```bash
+find /usr -name "pip*" | grep kicad
+```
+
+After installation, run `easyeda2kicad` from the same KiCad Command Prompt.
+
 ## 💻 Usage
 
 ```bash
@@ -52,9 +76,11 @@ easyeda2kicad --footprint --lcsc_id=C2040
 easyeda2kicad --3d --lcsc_id=C2040
 # For symbol in Kicad v5.x legacy format
 easyeda2kicad --symbol --lcsc_id=C2040 --v5
+# Import multiple components at once
+easyeda2kicad --full --lcsc_id C2040 C20197 C163691
 ```
 
-By default, all librairies are saved in `C:/Users/your_name/Documents/Kicad/easyeda2kicad/`, with :
+By default, all librairies are saved in `~/Documents/Kicad/easyeda2kicad/` (Linux/macOS) or `C:/Users/your_name/Documents/Kicad/easyeda2kicad/` (Windows), with :
 
 - `easyeda2kicad.kicad_sym` file for Kicad v6.x symbol library
 - `easyeda2kicad.lib` file for Kicad v5.x legacy symbol library
@@ -83,6 +109,35 @@ By default, easyeda2kicad will generate a symbol library for Kicad v6.x (.kicad_
 
 ```bash
 easyeda2kicad --symbol --lcsc_id=C2040 --v5
+```
+
+### Project-relative 3D model paths
+
+When working in a KiCad project folder, use `--project-relative` together with `--output` to store 3D model paths relative to the project root (`${KIPRJMOD}`):
+
+```bash
+easyeda2kicad --full --lcsc_id=C2040 --output ~/myproject/libs/my_lib --project-relative
+```
+
+This stores the 3D path as `${KIPRJMOD}/libs/my_lib.3dshapes/...` instead of an absolute filesystem path, making the project portable.
+
+### Multiple IDs at once
+
+You can import several components in a single call:
+
+```bash
+easyeda2kicad --full --lcsc_id C2040 C20197 C163691
+```
+
+### Using a proxy server
+
+Set the `HTTPS_PROXY` environment variable — no extra argument needed:
+
+```bash
+# Linux / macOS
+HTTPS_PROXY=http://proxy.example.com:8080 easyeda2kicad --full --lcsc_id=C2040
+# Windows
+set HTTPS_PROXY=http://proxy.example.com:8080 && easyeda2kicad --full --lcsc_id=C2040
 ```
 
 ### Debug Mode

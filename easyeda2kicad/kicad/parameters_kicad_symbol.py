@@ -95,7 +95,7 @@ ki_box_fill_v5_format = {
 
 
 def sanitize_fields(name: str) -> str:
-    return name.replace(" ", "").replace("/", "_")
+    return name.replace(" ", "").replace("/", "_").replace(":", "_")
 
 
 def apply_text_style(text: str, kicad_version: KicadVersion) -> str:
@@ -137,7 +137,9 @@ class KiSymbolInfo:
     manufacturer: str
     datasheet: str
     lcsc_id: str
-    jlc_id: str
+    mpn: str = ""
+    keywords: str = ""
+    description: str = ""
     y_low: int | float = 0
     y_high: int | float = 0
 
@@ -197,10 +199,14 @@ class KiSymbolInfo:
                     manufacturer=self.manufacturer,
                 )
             )
+        if self.mpn:
+            header.append(f'F5 "{self.mpn}" 0 0 0 H I C CNN "MPN"')
         if self.lcsc_id:
             header.append(f'F6 "{self.lcsc_id}" 0 0 0 H I C CNN "LCSC Part"')
-        if self.jlc_id:
-            header.append(f'F7 "{self.jlc_id}" 0 0 0 H I C CNN "JLC Part"')
+        if self.keywords:
+            header.append(f'F8 "{self.keywords}" 0 0 0 H I C CNN "Keywords"')
+        if self.description:
+            header.append(f'F9 "{self.description}" 0 0 0 H I C CNN "Description"')
 
         header.append("DRAW\n")
 
@@ -281,12 +287,12 @@ class KiSymbolInfo:
                     hide="hide",
                 )
             )
-        if self.lcsc_id:
+        if self.mpn:
             field_offset_y += KiExportConfigV6.FIELD_OFFSET_INCREMENT.value
             header.append(
                 property_template.format(
-                    key="LCSC Part",
-                    value=self.lcsc_id,
+                    key="MPN",
+                    value=self.mpn,
                     id_=5,
                     pos_y=self.y_low - field_offset_y,
                     font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
@@ -294,13 +300,39 @@ class KiSymbolInfo:
                     hide="hide",
                 )
             )
-        if self.jlc_id:
+        if self.lcsc_id:
             field_offset_y += KiExportConfigV6.FIELD_OFFSET_INCREMENT.value
             header.append(
                 property_template.format(
-                    key="JLC Part",
-                    value=self.jlc_id,
+                    key="LCSC Part",
+                    value=self.lcsc_id,
                     id_=6,
+                    pos_y=self.y_low - field_offset_y,
+                    font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
+                    style="",
+                    hide="hide",
+                )
+            )
+        if self.keywords:
+            field_offset_y += KiExportConfigV6.FIELD_OFFSET_INCREMENT.value
+            header.append(
+                property_template.format(
+                    key="Keywords",
+                    value=self.keywords,
+                    id_=8,
+                    pos_y=self.y_low - field_offset_y,
+                    font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
+                    style="",
+                    hide="hide",
+                )
+            )
+        if self.description:
+            field_offset_y += KiExportConfigV6.FIELD_OFFSET_INCREMENT.value
+            header.append(
+                property_template.format(
+                    key="Description",
+                    value=self.description,
+                    id_=9,
                     pos_y=self.y_low - field_offset_y,
                     font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
                     style="",
