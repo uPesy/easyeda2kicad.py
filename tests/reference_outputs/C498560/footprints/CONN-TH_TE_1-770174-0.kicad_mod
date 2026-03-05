@@ -9,6 +9,7 @@
 	(fp_text user %R (at 0 0) (layer F.Fab)
 		(effects (font (size 1 1) (thickness 0.15)))
 	)
+	(property "LCSC Part" "C498560")
 	(fp_line (start -4.95 1.15) (end -7.36 1.14) (layer F.SilkS) (width 0.25))
 	(fp_line (start -7.36 1.14) (end -7.36 3.17) (layer F.SilkS) (width 0.25))
 	(fp_line (start -7.36 3.17) (end -4.95 3.18) (layer F.SilkS) (width 0.25))
@@ -61,7 +62,7 @@
 	(pad "" thru_hole circle (at 6.52 -2.07) (size 3.18 3.18) (drill 3.18) (layers *.Cu *.Mask))
 	(fp_circle (center 6.52 -2.07) (end 7.27 -2.07) (layer Cmts.User) (width 1.50))
 	(fp_circle (center 4.92 -6.10) (end 4.95 -6.10) (layer F.SilkS) (width 0.06))
-	(model "/tmp/easyeda2kicad_test_38dz51i7/test_lib.3dshapes/CONN-TH_TE_1-770174-0.wrl"
+	(model "/tmp/easyeda2kicad_test_ofmco6kf/test_lib.3dshapes/CONN-TH_TE_1-770174-0.wrl"
 		(offset (xyz 0.000 0.000 4.200))
 		(scale (xyz 1 1 1))
 		(rotate (xyz 0 0 0))

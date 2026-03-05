@@ -34,38 +34,59 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
+        "Manufacturer"
+        "cjiang(长江微电)"
+        (id 4)
+        (at 0 -12.70 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "MPN"
+        "FXL0630-3R3-M"
+        (id 5)
+        (at 0 -15.24 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
         "LCSC Part"
         "C167219"
-        (id 5)
-        (at 0 -12.70 0)
+        (id 6)
+        (at 0 -17.78 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "Keywords"
+        "Power Inductors"
+        (id 8)
+        (at 0 -20.32 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (symbol "FXL0630-3R3-M_0_1"
         (arc
-          (start -3.81 -0.00)
-          (mid -2.52 0.01)
-          (end -2.54 -0.00)
+          (start -2.27 0.02)
+          (mid -3.28 1.10)
+          (end -4.29 0.02)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (arc
-          (start -2.54 -0.00)
-          (mid -1.06 0.99)
-          (end 0.00 -0.00)
+          (start -0.11 0.02)
+          (mid -1.12 1.10)
+          (end -2.13 0.02)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (arc
-          (start 0.00 -0.00)
-          (mid 1.48 0.99)
-          (end 2.54 -0.00)
+          (start 2.04 0.02)
+          (mid 1.03 1.10)
+          (end 0.02 0.02)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (arc
-          (start 2.54 -0.00)
-          (mid 3.83 0.01)
-          (end 3.81 -0.00)
+          (start 4.23 0.02)
+          (mid 3.22 1.10)
+          (end 2.21 0.02)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )

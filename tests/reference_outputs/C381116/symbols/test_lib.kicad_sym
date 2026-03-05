@@ -34,64 +34,85 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
+        "Manufacturer"
+        "XKB Connection(中国星坤)"
+        (id 4)
+        (at 0 -16.51 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "MPN"
+        "DC-005-5A-2.0"
+        (id 5)
+        (at 0 -19.05 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
         "LCSC Part"
         "C381116"
-        (id 5)
-        (at 0 -16.51 0)
+        (id 6)
+        (at 0 -21.59 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "Keywords"
+        "AC/DC Power Connectors"
+        (id 8)
+        (at 0 -24.13 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (symbol "DC-005-5A-2.0_0_1"
         (rectangle
-          (start -1.27 2.54)
-          (end 0.00 0.00)
+          (start -1.27 2.79)
+          (end -0.25 -0.25)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type background))
         )
         (arc
-          (start -6.35 -0.00)
-          (mid -6.14 2.26)
-          (end -6.35 2.54)
+          (start -6.35 2.29)
+          (mid -7.37 1.27)
+          (end -6.35 0.25)
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy 1.27 1.27) (xy 0.00 1.27)
+            (xy 1.27 1.27) (xy -0.25 1.27)
           )
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy -1.27 2.54) (xy -6.35 2.54)
+            (xy -1.27 2.29) (xy -6.35 2.29)
           )
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy -1.27 -0.00) (xy -6.35 -0.00)
+            (xy -1.27 0.25) (xy -6.35 0.25)
           )
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy 1.27 -3.81) (xy -6.35 -3.81) (xy -6.35 -2.54) (xy -6.35 -3.81)
+            (xy 1.27 -3.81) (xy -6.10 -3.81) (xy -6.60 -2.79) (xy -7.11 -3.81)
           )
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy 1.27 -1.27) (xy -2.54 -1.27) (xy -2.54 -3.81) (xy -2.54 -2.54)
+            (xy 1.27 -1.27) (xy -3.05 -1.27) (xy -3.05 -3.81) (xy -3.30 -2.54)
           )
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))
         )
         (polyline
           (pts
-            (xy -2.54 -3.81) (xy -2.54 -2.54)
+            (xy -3.05 -3.81) (xy -2.79 -2.54)
           )
           (stroke (width 0) (type default) (color 0 0 0 0))
           (fill (type none))

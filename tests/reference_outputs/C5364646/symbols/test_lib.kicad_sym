@@ -27,10 +27,31 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
+        "Manufacturer"
+        "ESPRESSIF(乐鑫)"
+        (id 4)
+        (at 0 -45.72 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "MPN"
+        "ESP32-C6"
+        (id 5)
+        (at 0 -48.26 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
         "LCSC Part"
         "C5364646"
-        (id 5)
-        (at 0 -45.72 0)
+        (id 6)
+        (at 0 -50.80 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "Keywords"
+        "Microcontrollers (MCU/MPU/SOC)"
+        (id 8)
+        (at 0 -53.34 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (symbol "ESP32-C6_C5364646_0_1"

@@ -27,10 +27,31 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
+        "Manufacturer"
+        "TE Connectivity(泰科电子)"
+        (id 4)
+        (at 0 -11.43 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "MPN"
+        "1-770174-0"
+        (id 5)
+        (at 0 -13.97 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
         "LCSC Part"
         "C498560"
-        (id 5)
-        (at 0 -11.43 0)
+        (id 6)
+        (at 0 -16.51 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "Keywords"
+        "Wire To Board / Wire To Wire Connector"
+        (id 8)
+        (at 0 -19.05 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (symbol "1-770174-0_0_1"

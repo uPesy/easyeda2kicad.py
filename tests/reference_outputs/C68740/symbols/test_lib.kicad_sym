@@ -34,10 +34,31 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
+        "Manufacturer"
+        "精拓金"
+        (id 4)
+        (at 0 -27.94 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "MPN"
+        "917-P81A205CS60202"
+        (id 5)
+        (at 0 -30.48 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
         "LCSC Part"
         "C68740"
-        (id 5)
-        (at 0 -27.94 0)
+        (id 6)
+        (at 0 -33.02 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "Keywords"
+        "USB Connectors"
+        (id 8)
+        (at 0 -35.56 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (symbol "CU3M002_USBA_M3.0SMTL=1.9K_0_1"

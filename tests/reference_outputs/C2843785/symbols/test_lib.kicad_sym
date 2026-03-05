@@ -27,10 +27,31 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
+        "Manufacturer"
+        "XINGLIGHT(成兴光)"
+        (id 4)
+        (at 0 -11.43 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "MPN"
+        "XL-5050RGBC-2812B"
+        (id 5)
+        (at 0 -13.97 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
         "LCSC Part"
         "C2843785"
-        (id 5)
-        (at 0 -11.43 0)
+        (id 6)
+        (at 0 -16.51 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "Keywords"
+        "Light Emitting Diodes (LED)"
+        (id 8)
+        (at 0 -19.05 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (symbol "XL-5050RGBC-WS2812B_0_1"

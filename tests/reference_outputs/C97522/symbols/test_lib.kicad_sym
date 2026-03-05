@@ -34,10 +34,31 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
+        "Manufacturer"
+        "Winbond(华邦)"
+        (id 4)
+        (at 0 -17.78 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "MPN"
+        "W25Q256JVEIQ"
+        (id 5)
+        (at 0 -20.32 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
         "LCSC Part"
         "C97522"
-        (id 5)
-        (at 0 -17.78 0)
+        (id 6)
+        (at 0 -22.86 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "Keywords"
+        "NOR FLASH"
+        (id 8)
+        (at 0 -25.40 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (symbol "W25Q256JVEIQTR_0_1"

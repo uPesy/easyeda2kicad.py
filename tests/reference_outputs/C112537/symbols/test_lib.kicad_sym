@@ -34,10 +34,31 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
+        "Manufacturer"
+        "TI(德州仪器)"
+        (id 4)
+        (at 0 -15.24 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "MPN"
+        "LM317LIPK"
+        (id 5)
+        (at 0 -17.78 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
         "LCSC Part"
         "C112537"
-        (id 5)
-        (at 0 -15.24 0)
+        (id 6)
+        (at 0 -20.32 0)
+        (effects (font (size 1.27 1.27) ) hide)
+      )
+      (property
+        "Keywords"
+        "Linear Voltage Regulators (LDO)"
+        (id 8)
+        (at 0 -22.86 0)
         (effects (font (size 1.27 1.27) ) hide)
       )
       (symbol "LM317LIPK_0_1"
