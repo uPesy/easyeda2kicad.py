@@ -404,10 +404,14 @@ class EasyedaSymbolImporter:
                 name=_sanitize_component_name(ee_data_info["name"]),
                 prefix=ee_data_info["pre"],
                 package=ee_data_info.get("package", ""),
-                manufacturer=ee_data_info.get("BOM_Manufacturer", ""),
+                manufacturer=ee_data_info.get("Manufacturer", "")
+                or ee_data_info.get("BOM_Manufacturer", ""),
+                mpn=ee_data_info.get("Manufacturer Part", "")
+                or ee_data_info.get("BOM_Manufacturer Part", ""),
                 datasheet=ee_data.get("lcsc", {}).get("url", ""),
                 lcsc_id=ee_data.get("lcsc", {}).get("number", ""),
-                jlc_id=ee_data_info.get("BOM_JLCPCB Part Class", ""),
+                keywords=" ".join(ee_data.get("tags", [])),
+                description=ee_data.get("description", ""),
             ),
             bbox=EeSymbolBbox(
                 x=origin_x,
@@ -430,24 +434,39 @@ class EasyedaSymbolImporter:
 class EasyedaFootprintImporter:
     def __init__(self, easyeda_cp_cad_data: dict[str, Any]):
         self.input = easyeda_cp_cad_data
+        _c_para = self.input["packageDetail"]["dataStr"]["head"]["c_para"]
         self.output = self.extract_easyeda_data(
             ee_data_str=self.input["packageDetail"]["dataStr"],
-            ee_data_info=self.input["packageDetail"]["dataStr"]["head"]["c_para"],
+            ee_data_info=_c_para,
             is_smd=bool(self.input.get("SMT"))
             and "-TH_" not in self.input["packageDetail"]["title"],
+            lcsc_id=self.input.get("lcsc", {}).get("number", ""),
+            manufacturer=_c_para.get("Manufacturer", "")
+            or _c_para.get("BOM_Manufacturer", ""),
+            mpn=_c_para.get("Manufacturer Part", "")
+            or _c_para.get("BOM_Manufacturer Part", ""),
         )
 
     def get_footprint(self) -> EeFootprint:
         return self.output
 
     def extract_easyeda_data(
-        self, ee_data_str: dict[str, Any], ee_data_info: dict[str, Any], is_smd: bool
+        self,
+        ee_data_str: dict[str, Any],
+        ee_data_info: dict[str, Any],
+        is_smd: bool,
+        lcsc_id: str = "",
+        manufacturer: str = "",
+        mpn: str = "",
     ) -> EeFootprint:
         new_ee_footprint = EeFootprint(
             info=EeFootprintInfo(
                 name=ee_data_info["package"],
                 fp_type="smd" if is_smd else "tht",
                 model_3d_name=ee_data_info.get("3DModel", ""),
+                lcsc_id=lcsc_id,
+                manufacturer=manufacturer,
+                mpn=mpn,
             ),
             bbox=EeFootprintBbox(
                 x=_safe_float(ee_data_str["head"].get("x")),

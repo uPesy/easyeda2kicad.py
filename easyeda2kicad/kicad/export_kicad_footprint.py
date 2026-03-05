@@ -121,7 +121,7 @@ def compute_arc(
     p = ux * vx + uy * vy
     sign = -1 if (ux * vy - uy * vx) < 0 else 1
     if n != 0:
-        angle_extent = to_degrees(sign * acos(p / n)) if abs(p / n) < 1 else 360 + 359
+        angle_extent = to_degrees(sign * acos(max(-1.0, min(1.0, p / n))))
     else:
         angle_extent = 360 + 359
     if not (sweep_flag) and angle_extent > 0:
@@ -223,14 +223,19 @@ class ExporterFootprintKicad:
                 field.convert_to_mm()
 
         ki_info = KiFootprintInfo(
-            name=self.input.info.name, fp_type=self.input.info.fp_type
+            name=self.input.info.name,
+            fp_type=self.input.info.fp_type,
+            lcsc_id=self.input.info.lcsc_id,
+            manufacturer=self.input.info.manufacturer,
+            mpn=self.input.info.mpn,
         )
 
         if self.input.model_3d is not None:
             self.input.model_3d.convert_to_mm()
 
-            # SMD: offset is baked into WRL vertices, so KiCad translation = (0,0,0)
-            # THT: use API z-offset so pins extend below the board
+            # SMD: XY offset is baked into WRL vertices → translation = (0,0,0)
+            # THT: STEP from API is not modified; XY=0 requires manual correction
+            #      in KiCad. Only Z is taken from the API so pins sit below the board.
             is_smd = self.input.info.fp_type == "smd"
             ki_3d_model_info = Ki3dModel(
                 name=self.input.model_3d.name,
@@ -548,6 +553,13 @@ class ExporterFootprintKicad:
             package_name=ki.info.name, pos_x="0", pos_y=y_high + 4
         )
         ki_lib += KI_FAB_REF
+
+        if ki.info.lcsc_id:
+            ki_lib += f'\t(property "LCSC Part" "{ki.info.lcsc_id}")\n'
+        if ki.info.manufacturer:
+            ki_lib += f'\t(property "Manufacturer" "{ki.info.manufacturer}")\n'
+        if ki.info.mpn:
+            ki_lib += f'\t(property "MPN" "{ki.info.mpn}")\n'
 
         # ---------------------------------------
 

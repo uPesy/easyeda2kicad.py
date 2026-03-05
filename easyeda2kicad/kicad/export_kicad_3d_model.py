@@ -103,19 +103,19 @@ def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
 
     materials = get_materials(obj_data=model_3d.raw_obj)
 
-    # For SMD parts: center XY on (0,0) and shift Z so bottom sits at z=0
+    # Center XY on (0,0) for all parts; shift Z so bottom sits at z=0 for SMD only.
     offset_x, offset_y, offset_z = 0.0, 0.0, 0.0
-    if fp_type == "smd":
-        bbox = _get_obj_bbox(model_3d.raw_obj)
-        if bbox:
-            (x_min, x_max), (y_min, y_max), (z_min, _) = bbox
-            offset_x = -(x_min + x_max) / 2.0
-            offset_y = -(y_min + y_max) / 2.0
+    bbox = _get_obj_bbox(model_3d.raw_obj)
+    if bbox:
+        (x_min, x_max), (y_min, y_max), (z_min, _) = bbox
+        offset_x = -(x_min + x_max) / 2.0
+        offset_y = -(y_min + y_max) / 2.0
+        if fp_type == "smd":
             offset_z = -z_min
-        logging.debug(
-            f"3D SMD centering offset: "
-            f"X={offset_x:.2f} Y={offset_y:.2f} Z={offset_z:.2f}"
-        )
+    logging.debug(
+        f"3D centering offset ({fp_type}): "
+        f"X={offset_x:.2f} Y={offset_y:.2f} Z={offset_z:.2f}"
+    )
 
     vertices = get_vertices(
         obj_data=model_3d.raw_obj,

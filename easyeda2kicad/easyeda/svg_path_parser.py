@@ -26,6 +26,12 @@ class SvgPathEllipticalArc:
     end_x: float
     end_y: float
 
+    def __post_init__(self) -> None:
+        # SVG arc flags arrive as raw strings '0'/'1' from the parser.
+        # bool('0') == True, so explicit int conversion is required.
+        self.flag_large_arc = bool(int(self.flag_large_arc))
+        self.flag_sweep = bool(int(self.flag_sweep))
+
 
 @dataclass
 class SvgPathClosePath:

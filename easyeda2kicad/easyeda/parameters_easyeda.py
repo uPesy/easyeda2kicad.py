@@ -349,7 +349,9 @@ class EeSymbolInfo:
     manufacturer: str = ""
     datasheet: str = ""
     lcsc_id: str = ""
-    jlc_id: str = ""
+    mpn: str = ""
+    keywords: str = ""
+    description: str = ""
 
 
 @dataclass
@@ -612,6 +614,9 @@ class EeFootprintInfo:
     name: str
     fp_type: str
     model_3d_name: str
+    lcsc_id: str = ""
+    manufacturer: str = ""
+    mpn: str = ""
 
 
 # ------------------------- 3D MODEL -------------------------

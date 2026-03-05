@@ -242,6 +242,9 @@ class KiFootprintCopperArea:
 class KiFootprintInfo:
     name: str
     fp_type: str
+    lcsc_id: str = ""
+    manufacturer: str = ""
+    mpn: str = ""
 
 
 # ---------------- 3D MODEL ----------------

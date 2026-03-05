@@ -6,7 +6,7 @@ with open("README.md") as fh:
 production_dependencies: list[str] = []
 
 development_dependencies: list[str] = [
-    "pre-commit>=2.17.0",
+    "pre-commit>=3.0.0",
 ]
 
 with open("requirements.txt", "w", encoding="utf-8") as f:
@@ -20,7 +20,7 @@ setup(
     ),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version="0.9.0",
+    version="1.0.0",
     author="uPesy",
     author_email="contact@upesy.com",
     url="https://github.com/uPesy/easyeda2kicad.py",
@@ -34,7 +34,7 @@ setup(
     packages=find_packages(exclude=["tests", "utils"]),
     package_dir={"easyeda2kicad": "easyeda2kicad"},
     entry_points={"console_scripts": ["easyeda2kicad = easyeda2kicad.__main__:main"]},
-    python_requires=">=3.6",
+    python_requires=">=3.10",
     install_requires=production_dependencies,
     extras_require={"dev": development_dependencies},
     zip_safe=False,
