@@ -209,18 +209,22 @@ class ExporterFootprintKicad:
         # Convert dimension from easyeda to kicad
         self.input.bbox.convert_to_mm()
 
-        for fields in (
-            self.input.pads,
-            self.input.tracks,
-            self.input.holes,
-            self.input.vias,
-            self.input.circles,
-            self.input.rectangles,
-            self.input.arcs,
-            self.input.texts,
-        ):
-            for field in fields:
-                field.convert_to_mm()
+        for pad in self.input.pads:
+            pad.convert_to_mm()
+        for track in self.input.tracks:
+            track.convert_to_mm()
+        for hole in self.input.holes:
+            hole.convert_to_mm()
+        for via in self.input.vias:
+            via.convert_to_mm()
+        for circle in self.input.circles:
+            circle.convert_to_mm()
+        for rectangle in self.input.rectangles:
+            rectangle.convert_to_mm()
+        for arc in self.input.arcs:
+            arc.convert_to_mm()
+        for text in self.input.texts:
+            text.convert_to_mm()
 
         ki_info = KiFootprintInfo(
             name=self.input.info.name,
@@ -231,11 +235,11 @@ class ExporterFootprintKicad:
         )
 
         if self.input.model_3d is not None:
-            self.input.model_3d.convert_to_mm()
+            # translation is already in mm (computed from EE canvas coordinates).
+            # Do NOT call convert_to_mm() — that would double-scale the values.
 
-            # SMD: XY offset is baked into WRL vertices → translation = (0,0,0)
-            # THT: STEP from API is not modified; XY=0 requires manual correction
-            #      in KiCad. Only Z is taken from the API so pins sit below the board.
+            # SMD: XY+Z offset is baked into WRL vertices → KiCad offset = (0,0,0)
+            # THT: WRL is not regenerated; full offset goes into KiCad footprint
             is_smd = self.input.info.fp_type == "smd"
             ki_3d_model_info = Ki3dModel(
                 name=self.input.model_3d.name,

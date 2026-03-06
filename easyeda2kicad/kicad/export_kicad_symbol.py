@@ -2,7 +2,7 @@
 import logging
 import math
 import re
-from typing import Callable, Sequence
+from typing import Sequence
 
 # Local imports
 from ..helpers import sanitize_for_regex
@@ -46,8 +46,8 @@ ee_pin_type_to_ki_pin_type = {
 }
 
 
-def px_to_mil(dim: int | float | str) -> int:
-    return int(10 * float(dim))
+def px_to_mil(dim: int | float | str) -> float:
+    return float(int(10 * float(dim)))
 
 
 def px_to_mm(dim: int | float | str) -> float:
@@ -58,6 +58,11 @@ def px_to_mm_grid(dim: int | float | str, grid: float = 1.27) -> float:
     """Convert EasyEDA pixels to KiCad mm and snap to grid (default 50mil = 1.27mm)."""
     mm_value = 10.0 * float(dim) * 0.0254
     return round(mm_value / grid) * grid
+
+
+# Single-argument wrapper used where a Callable[[int|float|str], float] is required.
+def _px_to_mm_grid(dim: int | float | str) -> float:
+    return px_to_mm_grid(dim)
 
 
 def snap_bbox(
@@ -78,9 +83,7 @@ def snap_bbox(
 def convert_ee_pins(
     ee_pins: list[EeSymbolPin], ee_bbox: EeSymbolBbox, kicad_version: KicadVersion
 ) -> list[KiSymbolPin]:
-    to_ki: Callable[[int | float | str], float] = (
-        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm_grid
-    )
+    to_ki = px_to_mil if kicad_version == KicadVersion.v5 else _px_to_mm_grid
 
     kicad_pins = []
     for ee_pin in ee_pins:
@@ -114,9 +117,7 @@ def convert_ee_rectangles(
     ee_bbox: EeSymbolBbox,
     kicad_version: KicadVersion,
 ) -> list[KiSymbolRectangle]:
-    to_ki: Callable[[int | float | str], float] = (
-        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
-    )
+    to_ki = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
 
     kicad_rectangles = []
     for ee_rectangle in ee_rectangles:
@@ -137,9 +138,7 @@ def convert_ee_circles(
     ee_bbox: EeSymbolBbox,
     kicad_version: KicadVersion,
 ) -> list[KiSymbolCircle]:
-    to_ki: Callable[[int | float | str], float] = (
-        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
-    )
+    to_ki = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
 
     return [
         KiSymbolCircle(
@@ -157,9 +156,7 @@ def convert_ee_ellipses(
     ee_bbox: EeSymbolBbox,
     kicad_version: KicadVersion,
 ) -> list[KiSymbolCircle]:
-    to_ki: Callable[[int | float | str], float] = (
-        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
-    )
+    to_ki = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
 
     # Ellipses are not supported in KiCad — convert only if radius_x == radius_y (circle)
     return [
@@ -267,9 +264,7 @@ def convert_ee_arcs(
     ee_bbox: EeSymbolBbox,
     kicad_version: KicadVersion,
 ) -> list[KiSymbolArc]:
-    to_ki: Callable[[int | float | str], float] = (
-        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
-    )
+    to_ki = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
 
     kicad_arcs = []
     for ee_arc in ee_arcs:
@@ -344,9 +339,7 @@ def convert_ee_polylines(
     ee_bbox: EeSymbolBbox,
     kicad_version: KicadVersion,
 ) -> list[KiSymbolPolygon]:
-    to_ki: Callable[[int | float | str], float] = (
-        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
-    )
+    to_ki = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
 
     kicad_polygons = []
     for ee_polyline in ee_polylines:
@@ -403,9 +396,7 @@ def convert_ee_paths(
     # Note: the EasyEDA PT format documentation (CMD_SYMBOL.md) is not fully
     # verified — implement curve support only once test cases are confirmed.
     kicad_polygons: list[KiSymbolPolygon] = []
-    to_ki: Callable[[int | float | str], float] = (
-        px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
-    )
+    to_ki = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
 
     # Token counts consumed by each SVG path command (excluding the command letter itself)
     _curve_tokens = {"C": 6, "Q": 4, "A": 7}
