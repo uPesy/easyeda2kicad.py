@@ -103,7 +103,9 @@ def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
 
     materials = get_materials(obj_data=model_3d.raw_obj)
 
-    # Center XY on (0,0) for all parts; shift Z so bottom sits at z=0 for SMD only.
+    # Step 1: Center XY on (0,0); shift Z so bottom sits at z=0 for SMD only.
+    # Step 2: Apply EE metadata offset (c_origin - canvas_origin) in mm.
+    # Mirrors smt-gl-engine.js fi(): bbox-center first, then metadata translate.
     offset_x, offset_y, offset_z = 0.0, 0.0, 0.0
     bbox = _get_obj_bbox(model_3d.raw_obj)
     if bbox:
@@ -112,6 +114,10 @@ def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
         offset_y = -(y_min + y_max) / 2.0
         if fp_type == "smd":
             offset_z = -z_min
+    # Add EE placement offset (already in mm, same unit as OBJ vertices)
+    offset_x += model_3d.translation.x
+    offset_y += model_3d.translation.y
+    offset_z += model_3d.translation.z
     logging.debug(
         f"3D centering offset ({fp_type}): "
         f"X={offset_x:.2f} Y={offset_y:.2f} Z={offset_z:.2f}"

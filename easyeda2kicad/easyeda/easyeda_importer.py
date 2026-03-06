@@ -525,7 +525,10 @@ class EasyedaFootprintImporter:
                 new_ee_footprint.texts.append(ee_text)
             elif ee_designator == "SVGNODE":
                 new_ee_footprint.model_3d = Easyeda3dModelImporter(
-                    easyeda_cp_cad_data=[line], download_raw_3d_model=False
+                    easyeda_cp_cad_data=[line],
+                    download_raw_3d_model=False,
+                    canvas_origin_x=_safe_float(ee_data_str["head"].get("x")),
+                    canvas_origin_y=_safe_float(ee_data_str["head"].get("y")),
                 ).output
 
             elif ee_designator == "SOLIDREGION":
@@ -540,15 +543,24 @@ class EasyedaFootprintImporter:
 
 
 class Easyeda3dModelImporter:
+    # EasyEDA canvas scale: 1 canvas-unit = 0.254 mm (confirmed from smt-gl-engine.js)
+    _CANVAS_SCALE = 0.254
+    # Outline-fix threshold from smt-gl-engine.js: if |outline_centre - c_origin| > 0.1mm
+    _FIX_THRESHOLD = 0.1
+
     def __init__(
         self,
         easyeda_cp_cad_data: dict[str, Any] | list[str],
         download_raw_3d_model: bool,
         api: EasyedaApi | None = None,
+        canvas_origin_x: float = 0.0,
+        canvas_origin_y: float = 0.0,
     ):
         self.input = easyeda_cp_cad_data
         self.download_raw_3d_model = download_raw_3d_model
         self.api = api
+        self.canvas_origin_x = canvas_origin_x
+        self.canvas_origin_y = canvas_origin_y
         self.output = self.create_3d_model()
 
     def create_3d_model(self) -> Ee3dModel | None:
@@ -559,7 +571,7 @@ class Easyeda3dModelImporter:
         )
 
         if model_3d_info := self.get_3d_model_info(ee_data=ee_data):
-            model_3d: Ee3dModel = self.parse_3d_model_info(info=model_3d_info)
+            model_3d: Ee3dModel = self.parse_3d_model_info(node=model_3d_info)
             if self.download_raw_3d_model:
                 api = self.api or EasyedaApi()
                 model_3d.raw_obj = api.get_raw_3d_model_obj(uuid=model_3d.uuid)
@@ -577,31 +589,65 @@ class Easyeda3dModelImporter:
                 if split_data:
                     raw_json = split_data[0]
                     try:
-                        parsed_json = json.loads(raw_json)
-                        result: dict[str, Any] = parsed_json.get("attrs", {})
-                        return result
+                        parsed_json: dict[str, Any] = json.loads(raw_json)
+                        # Return full node so parse_3d_model_info can access childNodes
+                        return parsed_json
                     except json.JSONDecodeError as e:
                         logging.error(f"Failed to parse 3D model JSON: {e}")
                         return {}
         return {}
 
-    def parse_3d_model_info(self, info: dict[str, Any]) -> Ee3dModel:
+    def _outline_centre_mm(self, node: dict[str, Any]) -> tuple[float, float] | None:
+        """Compute 2D outline bbox centre in mm, mirroring smt-gl-engine.js logic.
+
+        Returns (cx_mm, cy_mm) or None if no childNode points are found.
+        """
+        xs: list[float] = []
+        ys: list[float] = []
+        ox, oy = self.canvas_origin_x, self.canvas_origin_y
+        scale = self._CANVAS_SCALE
+        for child in node.get("childNodes", []):
+            pts = child.get("attrs", {}).get("points", "").split()
+            for i in range(0, len(pts) - 1, 2):
+                xs.append((_safe_float(pts[i]) - ox) * scale)
+                ys.append(-(_safe_float(pts[i + 1]) - oy) * scale)
+        if not xs:
+            return None
+        return ((min(xs) + max(xs)) / 2.0, (min(ys) + max(ys)) / 2.0)
+
+    def parse_3d_model_info(self, node: dict[str, Any]) -> Ee3dModel:
+        info = node.get("attrs", {})
+        scale = self._CANVAS_SCALE
+        ox, oy = self.canvas_origin_x, self.canvas_origin_y
+
+        co = info.get("c_origin", "0,0").split(",")
+        c_ox = _safe_float(co[0] if co else "0")
+        c_oy = _safe_float(co[1] if len(co) > 1 else "0")
+
+        # Primary offset: (c_origin - canvas_origin) * scale, Y negated
+        # Matches smt-gl-engine.js: f(b,x) = [(b - canvas_x)*e, -(x - canvas_y)*e]
+        tx = (c_ox - ox) * scale
+        ty = -(c_oy - oy) * scale
+        tz = _safe_float(info.get("z", "0")) * scale
+
+        # Outline-centre correction (smt-gl-engine.js: if |centre - offset| > 0.1mm → use centre)
+        outline = self._outline_centre_mm(node)
+        if outline is not None:
+            out_x, out_y = outline
+            if (
+                abs(out_x - tx) > self._FIX_THRESHOLD
+                or abs(out_y - ty) > self._FIX_THRESHOLD
+            ):
+                logging.debug(
+                    f"3D outline fix for {info.get('uuid', '?')}: "
+                    f"({tx:.3f},{ty:.3f}) → ({out_x:.3f},{out_y:.3f})"
+                )
+                tx, ty = out_x, out_y
+
         return Ee3dModel(
             name=info["title"],
             uuid=info["uuid"],
-            translation=Ee3dModelBase(
-                x=_safe_float(
-                    info["c_origin"].split(",")[0]
-                    if "c_origin" in info and "," in info["c_origin"]
-                    else "0"
-                ),
-                y=_safe_float(
-                    info["c_origin"].split(",")[1]
-                    if "c_origin" in info and len(info["c_origin"].split(",")) > 1
-                    else "0"
-                ),
-                z=_safe_float(info.get("z", "0")),
-            ),
+            translation=Ee3dModelBase(x=tx, y=ty, z=tz),
             rotation=Ee3dModelBase(
                 **dict(
                     zip(

@@ -338,9 +338,17 @@ def _process_3d_model(
     ).get("title", "")
     _fp_type = "smd" if _is_smd else "tht"
 
+    _head = cad_data.get("packageDetail", {}).get("dataStr", {}).get("head", {})
+    _canvas_ox = float(_head.get("x", 0) or 0)
+    _canvas_oy = float(_head.get("y", 0) or 0)
+
     model_exporter = Exporter3dModelKicad(
         model_3d=Easyeda3dModelImporter(
-            easyeda_cp_cad_data=cad_data, download_raw_3d_model=True, api=api
+            easyeda_cp_cad_data=cad_data,
+            download_raw_3d_model=True,
+            api=api,
+            canvas_origin_x=_canvas_ox,
+            canvas_origin_y=_canvas_oy,
         ).output,
         fp_type=_fp_type,
     )
