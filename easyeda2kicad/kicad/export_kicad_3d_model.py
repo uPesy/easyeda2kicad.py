@@ -35,10 +35,13 @@ def get_materials(obj_data: str) -> dict[str, dict[str, str | list[str]]]:
                 material["diffuse_color"] = value.split()[1:]
             elif value.startswith("Ks"):
                 material["specular_color"] = value.split()[1:]
-            elif value.startswith("d"):
-                # This isn't exactly the same as transparency, is dissolve
-                # I.e. part C115366 (SW-TH_SPEF110100) has d=1, and isn't transparent
-                material["transparency"] = value.split()[1]
+            elif value.startswith("d "):
+                # EasyEDA uses d as transparency directly (0.0 = opaque, 1.0 = transparent),
+                # which matches VRML transparency semantics — use value as-is.
+                try:
+                    material["transparency"] = str(round(float(value.split()[1]), 4))
+                except (ValueError, IndexError):
+                    material["transparency"] = "0"
 
         if material_id is not None:
             materials[material_id] = material
@@ -92,7 +95,7 @@ def _get_obj_bbox(
     )
 
 
-def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
+def generate_wrl_model(model_3d: Ee3dModel) -> Ki3dModel:
     if not model_3d.raw_obj:
         return Ki3dModel(
             translation=Ki3dModelBase(),
@@ -103,24 +106,23 @@ def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
 
     materials = get_materials(obj_data=model_3d.raw_obj)
 
-    # Step 1: Center XY on (0,0); shift Z so bottom sits at z=0 for SMD only.
+    # Step 1: Center XY on (0,0); shift Z so bottom sits at z=0 (always).
     # Step 2: Apply EE metadata offset (c_origin - canvas_origin) in mm.
-    # Mirrors smt-gl-engine.js fi(): bbox-center first, then metadata translate.
+    # Mirrors smt-gl-engine.js fi(): s.translate1(-g, -b, -x) with x=o.minZ,
+    # applied unconditionally for both SMD and THT.
     offset_x, offset_y, offset_z = 0.0, 0.0, 0.0
     bbox = _get_obj_bbox(model_3d.raw_obj)
     if bbox:
         (x_min, x_max), (y_min, y_max), (z_min, _) = bbox
         offset_x = -(x_min + x_max) / 2.0
         offset_y = -(y_min + y_max) / 2.0
-        if fp_type == "smd":
-            offset_z = -z_min
+        offset_z = -z_min
     # Add EE placement offset (already in mm, same unit as OBJ vertices)
     offset_x += model_3d.translation.x
     offset_y += model_3d.translation.y
     offset_z += model_3d.translation.z
     logging.debug(
-        f"3D centering offset ({fp_type}): "
-        f"X={offset_x:.2f} Y={offset_y:.2f} Z={offset_z:.2f}"
+        f"3D centering offset: X={offset_x:.2f} Y={offset_y:.2f} Z={offset_z:.2f}"
     )
 
     vertices = get_vertices(
@@ -170,6 +172,18 @@ def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
                 face_index.append("-1")
                 coord_index.append(",".join(face_index) + ",")
 
+        # ambientIntensity: VRML expects a scalar (0-1), not an RGB triplet.
+        # Compute luminance from Ka using Rec.601 weights.
+        try:
+            ka = material.get("ambient_color", ["0.2", "0.2", "0.2"])
+            ambient_intensity = round(
+                0.299 * float(ka[0]) + 0.587 * float(ka[1]) + 0.114 * float(ka[2]), 4
+            )
+        except (ValueError, IndexError):
+            ambient_intensity = 0.2
+
+        transparency = material.get("transparency", "0")
+
         shape_str = textwrap.dedent(
             f"""
             Shape{{
@@ -177,8 +191,8 @@ def generate_wrl_model(model_3d: Ee3dModel, fp_type: str = "") -> Ki3dModel:
                     material  Material 	{{
                         diffuseColor {" ".join(material["diffuse_color"])}
                         specularColor {" ".join(material["specular_color"])}
-                        ambientIntensity 0.2
-                        transparency 0
+                        ambientIntensity {ambient_intensity}
+                        transparency {transparency}
                         shininess 0.5
                     }}
                 }}
@@ -224,13 +238,12 @@ def _log_obj_bbox(raw_obj: str) -> None:
 
 
 class Exporter3dModelKicad:
-    def __init__(self, model_3d: Ee3dModel | None, fp_type: str = ""):
+    def __init__(self, model_3d: Ee3dModel | None):
         self.input = model_3d
-        self.fp_type = fp_type
         if model_3d and model_3d.raw_obj:
             _log_obj_bbox(model_3d.raw_obj)
         self.output = (
-            generate_wrl_model(model_3d=model_3d, fp_type=fp_type)
+            generate_wrl_model(model_3d=model_3d)
             if model_3d and model_3d.raw_obj
             else None
         )

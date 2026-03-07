@@ -332,12 +332,6 @@ def _process_3d_model(
     api: EasyedaApi,
 ) -> None:
     # ---------------- 3D MODEL ----------------
-    # Determine fp_type for 3D model centering (SMD vs THT)
-    _is_smd = bool(cad_data.get("SMT")) and "-TH_" not in cad_data.get(
-        "packageDetail", {}
-    ).get("title", "")
-    _fp_type = "smd" if _is_smd else "tht"
-
     _head = cad_data.get("packageDetail", {}).get("dataStr", {}).get("head", {})
     _canvas_ox = float(_head.get("x", 0) or 0)
     _canvas_oy = float(_head.get("y", 0) or 0)
@@ -350,7 +344,6 @@ def _process_3d_model(
             canvas_origin_x=_canvas_ox,
             canvas_origin_y=_canvas_oy,
         ).output,
-        fp_type=_fp_type,
     )
     model_exporter.export(output_dir=f"{arguments['output']}.3dshapes")
     if model_exporter.output:
