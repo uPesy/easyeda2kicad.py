@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from setuptools import find_packages, setup
 
 with open("README.md") as fh:
@@ -34,7 +36,7 @@ setup(
     packages=find_packages(exclude=["tests", "utils"]),
     package_dir={"easyeda2kicad": "easyeda2kicad"},
     entry_points={"console_scripts": ["easyeda2kicad = easyeda2kicad.__main__:main"]},
-    python_requires=">=3.10",
+    python_requires=">=3.9",
     install_requires=production_dependencies,
     extras_require={"dev": development_dependencies},
     zip_safe=False,

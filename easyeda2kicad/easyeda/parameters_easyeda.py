@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # Global imports
 from dataclasses import dataclass, field
 from enum import Enum

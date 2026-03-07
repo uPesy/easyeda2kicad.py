@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # Global imports
 import json
 import logging
@@ -11,7 +13,6 @@ __all__ = [
     "EeSymbol",
 ]
 
-from types import UnionType as _UnionType
 
 # Local imports
 from .easyeda_api import EasyedaApi
@@ -88,7 +89,7 @@ def convert_fields_to_types(
         field_type = type_hints[key]
 
         origin = get_origin(field_type)
-        if origin is Union or isinstance(field_type, _UnionType):
+        if origin is Union:
             args = get_args(field_type)
             if args and type(None) in args:
                 # It's Optional[T], get the non-None type
