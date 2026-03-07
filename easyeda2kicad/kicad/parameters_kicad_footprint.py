@@ -95,12 +95,12 @@ KI_LAYERS = {
     6: "B.Paste",
     7: "F.Mask",
     8: "B.Mask",
-    10: "Edge.Cuts",
-    11: "Edge.Cuts",
-    12: "Cmts.User",
-    13: "F.Fab",
-    14: "B.Fab",
-    15: "Dwgs.User",
+    10: "Edge.Cuts",  # BoardOutLine
+    # 11 = Multi-Layer (all copper) — not valid for graphical elements; handled by KI_PAD_LAYER for pads
+    12: "Cmts.User",  # Document
+    13: "F.Fab",  # TopAssembly
+    14: "B.Fab",  # BottomAssembly
+    15: "Dwgs.User",  # Mechanical
     99: "F.Fab",  # ComponentShapeLayer - component outline for fabrication
     100: "F.Fab",  # LeadShapeLayer - lead shapes for fabrication
     101: "F.SilkS",  # ComponentPolarityLayer - polarity markings on silkscreen
