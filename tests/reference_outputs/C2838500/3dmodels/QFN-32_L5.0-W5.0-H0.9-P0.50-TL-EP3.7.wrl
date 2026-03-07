@@ -6,8 +6,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.9686274509803922 0.8784313725490196 0.6
             specularColor 0.6784313725490196 0.615686274509804 0.4196078431372549
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.8737
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -29,8 +29,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.10980392156862745 0.10980392156862745 0.10980392156862745
             specularColor 0.0784313725490196 0.0784313725490196 0.0784313725490196
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.1098
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -52,8 +52,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.4117647058823529 0.4117647058823529 0.4117647058823529
             specularColor 0.20392156862745098 0.20392156862745098 0.20392156862745098
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.4118
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -75,8 +75,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.792156862745098 0.8196078431372549 0.9333333333333333
             specularColor 0.396078431372549 0.4117647058823529 0.4666666666666667
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.8244
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -98,8 +98,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.4117647058823529 0.4117647058823529 0.4117647058823529
             specularColor 0.20392156862745098 0.20392156862745098 0.20392156862745098
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.4118
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -121,8 +121,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.792156862745098 0.8196078431372549 0.9333333333333333
             specularColor 0.396078431372549 0.4117647058823529 0.4666666666666667
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.8244
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -144,8 +144,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.10980392156862745 0.10980392156862745 0.10980392156862745
             specularColor 0.0784313725490196 0.0784313725490196 0.0784313725490196
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.1098
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -167,8 +167,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.792156862745098 0.8196078431372549 0.9333333333333333
             specularColor 0.396078431372549 0.4117647058823529 0.4666666666666667
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.8244
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -190,8 +190,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.10980392156862745 0.10980392156862745 0.10980392156862745
             specularColor 0.0784313725490196 0.0784313725490196 0.0784313725490196
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.1098
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -213,8 +213,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.9686274509803922 0.8784313725490196 0.6
             specularColor 0.6784313725490196 0.615686274509804 0.4196078431372549
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.8737
+            transparency 0.0
             shininess 0.5
         }
     }

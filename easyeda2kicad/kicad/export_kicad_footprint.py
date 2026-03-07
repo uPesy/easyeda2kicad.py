@@ -238,15 +238,15 @@ class ExporterFootprintKicad:
             # translation is already in mm (computed from EE canvas coordinates).
             # Do NOT call convert_to_mm() — that would double-scale the values.
 
-            # SMD: XY+Z offset is baked into WRL vertices → KiCad offset = (0,0,0)
-            # THT: WRL is not regenerated; full offset goes into KiCad footprint
-            is_smd = self.input.info.fp_type == "smd"
+            # XY+Z offset is fully baked into WRL vertices for all footprint types.
+            # Mirrors smt-gl-engine.js fi(): z_min always shifted to 0.
+            # KiCad offset is always (0,0,0).
             ki_3d_model_info = Ki3dModel(
                 name=self.input.model_3d.name,
                 translation=Ki3dModelBase(
                     x=0.0,
                     y=0.0,
-                    z=0.0 if is_smd else -round(self.input.model_3d.translation.z, 2),
+                    z=0.0,
                 ),
                 rotation=Ki3dModelBase(
                     x=(360 - self.input.model_3d.rotation.x) % 360,

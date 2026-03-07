@@ -6,8 +6,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.6470588235294118 0.6196078431372549 0.5882352941176471
             specularColor 0.45098039215686275 0.43529411764705883 0.4117647058823529
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.6242
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -29,8 +29,8 @@ Shape{
         material  Material 	{
             diffuseColor 1.0 1.0 1.0
             specularColor 0.8784313725490196 0.8784313725490196 0.8784313725490196
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 1.0
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -52,8 +52,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.6470588235294118 0.6196078431372549 0.5882352941176471
             specularColor 0.45098039215686275 0.43529411764705883 0.4117647058823529
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.6242
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -75,8 +75,8 @@ Shape{
         material  Material 	{
             diffuseColor 1.0 1.0 1.0
             specularColor 0.8784313725490196 0.8784313725490196 0.8784313725490196
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 1.0
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -98,8 +98,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.6470588235294118 0.6196078431372549 0.5882352941176471
             specularColor 0.45098039215686275 0.43529411764705883 0.4117647058823529
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.6242
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -121,8 +121,8 @@ Shape{
         material  Material 	{
             diffuseColor 1.0 1.0 1.0
             specularColor 0.8784313725490196 0.8784313725490196 0.8784313725490196
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 1.0
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -144,8 +144,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.6470588235294118 0.6196078431372549 0.5882352941176471
             specularColor 0.45098039215686275 0.43529411764705883 0.4117647058823529
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.6242
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -167,8 +167,8 @@ Shape{
         material  Material 	{
             diffuseColor 1.0 1.0 1.0
             specularColor 0.8784313725490196 0.8784313725490196 0.8784313725490196
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 1.0
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -190,8 +190,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.6470588235294118 0.6196078431372549 0.5882352941176471
             specularColor 0.45098039215686275 0.43529411764705883 0.4117647058823529
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.6242
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -213,8 +213,8 @@ Shape{
         material  Material 	{
             diffuseColor 1.0 1.0 1.0
             specularColor 0.8784313725490196 0.8784313725490196 0.8784313725490196
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 1.0
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -236,8 +236,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.6470588235294118 0.6196078431372549 0.5882352941176471
             specularColor 0.45098039215686275 0.43529411764705883 0.4117647058823529
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.6242
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -259,8 +259,8 @@ Shape{
         material  Material 	{
             diffuseColor 1.0 1.0 1.0
             specularColor 0.8784313725490196 0.8784313725490196 0.8784313725490196
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 1.0
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -282,8 +282,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.6470588235294118 0.6196078431372549 0.5882352941176471
             specularColor 0.45098039215686275 0.43529411764705883 0.4117647058823529
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.6242
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -305,8 +305,8 @@ Shape{
         material  Material 	{
             diffuseColor 1.0 1.0 1.0
             specularColor 0.8784313725490196 0.8784313725490196 0.8784313725490196
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 1.0
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -328,8 +328,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.6470588235294118 0.6196078431372549 0.5882352941176471
             specularColor 0.45098039215686275 0.43529411764705883 0.4117647058823529
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.6242
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -351,8 +351,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.10588235294117647 0.36470588235294116 0.8784313725490196
             specularColor 0.050980392156862744 0.1843137254901961 0.4392156862745098
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.3459
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -374,8 +374,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.8313725490196079 0.6705882352941176 0.12941176470588237
             specularColor 0.6666666666666666 0.5372549019607843 0.10196078431372549
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.657
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -397,8 +397,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.10588235294117647 0.36470588235294116 0.8784313725490196
             specularColor 0.050980392156862744 0.1843137254901961 0.4392156862745098
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.3459
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -420,8 +420,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.8313725490196079 0.6705882352941176 0.12941176470588237
             specularColor 0.6666666666666666 0.5372549019607843 0.10196078431372549
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.657
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -443,8 +443,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.10588235294117647 0.36470588235294116 0.8784313725490196
             specularColor 0.050980392156862744 0.1843137254901961 0.4392156862745098
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.3459
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -466,8 +466,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.8313725490196079 0.6705882352941176 0.12941176470588237
             specularColor 0.6666666666666666 0.5372549019607843 0.10196078431372549
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.657
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -489,8 +489,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.10588235294117647 0.36470588235294116 0.8784313725490196
             specularColor 0.050980392156862744 0.1843137254901961 0.4392156862745098
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.3459
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -512,8 +512,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.8313725490196079 0.6705882352941176 0.12941176470588237
             specularColor 0.6666666666666666 0.5372549019607843 0.10196078431372549
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.657
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -535,8 +535,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.10588235294117647 0.36470588235294116 0.8784313725490196
             specularColor 0.050980392156862744 0.1843137254901961 0.4392156862745098
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.3459
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -558,8 +558,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.8313725490196079 0.6705882352941176 0.12941176470588237
             specularColor 0.6666666666666666 0.5372549019607843 0.10196078431372549
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.657
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -581,8 +581,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.0 0.0 0.0
             specularColor 0.0 0.0 0.0
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.0
+            transparency 0.0
             shininess 0.5
         }
     }
@@ -604,8 +604,8 @@ Shape{
         material  Material 	{
             diffuseColor 0.10588235294117647 0.36470588235294116 0.8784313725490196
             specularColor 0.050980392156862744 0.1843137254901961 0.4392156862745098
-            ambientIntensity 0.2
-            transparency 0
+            ambientIntensity 0.3459
+            transparency 0.0
             shininess 0.5
         }
     }
