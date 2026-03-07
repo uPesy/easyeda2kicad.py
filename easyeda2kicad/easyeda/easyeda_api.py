@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # Global imports
 import glob  # noqa: F401  # used inside sys.platform=="darwin" block
 import gzip
