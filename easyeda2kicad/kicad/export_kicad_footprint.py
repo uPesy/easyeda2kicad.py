@@ -334,8 +334,8 @@ class ExporterFootprintKicad:
         for ee_track in self.input.tracks:
             ki_track = KiFootprintTrack(
                 layers=(
-                    KI_PAD_LAYER[ee_track.layer_id]
-                    if ee_track.layer_id in KI_PAD_LAYER
+                    KI_LAYERS[ee_track.layer_id]
+                    if ee_track.layer_id in KI_LAYERS
                     else "F.Fab"
                 ),
                 stroke_width=max(ee_track.stroke_width, 0.01),
@@ -406,8 +406,8 @@ class ExporterFootprintKicad:
         for ee_rectangle in self.input.rectangles:
             ki_rectangle = KiFootprintRectangle(
                 layers=(
-                    KI_PAD_LAYER[ee_rectangle.layer_id]
-                    if ee_rectangle.layer_id in KI_PAD_LAYER
+                    KI_LAYERS[ee_rectangle.layer_id]
+                    if ee_rectangle.layer_id in KI_LAYERS
                     else "F.Fab"
                 ),
                 stroke_width=max(fp_to_ki(ee_rectangle.stroke_width), 0.01),
