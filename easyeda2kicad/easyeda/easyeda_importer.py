@@ -435,11 +435,26 @@ class EasyedaFootprintImporter:
     def __init__(self, easyeda_cp_cad_data: dict[str, Any]):
         self.input = easyeda_cp_cad_data
         _c_para = self.input["packageDetail"]["dataStr"]["head"]["c_para"]
+        # Mirror smt-gl-engine.js: i.tht = n.customData?.jlcPara?.assemblyProcess
+        # Primary source: customData.jlcPara.assemblyProcess ("SMT" / "THT").
+        # Fallback: top-level SMT flag + title heuristic for older API responses.
+        _assembly = (
+            self.input.get("customData", {})
+            .get("jlcPara", {})
+            .get("assemblyProcess", "")
+        )
+        if _assembly:
+            _is_smd = _assembly.upper() == "SMT"
+        else:
+            _is_smd = (
+                bool(self.input.get("SMT"))
+                and "-TH_" not in self.input["packageDetail"]["title"]
+            )
+
         self.output = self.extract_easyeda_data(
             ee_data_str=self.input["packageDetail"]["dataStr"],
             ee_data_info=_c_para,
-            is_smd=bool(self.input.get("SMT"))
-            and "-TH_" not in self.input["packageDetail"]["title"],
+            is_smd=_is_smd,
             lcsc_id=self.input.get("lcsc", {}).get("number", ""),
             manufacturer=_c_para.get("Manufacturer", "")
             or _c_para.get("BOM_Manufacturer", ""),
@@ -524,11 +539,21 @@ class EasyedaFootprintImporter:
                 )
                 new_ee_footprint.texts.append(ee_text)
             elif ee_designator == "SVGNODE":
+                # Mirror smt-gl-engine.js _I(): canvas.split("~")[16] and [17]
+                # are the authoritative canvas origin. Fall back to head.x/y
+                # if the canvas string is absent or too short.
+                _canvas_parts = ee_data_str.get("canvas", "").split("~")
+                if len(_canvas_parts) > 17:
+                    _cox = _safe_float(_canvas_parts[16])
+                    _coy = _safe_float(_canvas_parts[17])
+                else:
+                    _cox = _safe_float(ee_data_str["head"].get("x"))
+                    _coy = _safe_float(ee_data_str["head"].get("y"))
                 new_ee_footprint.model_3d = Easyeda3dModelImporter(
                     easyeda_cp_cad_data=[line],
                     download_raw_3d_model=False,
-                    canvas_origin_x=_safe_float(ee_data_str["head"].get("x")),
-                    canvas_origin_y=_safe_float(ee_data_str["head"].get("y")),
+                    canvas_origin_x=_cox,
+                    canvas_origin_y=_coy,
                 ).output
 
             elif ee_designator == "SOLIDREGION":

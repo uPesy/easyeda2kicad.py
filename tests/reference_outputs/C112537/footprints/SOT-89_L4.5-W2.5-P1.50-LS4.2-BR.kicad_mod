@@ -27,7 +27,7 @@
 	(pad 1 smd rect (at 1.36 1.50 0.00) (size 1.58 0.67) (layers F.Cu F.Paste F.Mask))
 	(fp_circle (center 1.73 2.25) (end 1.76 2.25) (layer F.SilkS) (width 0.06))
 	(fp_circle (center 2.29 1.52) (end 2.44 1.52) (layer Cmts.User) (width 0.30))
-	(model "/tmp/easyeda2kicad_test_cengn8pm/test_lib.3dshapes/SOT-89-3_L4.3-W2.5-H1.6-LS4.1-P1.50.wrl"
+	(model "/tmp/test/test_lib.3dshapes/SOT-89-3_L4.3-W2.5-H1.6-LS4.1-P1.50.wrl"
 		(offset (xyz 0.000 0.000 0.000))
 		(scale (xyz 1 1 1))
 		(rotate (xyz 0 0 180))

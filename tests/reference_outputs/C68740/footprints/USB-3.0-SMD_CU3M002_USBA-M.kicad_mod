@@ -43,7 +43,7 @@
 	(pad "" thru_hole circle (at -2.25 1.10) (size 1.20 1.20) (drill 1.20) (layers *.Cu *.Mask))
 	(pad "" thru_hole circle (at 2.25 1.10) (size 1.20 1.20) (drill 1.20) (layers *.Cu *.Mask))
 	(fp_circle (center 6.05 -1.80) (end 6.08 -1.80) (layer F.SilkS) (width 0.06))
-	(model "/tmp/easyeda2kicad_test_mwoiu2bc/test_lib.3dshapes/USB-3.0-SMD_9P-L12.0-W18.9-H4.5-LS20.8-P1.0.wrl"
+	(model "/tmp/test/test_lib.3dshapes/USB-3.0-SMD_9P-L12.0-W18.9-H4.5-LS20.8-P1.0.wrl"
 		(offset (xyz 0.000 0.000 0.000))
 		(scale (xyz 1 1 1))
 		(rotate (xyz 0 0 0))

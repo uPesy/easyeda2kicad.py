@@ -56,7 +56,7 @@
 	(fp_circle (center -9.70 -1.75) (end -9.67 -1.75) (layer F.SilkS) (width 0.06))
 	(fp_circle (center -7.84 -1.31) (end -7.71 -1.31) (layer Cmts.User) (width 0.25))
 	(fp_circle (center -7.83 -1.40) (end -7.70 -1.40) (layer F.SilkS) (width 0.25))
-	(model "/tmp/easyeda2kicad_test_y5y7i94p/test_lib.3dshapes/FPC-SMD_30P-P0.50_XUNPU_FPC-05F-30PH20.wrl"
+	(model "/tmp/test/test_lib.3dshapes/FPC-SMD_30P-P0.50_XUNPU_FPC-05F-30PH20.wrl"
 		(offset (xyz 0.000 0.000 0.000))
 		(scale (xyz 1 1 1))
 		(rotate (xyz 0 0 0))

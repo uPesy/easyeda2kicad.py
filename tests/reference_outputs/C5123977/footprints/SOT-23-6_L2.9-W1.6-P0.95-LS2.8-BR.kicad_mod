@@ -21,7 +21,7 @@
 	(fp_circle (center 1.40 1.45) (end 1.43 1.45) (layer F.SilkS) (width 0.06))
 	(fp_circle (center 1.40 0.95) (end 1.50 0.95) (layer Cmts.User) (width 0.20))
 	(fp_circle (center 1.40 1.65) (end 1.53 1.65) (layer F.SilkS) (width 0.25))
-	(model "/tmp/easyeda2kicad_test_bh6qddmj/test_lib.3dshapes/SOT-23-6_L2.9-W1.6-H1.5-LS2.8-P0.95.wrl"
+	(model "/tmp/test/test_lib.3dshapes/SOT-23-6_L2.9-W1.6-H1.5-LS2.8-P0.95.wrl"
 		(offset (xyz 0.000 0.000 0.000))
 		(scale (xyz 1 1 1))
 		(rotate (xyz 0 0 180))
