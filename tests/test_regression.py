@@ -5,6 +5,7 @@ This test compares the output of the current version with reference files
 from a known-good version to detect any unintended changes in output.
 """
 
+import re
 import shutil
 from pathlib import Path
 from typing import List, Tuple
@@ -62,22 +63,35 @@ class TestCreateReference:
         except SystemExit as e:
             assert e.code == 0, f"main() exited with code: {e.code}"
 
-        # Copy generated files to reference directory
-        # Files are in temp_output_dir, not subdirectory
+        # Copy generated files to reference directory.
+        # Text files are normalized (temp paths replaced) before writing so that
+        # reference files don't change on every --create-reference run.
         temp_path = Path(temp_output_dir)
+
+        def copy_normalized(src: Path, dst: Path) -> None:
+            """Copy a file, normalizing temp paths in text files."""
+            if src.suffix in (".step",):
+                shutil.copy2(src, dst)
+            else:
+                content = src.read_text(encoding="utf-8", errors="ignore")
+                content = re.sub(
+                    r"/tmp/easyeda2kicad_test_[^/]+/", "/tmp/test/", content
+                )
+                content = re.sub(r"/tmp/tmp[a-z0-9_]+/", "/tmp/test/", content)
+                dst.write_text(content, encoding="utf-8")
 
         # Symbols
         symbol_dir = ref_component_dir / "symbols"
         symbol_dir.mkdir(parents=True, exist_ok=True)
         for file in temp_path.glob("*.kicad_sym"):
-            shutil.copy2(file, symbol_dir / file.name)
+            copy_normalized(file, symbol_dir / file.name)
             print(f"Created reference: {symbol_dir / file.name}")
 
         # Footprints
         footprint_dir = ref_component_dir / "footprints"
         footprint_dir.mkdir(parents=True, exist_ok=True)
         for file in temp_path.glob("*.pretty/*.kicad_mod"):
-            shutil.copy2(file, footprint_dir / file.name)
+            copy_normalized(file, footprint_dir / file.name)
             print(f"Created reference: {footprint_dir / file.name}")
 
         # 3D Models
@@ -85,7 +99,7 @@ class TestCreateReference:
         model_dir.mkdir(parents=True, exist_ok=True)
         for file in temp_path.glob("*.3dshapes/*"):
             if file.is_file():
-                shutil.copy2(file, model_dir / file.name)
+                copy_normalized(file, model_dir / file.name)
                 print(f"Created reference: {model_dir / file.name}")
 
         print(f"\nReference files created for {component_id}")

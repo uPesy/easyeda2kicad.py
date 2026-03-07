@@ -96,8 +96,8 @@ def convert_ee_pins(
             length=to_ki(pin_length),
             type=ee_pin_type_to_ki_pin_type[ee_pin.settings.type],
             orientation=ee_pin.settings.rotation,
-            pos_x=to_ki(int(ee_pin.settings.pos_x) - int(ee_bbox.x)),
-            pos_y=-to_ki(int(ee_pin.settings.pos_y) - int(ee_bbox.y)),
+            pos_x=to_ki(ee_pin.settings.pos_x - ee_bbox.x),
+            pos_y=-to_ki(ee_pin.settings.pos_y - ee_bbox.y),
         )
 
         if ee_pin.dot.is_displayed and ee_pin.clock.is_displayed:
@@ -122,11 +122,11 @@ def convert_ee_rectangles(
     kicad_rectangles = []
     for ee_rectangle in ee_rectangles:
         ki_rectangle = KiSymbolRectangle(
-            pos_x0=to_ki(int(ee_rectangle.pos_x) - int(ee_bbox.x)),
-            pos_y0=-to_ki(int(ee_rectangle.pos_y) - int(ee_bbox.y)),
+            pos_x0=to_ki(ee_rectangle.pos_x - ee_bbox.x),
+            pos_y0=-to_ki(ee_rectangle.pos_y - ee_bbox.y),
         )
-        ki_rectangle.pos_x1 = to_ki(int(ee_rectangle.width)) + ki_rectangle.pos_x0
-        ki_rectangle.pos_y1 = -to_ki(int(ee_rectangle.height)) + ki_rectangle.pos_y0
+        ki_rectangle.pos_x1 = to_ki(ee_rectangle.width) + ki_rectangle.pos_x0
+        ki_rectangle.pos_y1 = -to_ki(ee_rectangle.height) + ki_rectangle.pos_y0
 
         kicad_rectangles.append(ki_rectangle)
 
@@ -142,8 +142,8 @@ def convert_ee_circles(
 
     return [
         KiSymbolCircle(
-            pos_x=to_ki(int(ee_circle.center_x) - int(ee_bbox.x)),
-            pos_y=-to_ki(int(ee_circle.center_y) - int(ee_bbox.y)),
+            pos_x=to_ki(ee_circle.center_x - ee_bbox.x),
+            pos_y=-to_ki(ee_circle.center_y - ee_bbox.y),
             radius=to_ki(ee_circle.radius),
             background_filling=ee_circle.fill_color,
         )
@@ -161,8 +161,8 @@ def convert_ee_ellipses(
     # Ellipses are not supported in KiCad — convert only if radius_x == radius_y (circle)
     return [
         KiSymbolCircle(
-            pos_x=to_ki(int(ee_ellipse.center_x) - int(ee_bbox.x)),
-            pos_y=-to_ki(int(ee_ellipse.center_y) - int(ee_bbox.y)),
+            pos_x=to_ki(ee_ellipse.center_x - ee_bbox.x),
+            pos_y=-to_ki(ee_ellipse.center_y - ee_bbox.y),
             radius=to_ki(ee_ellipse.radius_x),
         )
         for ee_ellipse in ee_ellipses
@@ -345,12 +345,10 @@ def convert_ee_polylines(
     for ee_polyline in ee_polylines:
         raw_pts = ee_polyline.points.split()
         x_points = [
-            to_ki(int(float(raw_pts[i])) - int(ee_bbox.x))
-            for i in range(0, len(raw_pts), 2)
+            to_ki(float(raw_pts[i]) - ee_bbox.x) for i in range(0, len(raw_pts), 2)
         ]
         y_points = [
-            -to_ki(int(float(raw_pts[i])) - int(ee_bbox.y))
-            for i in range(1, len(raw_pts), 2)
+            -to_ki(float(raw_pts[i]) - ee_bbox.y) for i in range(1, len(raw_pts), 2)
         ]
 
         if isinstance(ee_polyline, EeSymbolPolygon) or ee_polyline.fill_color:
@@ -412,8 +410,8 @@ def convert_ee_paths(
         while idx < len(raw_pts):
             token = raw_pts[idx]
             if token in ("M", "L"):
-                x_points.append(to_ki(int(float(raw_pts[idx + 1])) - int(ee_bbox.x)))
-                y_points.append(-to_ki(int(float(raw_pts[idx + 2])) - int(ee_bbox.y)))
+                x_points.append(to_ki(float(raw_pts[idx + 1]) - ee_bbox.x))
+                y_points.append(-to_ki(float(raw_pts[idx + 2]) - ee_bbox.y))
                 idx += 3
             elif token == "Z":
                 if x_points:
