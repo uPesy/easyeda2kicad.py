@@ -234,6 +234,7 @@ class ExporterFootprintKicad:
             lcsc_id=self.input.info.lcsc_id,
             manufacturer=self.input.info.manufacturer,
             mpn=self.input.info.mpn,
+            description=self.input.info.description,
         )
 
         if self.input.model_3d is not None:
@@ -543,6 +544,8 @@ class ExporterFootprintKicad:
         ki_lib += KI_MODULE_INFO.format(
             package_lib="easyeda2kicad", package_name=ki.info.name, edit="5DC5F6A4"
         )
+        if ki.info.description:
+            ki_lib += f'\t(descr "{ki.info.description}")\n'
 
         if ki.info.fp_type:
             ki_lib += KI_FP_TYPE.format(

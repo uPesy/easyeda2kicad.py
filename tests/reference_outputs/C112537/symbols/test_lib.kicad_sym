@@ -55,7 +55,7 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
-        "Keywords"
+        "ki_keywords"
         "Linear Voltage Regulators (LDO)"
         (id 8)
         (at 0 -22.86 0)

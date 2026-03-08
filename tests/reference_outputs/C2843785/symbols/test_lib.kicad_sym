@@ -48,7 +48,7 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
-        "Keywords"
+        "ki_keywords"
         "Light Emitting Diodes (LED)"
         (id 8)
         (at 0 -19.05 0)

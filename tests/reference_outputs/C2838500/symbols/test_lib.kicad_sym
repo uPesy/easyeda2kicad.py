@@ -48,7 +48,7 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
-        "Keywords"
+        "ki_keywords"
         "Other Processors and Microcontrollers (MCUs)"
         (id 8)
         (at 0 -44.45 0)

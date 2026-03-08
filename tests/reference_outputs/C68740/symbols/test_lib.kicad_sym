@@ -55,7 +55,7 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
-        "Keywords"
+        "ki_keywords"
         "USB Connectors"
         (id 8)
         (at 0 -35.56 0)

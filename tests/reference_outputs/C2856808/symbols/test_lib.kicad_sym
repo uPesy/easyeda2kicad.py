@@ -48,7 +48,7 @@
         (effects (font (size 1.27 1.27) ) hide)
       )
       (property
-        "Keywords"
+        "ki_keywords"
         "FFC/FPC Connectors"
         (id 8)
         (at 0 -59.69 0)

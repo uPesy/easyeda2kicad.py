@@ -247,6 +247,7 @@ class KiFootprintInfo:
     lcsc_id: str = ""
     manufacturer: str = ""
     mpn: str = ""
+    description: str = ""
 
 
 # ---------------- 3D MODEL ----------------
