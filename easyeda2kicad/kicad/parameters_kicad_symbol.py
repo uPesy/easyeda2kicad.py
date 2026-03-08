@@ -319,7 +319,7 @@ class KiSymbolInfo:
             field_offset_y += KiExportConfigV6.FIELD_OFFSET_INCREMENT.value
             header.append(
                 property_template.format(
-                    key="Keywords",
+                    key="ki_keywords",
                     value=self.keywords,
                     id_=8,
                     pos_y=self.y_low - field_offset_y,
@@ -332,7 +332,7 @@ class KiSymbolInfo:
             field_offset_y += KiExportConfigV6.FIELD_OFFSET_INCREMENT.value
             header.append(
                 property_template.format(
-                    key="Description",
+                    key="ki_description",
                     value=self.description,
                     id_=9,
                     pos_y=self.y_low - field_offset_y,

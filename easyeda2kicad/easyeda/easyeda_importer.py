@@ -461,6 +461,7 @@ class EasyedaFootprintImporter:
             or _c_para.get("BOM_Manufacturer", ""),
             mpn=_c_para.get("Manufacturer Part", "")
             or _c_para.get("BOM_Manufacturer Part", ""),
+            description=self.input.get("description", ""),
         )
 
     def get_footprint(self) -> EeFootprint:
@@ -474,6 +475,7 @@ class EasyedaFootprintImporter:
         lcsc_id: str = "",
         manufacturer: str = "",
         mpn: str = "",
+        description: str = "",
     ) -> EeFootprint:
         new_ee_footprint = EeFootprint(
             info=EeFootprintInfo(
@@ -483,6 +485,7 @@ class EasyedaFootprintImporter:
                 lcsc_id=lcsc_id,
                 manufacturer=manufacturer,
                 mpn=mpn,
+                description=description,
             ),
             bbox=EeFootprintBbox(
                 x=_safe_float(ee_data_str["head"].get("x")),
