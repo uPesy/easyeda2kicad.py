@@ -6,18 +6,18 @@ This document provides a compact reference for all EasyEDA footprint shape comma
 
 ## Command Overview
 
-| Command     | Description                           | Implementation              |
-| ----------- | ------------------------------------- | --------------------------- |
-| PAD         | Footprint pad (SMD or through-hole)   | ✅ Implemented              |
-| TRACK       | Copper track/trace or silkscreen line | ✅ Implemented              |
-| RECT        | Rectangle shape                       | ✅ Implemented              |
-| CIRCLE      | Circle shape                          | ✅ Implemented              |
-| HOLE        | Non-plated hole                       | ✅ Implemented              |
-| VIA         | Via connection                        | ✅ Implemented              |
-| ARC         | Arc segment                           | ✅ Implemented              |
-| TEXT        | Text label                            | ✅ Implemented              |
-| SOLIDREGION | Filled copper region                  | ❌ Parsed but not converted |
-| SVGNODE     | 3D model metadata (JSON)              | ✅ Implemented              |
+| Command     | Description                           | Implementation |
+|-------------|---------------------------------------|----------------|
+| PAD         | Footprint pad (SMD or through-hole)   | ✅ Implemented  |
+| TRACK       | Copper track/trace or silkscreen line | ✅ Implemented  |
+| RECT        | Rectangle shape                       | ✅ Implemented  |
+| CIRCLE      | Circle shape                          | ✅ Implemented  |
+| HOLE        | Non-plated hole                       | ✅ Implemented  |
+| VIA         | Via connection                        | ✅ Implemented  |
+| ARC         | Arc segment                           | ✅ Implemented  |
+| TEXT        | Text label                            | ✅ Implemented  |
+| SOLIDREGION | Filled polygon region                 | ✅ Implemented  |
+| SVGNODE     | 3D model metadata (JSON)              | ✅ Implemented  |
 
 ---
 
@@ -38,7 +38,7 @@ PAD~RECT~3994.299~2995~9.0551~9.0551~11~~1~2.7559~3989.7715 2990.4725 3998.8266 
 **Fields:**
 
 | Index | Field       | Type   | Unit     | Description                                  |
-| ----- | ----------- | ------ | -------- | -------------------------------------------- |
+|-------|-------------|--------|----------|----------------------------------------------|
 | 0     | PAD         | -      | -        | Command identifier                           |
 | 1     | shape       | string | -        | Shape: RECT, OVAL, ELLIPSE, POLYGON          |
 | 2     | center_x    | float  | EE units | X coordinate of pad center                   |
@@ -82,7 +82,7 @@ TRACK~1~3~~3966.65 3007.66 3957.1495 3007.6495 3957.1495 3015.6495 3966.65 3015.
 **Fields:**
 
 | Index | Field        | Type   | Unit     | Description                                |
-| ----- | ------------ | ------ | -------- | ------------------------------------------ |
+|-------|--------------|--------|----------|--------------------------------------------|
 | 0     | TRACK        | -      | -        | Command identifier                         |
 | 1     | stroke_width | float  | EE units | Line width/thickness                       |
 | 2     | layer_id     | int    | -        | Layer ID (1=F.Cu, 3=F.SilkS, etc.)         |
@@ -116,7 +116,7 @@ RECT~3980.15~2979.15~12.5~4.5~3~gge226~0~1~none~~~
 **Fields:**
 
 | Index | Field        | Type   | Unit     | Description                          |
-| ----- | ------------ | ------ | -------- | ------------------------------------ |
+|-------|--------------|--------|----------|--------------------------------------|
 | 0     | RECT         | -      | -        | Command identifier                   |
 | 1     | x            | float  | EE units | X coordinate (top-left corner)       |
 | 2     | y            | float  | EE units | Y coordinate (top-left corner)       |
@@ -153,7 +153,7 @@ CIRCLE~4011.819~2995~2.9528~5.9055~12~gge381~0~~
 **Fields:**
 
 | Index | Field        | Type   | Unit     | Description                   |
-| ----- | ------------ | ------ | -------- | ----------------------------- |
+|-------|--------------|--------|----------|-------------------------------|
 | 0     | CIRCLE       | -      | -        | Command identifier            |
 | 1     | cx           | float  | EE units | X coordinate of circle center |
 | 2     | cy           | float  | EE units | Y coordinate of circle center |
@@ -187,7 +187,7 @@ HOLE~4011.819~2995~6.2598~gge130~0
 **Fields:**
 
 | Index | Field     | Type   | Unit     | Description                 |
-| ----- | --------- | ------ | -------- | --------------------------- |
+|-------|-----------|--------|----------|-----------------------------|
 | 0     | HOLE      | -      | -        | Command identifier          |
 | 1     | center_x  | float  | EE units | X coordinate of hole center |
 | 2     | center_y  | float  | EE units | Y coordinate of hole center |
@@ -219,7 +219,7 @@ VIA~3978~3003~3.9370~VCC~4.9213~gge150~0
 **Fields:**
 
 | Index | Field     | Type   | Unit     | Description                |
-| ----- | --------- | ------ | -------- | -------------------------- |
+|-------|-----------|--------|----------|----------------------------|
 | 0     | VIA       | -      | -        | Command identifier         |
 | 1     | center_x  | float  | EE units | X coordinate of via center |
 | 2     | center_y  | float  | EE units | Y coordinate of via center |
@@ -253,7 +253,7 @@ ARC~1~3~~M 3980 3000 A 5 5 0 0 1 3985 3005~~gge200~0
 **Fields:**
 
 | Index | Field        | Type   | Unit     | Description                                           |
-| ----- | ------------ | ------ | -------- | ----------------------------------------------------- |
+|-------|--------------|--------|----------|-------------------------------------------------------|
 | 0     | ARC          | -      | -        | Command identifier                                    |
 | 1     | stroke_width | float  | EE units | Arc line width                                        |
 | 2     | layer_id     | int    | -        | Layer ID                                              |
@@ -287,7 +287,7 @@ TEXT~P~3986~3003~1~0~0~13~~7~REF**~M3986,3003~1~gge300~0
 **Fields:**
 
 | Index | Field        | Type   | Unit     | Description                               |
-| ----- | ------------ | ------ | -------- | ----------------------------------------- |
+|-------|--------------|--------|----------|-------------------------------------------|
 | 0     | TEXT         | -      | -        | Command identifier                        |
 | 1     | type         | string | -        | Text type: "P"=Reference, "N"=Value, etc. |
 | 2     | center_x     | float  | EE units | X coordinate of text center               |
@@ -311,35 +311,40 @@ TEXT~P~3986~3003~1~0~0~13~~7~REF**~M3986,3003~1~gge300~0
 
 ---
 
-## SOLIDREGION - Filled Copper Region
+## SOLIDREGION - Filled Polygon Region
 
 **Format:**
 
 ```
-SOLIDREGION~layer_id~~path~id~net~[...]
+SOLIDREGION~layer_id~net~path~region_type~id~is_locked~[...]
 ```
 
 **Example:**
 
 ```
-SOLIDREGION~100~~M 3976.4252 3009.7242 L 3979.5748 3009.7242 L 3979.5748 3012.8738 L 3976.4252 3012.8738 Z~solid~gge344~~~~0
+SOLIDREGION~99~~M 3976.4252 3009.7242 L 3979.5748 3009.7242 L 3979.5748 3012.8738 L 3976.4252 3012.8738 Z~solid~gge344~~0
 ```
 
 **Fields:**
 
-| Index | Field       | Type   | Unit | Description                                 |
-| ----- | ----------- | ------ | ---- | ------------------------------------------- |
-| 0     | SOLIDREGION | -      | -    | Command identifier                          |
-| 1     | layer_id    | int    | -    | Layer ID (99=ComponentShape, 100=LeadShape) |
-| 2     | ...         | -      | -    | Empty field                                 |
-| 3     | path        | string | -    | SVG path defining the filled region         |
-| 4+    | ...         | -      | -    | Additional fields                           |
+| Index | Field       | Type   | Unit     | Description                                              |
+|-------|-------------|--------|----------|----------------------------------------------------------|
+| 0     | SOLIDREGION | -      | -        | Command identifier                                       |
+| 1     | layer_id    | int    | -        | Layer ID (3=F.SilkS, 4=B.SilkS, 13=F.Fab, 99=F.Fab, ...) |
+| 2     | net         | string | -        | Net name (usually empty)                                 |
+| 3     | path        | string | EE units | SVG path defining the filled polygon                     |
+| 4     | region_type | string | -        | "solid", "cutout", or "npth"                             |
+| 5     | id          | string | -        | Unique element ID                                        |
+| 6     | is_locked   | int    | -        | 1 if locked, 0 if unlocked                               |
 
 **Notes:**
 
-- ❌ Currently parsed but **NOT converted** to KiCad
-- Used for filled copper areas and zones
-- Path uses SVG format (M=move, L=line, Z=close path)
+- Path uses SVG format: `M x y` (move), `L x y` (line), `H x` (horizontal), `V y` (vertical), `Z` (close)
+- Converted to KiCad `fp_poly` (filled solid polygon)
+- Layers 3/4 (F.SilkS/B.SilkS), 13/14 (F.Fab/B.Fab): imported as filled `fp_poly`
+- Layer 99 (ComponentShapeLayer/LIBBODY): not visible in EasyEDA; imported as unfilled `fp_line` outline on `F.CrtYd`
+- Layers 5/6 skipped — paste areas belong to pad definitions
+- Layers 100/101 skipped — decorative lead/polarity shapes
 
 ---
 
@@ -360,7 +365,7 @@ SVGNODE~{"gId":"g1_outline","attrs":{"uuid":"ed3be94b43cd45f99a7c943270463433","
 **Fields:**
 
 | Index | Field   | Type   | Description               |
-| ----- | ------- | ------ | ------------------------- |
+|-------|---------|--------|---------------------------|
 | 0     | SVGNODE | -      | Command identifier        |
 | 1     | JSON    | object | 3D model metadata as JSON |
 
@@ -405,27 +410,27 @@ mm = easyeda_units * 10 * 0.0254
 
 ## Layer IDs
 
-| ID  | EasyEDA Name           | KiCad Layer | Usage               |
-| --- | ---------------------- | ----------- | ------------------- |
-| 0   | (undefined)            | F.Fab       | Default fallback    |
-| 1   | TopLayer               | F.Cu        | Front copper        |
-| 2   | BottomLayer            | B.Cu        | Back copper         |
-| 3   | TopSilkLayer           | F.SilkS     | Front silkscreen    |
-| 4   | BottomSilkLayer        | B.SilkS     | Back silkscreen     |
-| 5   | TopPasteMaskLayer      | F.Paste     | Front solder paste  |
-| 6   | BottomPasteMaskLayer   | B.Paste     | Back solder paste   |
-| 7   | TopSolderMaskLayer     | F.Mask      | Front solder mask   |
-| 8   | BottomSolderMaskLayer  | B.Mask      | Back solder mask    |
-| 10  | BoardOutLine           | Edge.Cuts   | Board outline       |
-| 11  | Multi-Layer            | _.Cu _.Mask | All copper layers   |
-| 12  | Document               | Cmts.User   | Documentation       |
-| 13  | TopAssembly            | F.Fab       | Front fabrication   |
-| 14  | BottomAssembly         | B.Fab       | Back fabrication    |
-| 15  | Mechanical             | Dwgs.User   | Mechanical drawings |
-| 19  | 3DModel                | -           | 3D model layer      |
-| 99  | ComponentShapeLayer    | F.Fab       | Component outline   |
-| 100 | LeadShapeLayer         | F.Fab       | Lead shape          |
-| 101 | ComponentPolarityLayer | F.Fab       | Polarity marking    |
+| ID  | EasyEDA Name           | KiCad Layer | Usage                                    |
+|-----|------------------------|-------------|------------------------------------------|
+| 0   | (undefined)            | F.Fab       | Default fallback                         |
+| 1   | TopLayer               | F.Cu        | Front copper                             |
+| 2   | BottomLayer            | B.Cu        | Back copper                              |
+| 3   | TopSilkLayer           | F.SilkS     | Front silkscreen                         |
+| 4   | BottomSilkLayer        | B.SilkS     | Back silkscreen                          |
+| 5   | TopPasteMaskLayer      | F.Paste     | Front solder paste                       |
+| 6   | BottomPasteMaskLayer   | B.Paste     | Back solder paste                        |
+| 7   | TopSolderMaskLayer     | F.Mask      | Front solder mask                        |
+| 8   | BottomSolderMaskLayer  | B.Mask      | Back solder mask                         |
+| 10  | BoardOutLine           | Edge.Cuts   | Board outline                            |
+| 11  | Multi-Layer            | _.Cu _.Mask | All copper layers                        |
+| 12  | Document               | Cmts.User   | Documentation                            |
+| 13  | TopAssembly            | F.Fab       | Front fabrication                        |
+| 14  | BottomAssembly         | B.Fab       | Back fabrication                         |
+| 15  | Mechanical             | Dwgs.User   | Mechanical drawings                      |
+| 19  | 3DModel                | -           | 3D model layer                           |
+| 99  | ComponentShapeLayer    | F.CrtYd     | Component body                           |
+| 100 | LeadShapeLayer         | (skipped)   | Decorative lead shapes — not imported    |
+| 101 | ComponentPolarityLayer | (skipped)   | Decorative polarity marks — not imported |
 
 ---
 
@@ -465,4 +470,4 @@ def convert_to_mm(self):
     self.stroke_width = convert_to_mm(self.stroke_width)  # ADDED
 ```
 
-**Result:** Rectangle lines now have correct width (~0.19 mm instead of 0.76 mm)
+**Result:** Rectangle lines now have correct width

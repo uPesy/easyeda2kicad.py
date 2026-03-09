@@ -20,6 +20,7 @@ from ..easyeda.parameters_easyeda import (
     EeSymbolPolygon,
     EeSymbolPolyline,
     EeSymbolRectangle,
+    EeSymbolText,
 )
 from ..easyeda.svg_path_parser import SvgPathEllipticalArc, SvgPathMoveTo
 from .parameters_kicad_symbol import (
@@ -33,6 +34,7 @@ from .parameters_kicad_symbol import (
     KiSymbolPin,
     KiSymbolPolygon,
     KiSymbolRectangle,
+    KiSymbolText,
 )
 
 # EasyEDA uses a 5px grid (= 1.27mm = 50mil). Snapping bbox coordinates to this
@@ -387,25 +389,28 @@ def convert_ee_paths(
     ee_bbox: EeSymbolBbox,
     kicad_version: KicadVersion,
 ) -> list[KiSymbolPolygon]:
-    # TODO: PT path support is simplified — curves are silently dropped.
-    # EasyEDA's PT command supports M, L, C (cubic bezier), Q (quadratic bezier),
-    # A (arc), and Z. Currently only M/L/Z are converted to straight-line polygon
-    # segments; C/Q/A tokens are skipped along with their coordinate values.
-    # This produces correct output for paths made of straight lines, but symbols
-    # with curves will appear as polygons with missing segments.
-    # Note: the EasyEDA PT format documentation (CMD_SYMBOL.md) is not fully
-    # verified — implement curve support only once test cases are confirmed.
+    """Convert EasyEDA PT path shapes to KiCad polygons.
+
+    Supports M, L, Z commands exactly. Curve commands (C, Q, A) are approximated
+    by their endpoint so the polygon stays closed — the curve shape is lost.
+    A warning is emitted when curves are present.
+
+    TODO: replace endpoint approximation with proper tessellation once KiCad
+    supports native bezier/arc in symbols or verified test cases are available.
+    """
     kicad_polygons: list[KiSymbolPolygon] = []
     to_ki = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
 
-    # Token counts consumed by each SVG path command (excluding the command letter itself)
-    _curve_tokens = {"C": 6, "Q": 4, "A": 7}
+    # (total args, 0-based index of endpoint x) per curve command
+    # C: x1 y1 x2 y2 x y   Q: x1 y1 x y   A: rx ry rot fA fS x y
+    _curve_cmd: dict[str, tuple[int, int]] = {"C": (6, 4), "Q": (4, 2), "A": (7, 5)}
 
     for ee_path in ee_paths:
         raw_pts = ee_path.paths.split()
 
         x_points = []
         y_points = []
+        has_curves = False
 
         # Minimal SVG path parser: https://www.w3.org/TR/SVG11/paths.html#PathElement
         idx = 0
@@ -420,14 +425,22 @@ def convert_ee_paths(
                     x_points.append(x_points[0])
                     y_points.append(y_points[0])
                 idx += 1
-            elif token in _curve_tokens:
-                logging.debug(
-                    f"PT path: '{token}' curve command not supported, "
-                    f"skipping {_curve_tokens[token]} coordinate tokens"
-                )
-                idx += 1 + _curve_tokens[token]
+            elif token in _curve_cmd:
+                n_args, ep_idx = _curve_cmd[token]
+                # Use the curve endpoint as straight-line approximation
+                x_points.append(to_ki(float(raw_pts[idx + ep_idx + 1]) - ee_bbox.x))
+                y_points.append(-to_ki(float(raw_pts[idx + ep_idx + 2]) - ee_bbox.y))
+                has_curves = True
+                idx += 1 + n_args
             else:
                 idx += 1  # unknown token or stray coordinate
+
+        if has_curves:
+            logging.warning(
+                f"PT path in symbol '{ee_path.paths[:40]}...': "
+                f"curve commands (C/Q/A) approximated as straight lines — "
+                f"shape may differ from original"
+            )
 
         if x_points:
             ki_polygon = KiSymbolPolygon(
@@ -443,6 +456,26 @@ def convert_ee_paths(
             logging.warning("PT path: skipping shape with no parseable points")
 
     return kicad_polygons
+
+
+def convert_ee_texts(
+    ee_texts: list[EeSymbolText],
+    ee_bbox: EeSymbolBbox,
+    kicad_version: KicadVersion,
+) -> list[KiSymbolText]:
+    to_ki = px_to_mil if kicad_version == KicadVersion.v5 else px_to_mm
+    result: list[KiSymbolText] = []
+    for t in ee_texts:
+        result.append(
+            KiSymbolText(
+                text=t.text,
+                pos_x=to_ki(t.pos_x - ee_bbox.x),
+                pos_y=-to_ki(t.pos_y - ee_bbox.y),
+                rotation=t.rotation,
+                font_size=t.font_size,
+            )
+        )
+    return result
 
 
 def convert_to_kicad(ee_symbol: EeSymbol, kicad_version: KicadVersion) -> KiSymbol:
@@ -503,6 +536,12 @@ def convert_to_kicad(ee_symbol: EeSymbol, kicad_version: KicadVersion) -> KiSymb
     )
     kicad_symbol.polygons += convert_ee_polygons(
         ee_polygons=ee_symbol.polygons,
+        ee_bbox=snapped_bbox,
+        kicad_version=kicad_version,
+    )
+
+    kicad_symbol.texts = convert_ee_texts(
+        ee_texts=ee_symbol.texts,
         ee_bbox=snapped_bbox,
         kicad_version=kicad_version,
     )

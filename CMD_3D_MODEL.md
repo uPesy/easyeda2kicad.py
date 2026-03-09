@@ -29,7 +29,7 @@ SVGNODE~{"gId":"g1_outline","attrs":{"uuid":"43ba165dae7e4f5b88ae140d98d63cbd","
 **Attributes:**
 
 | Field        | Type   | Description                    | Example                  |
-| ------------ | ------ | ------------------------------ | ------------------------ |
+|--------------|--------|--------------------------------|--------------------------|
 | `uuid`       | string | Model identifier for download  | "43ba165d..."            |
 | `title`      | string | Model name (becomes filename)  | "IND-SMD_L7.0-W6.6-H3.0" |
 | `c_origin`   | string | Translation (x,y) in EE units  | "3987.9646,3009"         |
@@ -150,16 +150,15 @@ Shape {
 
 ### Translation
 
-```python
-# Make relative to footprint bounding box
-x_mm = (model_3d.translation.x - bbox.x) * 10 * 0.0254
-y_mm = (model_3d.translation.y - bbox.y) * 10 * 0.0254
+The XY and Z offset is baked into the WRL vertex coordinates during OBJ→WRL conversion:
+the OBJ bounding-box centre is subtracted from all vertices so the model is centred on (0,0,0).
+This mirrors the behaviour of EasyEDA's `smt-gl-engine.js` (`fi()`: z_min always shifted to 0).
 
-# Z-height
-if fp_type == "smd":
-    z_mm = -round(model_3d.translation.z * 10 * 0.0254, 2)  # Inverted
-else:
-    z_mm = 0  # Through-hole at PCB surface
+As a result the KiCad footprint always receives offset **(0, 0, 0)**:
+
+```python
+# All footprint types — offset fully encoded in WRL vertices
+translation = Ki3dModelBase(x=0.0, y=0.0, z=0.0)
 ```
 
 ### Rotation
@@ -171,14 +170,6 @@ ry = 360 - model_3d.rotation.y
 rz = 360 - model_3d.rotation.z
 ```
 
-### Unit Conversion
-
-**EasyEDA Units → Millimeters:**
-
-```python
-mm = easyeda_units * 10 * 0.0254
-```
-
 ---
 
 ## KiCad Footprint Integration
@@ -187,13 +178,13 @@ mm = easyeda_units * 10 * 0.0254
 
 ```
 (model "${EASYEDA2KICAD}/IND-SMD_L7.0-W6.6-H3.0.wrl"
-  (at (xyz -0.635 0.127 -0.508))
+  (at (xyz 0 0 0))
   (scale (xyz 1 1 1))
   (rotate (xyz 0 0 0))
 )
 
 (model "${EASYEDA2KICAD}/IND-SMD_L7.0-W6.6-H3.0.step"
-  (at (xyz -0.635 0.127 -0.508))
+  (at (xyz 0 0 0))
   (scale (xyz 1 1 1))
   (rotate (xyz 0 0 0))
 )
@@ -212,7 +203,7 @@ MyLibrary.3dshapes/
 ## Limitations
 
 | Issue                  | Description                                 |
-| ---------------------- | ------------------------------------------- |
+|------------------------|---------------------------------------------|
 | Network Required       | 3D models cannot be obtained offline        |
 | Material Approximation | VRML may not perfectly match OBJ appearance |
 | Server Dependency      | Requires EasyEDA servers to be available    |
