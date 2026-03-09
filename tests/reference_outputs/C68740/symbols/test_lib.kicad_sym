@@ -2,138 +2,138 @@
   (version 20211014)
   (generator https://github.com/uPesy/easyeda2kicad.py)
 
-    (symbol "CU3M002_USBA_M3.0SMTL=1.9K"
-      (in_bom yes)
-      (on_board yes)
-      (property
-        "Reference"
-        "USB"
-        (id 0)
-        (at 0 15.24 0)
-        (effects (font (size 1.27 1.27) ) )
+  (symbol "CU3M002_USBA_M3.0SMTL=1.9K"
+    (in_bom yes)
+    (on_board yes)
+    (property
+      "Reference"
+      "USB"
+      (id 0)
+      (at 0 15.24 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Value"
+      "CU3M002_USB A/M 3.0 SMT L=1.9 K"
+      (id 1)
+      (at 0 -20.32 0)
+      (effects (font (size 1.27 1.27) ) )
+    )
+    (property
+      "Footprint"
+      "test_lib:USB-3.0-SMD_CU3M002_USBA-M"
+      (id 2)
+      (at 0 -22.86 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "Datasheet"
+      "https://lcsc.com/product-detail/USB-Connectors_A-M-3-0Sink-plate-SMT-Blue-tape-Male-Not-high-temperature_C68740.html"
+      (id 3)
+      (at 0 -25.40 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "Manufacturer"
+      "精拓金"
+      (id 4)
+      (at 0 -27.94 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "MPN"
+      "917-P81A205CS60202"
+      (id 5)
+      (at 0 -30.48 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "LCSC Part"
+      "C68740"
+      (id 6)
+      (at 0 -33.02 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (property
+      "ki_keywords"
+      "USB Connectors"
+      (id 8)
+      (at 0 -35.56 0)
+      (effects (font (size 1.27 1.27) ) hide)
+    )
+    (symbol "CU3M002_USBA_M3.0SMTL=1.9K_0_1"
+      (rectangle
+        (start -12.70 15.24)
+        (end 12.70 -10.16)
+        (stroke (width 0) (type default) (color 0 0 0 0))
+        (fill (type background))
       )
-      (property
-        "Value"
-        "CU3M002_USB A/M 3.0 SMT L=1.9 K"
-        (id 1)
-        (at 0 -20.32 0)
-        (effects (font (size 1.27 1.27) ) )
+      (pin unspecified line
+        (at -10.16 -15.24 90)
+        (length 5.08)
+        (name "VBUS" (effects (font (size 1.27 1.27))))
+        (number "1" (effects (font (size 1.27 1.27))))
       )
-      (property
-        "Footprint"
-        "test_lib:USB-3.0-SMD_CU3M002_USBA-M"
-        (id 2)
-        (at 0 -22.86 0)
-        (effects (font (size 1.27 1.27) ) hide)
+      (pin unspecified line
+        (at -7.62 -15.24 90)
+        (length 5.08)
+        (name "D-" (effects (font (size 1.27 1.27))))
+        (number "2" (effects (font (size 1.27 1.27))))
       )
-      (property
-        "Datasheet"
-        "https://lcsc.com/product-detail/USB-Connectors_A-M-3-0Sink-plate-SMT-Blue-tape-Male-Not-high-temperature_C68740.html"
-        (id 3)
-        (at 0 -25.40 0)
-        (effects (font (size 1.27 1.27) ) hide)
+      (pin unspecified line
+        (at -5.08 -15.24 90)
+        (length 5.08)
+        (name "D+" (effects (font (size 1.27 1.27))))
+        (number "3" (effects (font (size 1.27 1.27))))
       )
-      (property
-        "Manufacturer"
-        "精拓金"
-        (id 4)
-        (at 0 -27.94 0)
-        (effects (font (size 1.27 1.27) ) hide)
+      (pin unspecified line
+        (at -2.54 -15.24 90)
+        (length 5.08)
+        (name "GND" (effects (font (size 1.27 1.27))))
+        (number "4" (effects (font (size 1.27 1.27))))
       )
-      (property
-        "MPN"
-        "917-P81A205CS60202"
-        (id 5)
-        (at 0 -30.48 0)
-        (effects (font (size 1.27 1.27) ) hide)
+      (pin unspecified line
+        (at 0.00 -15.24 90)
+        (length 5.08)
+        (name "STDA-SSRX-" (effects (font (size 1.27 1.27))))
+        (number "5" (effects (font (size 1.27 1.27))))
       )
-      (property
-        "LCSC Part"
-        "C68740"
-        (id 6)
-        (at 0 -33.02 0)
-        (effects (font (size 1.27 1.27) ) hide)
+      (pin unspecified line
+        (at 2.54 -15.24 90)
+        (length 5.08)
+        (name "STDA-SSRX+" (effects (font (size 1.27 1.27))))
+        (number "6" (effects (font (size 1.27 1.27))))
       )
-      (property
-        "ki_keywords"
-        "USB Connectors"
-        (id 8)
-        (at 0 -35.56 0)
-        (effects (font (size 1.27 1.27) ) hide)
+      (pin unspecified line
+        (at 5.08 -15.24 90)
+        (length 5.08)
+        (name "GND-DRAIN" (effects (font (size 1.27 1.27))))
+        (number "7" (effects (font (size 1.27 1.27))))
       )
-      (symbol "CU3M002_USBA_M3.0SMTL=1.9K_0_1"
-        (rectangle
-          (start -12.70 15.24)
-          (end 12.70 -10.16)
-          (stroke (width 0) (type default) (color 0 0 0 0))
-          (fill (type background))
-        )
-        (pin unspecified line
-          (at -10.16 -15.24 90)
-          (length 5.08)
-          (name "VBUS" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin unspecified line
-          (at -7.62 -15.24 90)
-          (length 5.08)
-          (name "D-" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-        (pin unspecified line
-          (at -5.08 -15.24 90)
-          (length 5.08)
-          (name "D+" (effects (font (size 1.27 1.27))))
-          (number "3" (effects (font (size 1.27 1.27))))
-        )
-        (pin unspecified line
-          (at -2.54 -15.24 90)
-          (length 5.08)
-          (name "GND" (effects (font (size 1.27 1.27))))
-          (number "4" (effects (font (size 1.27 1.27))))
-        )
-        (pin unspecified line
-          (at 0.00 -15.24 90)
-          (length 5.08)
-          (name "STDA-SSRX-" (effects (font (size 1.27 1.27))))
-          (number "5" (effects (font (size 1.27 1.27))))
-        )
-        (pin unspecified line
-          (at 2.54 -15.24 90)
-          (length 5.08)
-          (name "STDA-SSRX+" (effects (font (size 1.27 1.27))))
-          (number "6" (effects (font (size 1.27 1.27))))
-        )
-        (pin unspecified line
-          (at 5.08 -15.24 90)
-          (length 5.08)
-          (name "GND-DRAIN" (effects (font (size 1.27 1.27))))
-          (number "7" (effects (font (size 1.27 1.27))))
-        )
-        (pin unspecified line
-          (at 7.62 -15.24 90)
-          (length 5.08)
-          (name "STDA-SSTX-" (effects (font (size 1.27 1.27))))
-          (number "8" (effects (font (size 1.27 1.27))))
-        )
-        (pin unspecified line
-          (at 10.16 -15.24 90)
-          (length 5.08)
-          (name "STDA-SSTX+" (effects (font (size 1.27 1.27))))
-          (number "9" (effects (font (size 1.27 1.27))))
-        )
-        (pin unspecified line
-          (at 17.78 10.16 180)
-          (length 5.08)
-          (name "SHELL" (effects (font (size 1.27 1.27))))
-          (number "10" (effects (font (size 1.27 1.27))))
-        )
-        (pin unspecified line
-          (at -17.78 10.16 0)
-          (length 5.08)
-          (name "SHELL" (effects (font (size 1.27 1.27))))
-          (number "11" (effects (font (size 1.27 1.27))))
-        )
+      (pin unspecified line
+        (at 7.62 -15.24 90)
+        (length 5.08)
+        (name "STDA-SSTX-" (effects (font (size 1.27 1.27))))
+        (number "8" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at 10.16 -15.24 90)
+        (length 5.08)
+        (name "STDA-SSTX+" (effects (font (size 1.27 1.27))))
+        (number "9" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at 17.78 10.16 180)
+        (length 5.08)
+        (name "SHELL" (effects (font (size 1.27 1.27))))
+        (number "10" (effects (font (size 1.27 1.27))))
+      )
+      (pin unspecified line
+        (at -17.78 10.16 0)
+        (length 5.08)
+        (name "SHELL" (effects (font (size 1.27 1.27))))
+        (number "11" (effects (font (size 1.27 1.27))))
       )
     )
+  )
 )
