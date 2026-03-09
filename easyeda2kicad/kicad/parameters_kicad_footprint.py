@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 # Global imports
-from dataclasses import dataclass, field, fields
-from typing import Any
+from dataclasses import dataclass, field
 
 # ---------------------------- FOOTPRINT PART ----------------------------
 
@@ -13,11 +12,11 @@ KI_DESCRIPTION = (
 KI_TAGS_INFO = '\t(tags "{tag}")\n'
 KI_FP_TYPE = "\t(attr {component_type})\n"
 KI_REFERENCE = (
-    "\t(fp_text reference REF** (at {pos_x} {pos_y}) (layer F.SilkS)\n\t\t(effects"
+    "\t(fp_text reference REF** (at {pos_x:.3f} {pos_y:.3f}) (layer F.SilkS)\n\t\t(effects"
     " (font (size 1 1) (thickness 0.15)))\n\t)\n"
 )
 KI_PACKAGE_VALUE = (
-    "\t(fp_text value {package_name} (at {pos_x} {pos_y}) (layer F.Fab)\n\t\t(effects"
+    "\t(fp_text value {package_name} (at {pos_x:.3f} {pos_y:.3f}) (layer F.Fab)\n\t\t(effects"
     " (font (size 1 1) (thickness 0.15)))\n\t)\n"
 )
 KI_FAB_REF = (
@@ -55,6 +54,8 @@ KI_TEXT = (
     " {layers}){display}\n\t\t(effects (font (size {font_size:.2f} {font_size:.2f})"
     " (thickness {thickness:.2f})) (justify left{mirror}))\n\t)\n"
 )
+KI_FP_POLY = '\t(fp_poly (pts {pts}) (stroke (width 0) (type solid)) (fill solid) (layer "{layer}"))\n'
+
 KI_MODEL_3D = (
     '\t(model "{file_3d}"\n\t\t(offset (xyz {pos_x:.3f} {pos_y:.3f}'
     " {pos_z:.3f}))\n\t\t(scale (xyz 1 1 1))\n\t\t(rotate (xyz {rot_x:.0f} {rot_y:.0f}"
@@ -103,18 +104,10 @@ KI_LAYERS = {
     13: "F.Fab",  # TopAssembly
     14: "B.Fab",  # BottomAssembly
     15: "Dwgs.User",  # Mechanical
-    99: "F.Fab",  # ComponentShapeLayer - component outline for fabrication
+    99: "F.CrtYd",  # ComponentShapeLayer (LIBBODY) - invisible in EasyEDA, maps to courtyard in KiCad
     100: "F.Fab",  # LeadShapeLayer - lead shapes for fabrication
     101: "F.SilkS",  # ComponentPolarityLayer - polarity markings on silkscreen
 }
-
-
-# Round all float values contained in the dataclass
-def round_float_values(self: Any) -> None:
-    for _field in fields(self):
-        current_value = getattr(self, _field.name)
-        if isinstance(current_value, float):
-            setattr(self, _field.name, round(current_value, 2))
 
 
 # ---------------- PAD ----------------
@@ -131,9 +124,6 @@ class KiFootprintPad:
     drill: str
     orientation: float
     polygon: str
-
-    def __post_init__(self) -> None:
-        round_float_values(self)
 
 
 # ---------------- TRACK ----------------
@@ -154,9 +144,6 @@ class KiFootprintHole:
     pos_y: float
     size: float
 
-    def __post_init__(self) -> None:
-        round_float_values(self)
-
 
 # ---------------- CIRCLE ----------------
 @dataclass
@@ -167,9 +154,6 @@ class KiFootprintCircle:
     end_y: float
     layers: str
     stroke_width: float
-
-    def __post_init__(self) -> None:
-        round_float_values(self)
 
 
 # ---------------- RECTANGLE ----------------
@@ -188,9 +172,6 @@ class KiFootprintArc:
     layers: str
     stroke_width: float
 
-    def __post_init__(self) -> None:
-        round_float_values(self)
-
 
 # ---------------- TEXT ----------------
 @dataclass
@@ -205,9 +186,6 @@ class KiFootprintText:
     display: str
     mirror: str
 
-    def __post_init__(self) -> None:
-        round_float_values(self)
-
 
 # ---------------- VIA ----------------
 @dataclass
@@ -217,18 +195,15 @@ class KiFootprintVia:
     size: float
     diameter: float
 
-    def __post_init__(self) -> None:
-        round_float_values(self)
-
-    # TODO
-
 
 # ---------------- SOLID REGION ----------------
-# EasyEDA SOLIDREGION: filled copper polygon (e.g. exposed pad of QFN/DFN, heat slug).
-# In KiCad this maps to a zone or filled polygon. Not yet implemented.
+# EasyEDA SOLIDREGION: filled polygon on silkscreen or fab layer
+# (e.g. pin-1 dot, polarity mark, component outline fill).
+# Maps to KiCad fp_poly.
 @dataclass
 class KiFootprintSolidRegion:
-    name: str = ""
+    layer: str
+    points: list[tuple[float, float]]
 
 
 # ---------------- COPPER AREA ----------------

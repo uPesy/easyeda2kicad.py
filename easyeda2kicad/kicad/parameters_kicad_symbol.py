@@ -628,6 +628,43 @@ class KiSymbolBezier:
         )
 
 
+# ---------------- TEXT ----------------
+@dataclass
+class KiSymbolText:
+    # Represents a free text label from EasyEDA (T~ command).
+    #
+    # (text ...) is a valid graphic primitive in KiCad symbol libraries from KiCad 6+
+    # (file format >= 20220102). It is documented in the official KiCad symbol library
+    # file format spec as "graphical text in a symbol definition".
+    #
+    # NOTE: Older KiCad versions or libraries with an older format version may silently
+    # discard (text ...) blocks when loading/saving. If text disappears after a
+    # round-trip, check the (version ...) header in the .kicad_sym file — it must
+    # be >= 20220102 for text primitives to be preserved.
+    text: str = ""
+    pos_x: float = 0.0
+    pos_y: float = 0.0
+    rotation: float = 0.0
+    font_size: float = 1.27  # mm
+
+    def export_v5(self) -> str:
+        # KiCad v5 has no free text in symbols — silently skip
+        return ""
+
+    def export_v6(self) -> str:
+        return """
+            (text "{text}"
+              (at {pos_x:.2f} {pos_y:.2f} {rotation:.0f})
+              (effects (font (size {font_size:.2f} {font_size:.2f})))
+            )""".format(
+            text=self.text.replace('"', '\\"'),
+            pos_x=self.pos_x,
+            pos_y=self.pos_y,
+            rotation=self.rotation,
+            font_size=self.font_size,
+        )
+
+
 # ---------------- SYMBOL ----------------
 @dataclass
 class KiSymbol:
@@ -638,6 +675,7 @@ class KiSymbol:
     arcs: list[KiSymbolArc] = field(default_factory=lambda: [])
     polygons: list[KiSymbolPolygon] = field(default_factory=lambda: [])
     beziers: list[KiSymbolBezier] = field(default_factory=lambda: [])
+    texts: list[KiSymbolText] = field(default_factory=lambda: [])
 
     def export_handler(self, kicad_version: KicadVersion) -> dict[str, str | list[str]]:
         method_name = f"export_{kicad_version.name}"  # e.g. "export_v6"

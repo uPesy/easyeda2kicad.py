@@ -342,6 +342,22 @@ class EeSymbolPath:
             self.fill_color = _safe_bool(self.fill_color, False)
 
 
+# ---------------- TEXT ----------------
+@dataclass
+class EeSymbolText:
+    text: str
+    pos_x: float
+    pos_y: float
+    rotation: float
+    font_size: float  # in mm
+
+    def __post_init__(self) -> None:
+        self.pos_x = _safe_float(self.pos_x, 0.0)
+        self.pos_y = _safe_float(self.pos_y, 0.0)
+        self.rotation = _safe_float(self.rotation, 0.0)
+        self.font_size = _safe_float(self.font_size, 1.27)
+
+
 # ---------------- SYMBOL ----------------
 @dataclass
 class EeSymbolInfo:
@@ -368,6 +384,7 @@ class EeSymbol:
     polylines: list[EeSymbolPolyline] = field(default_factory=list)
     polygons: list[EeSymbolPolygon] = field(default_factory=list)
     paths: list[EeSymbolPath] = field(default_factory=list)
+    texts: list[EeSymbolText] = field(default_factory=list)
     # Sub-units of a multi-unit symbol (e.g. op-amp body + power pins as separate units)
     sub_symbols: list["EeSymbol"] = field(default_factory=list)
 
@@ -376,7 +393,8 @@ class EeSymbol:
 
 
 def convert_to_mm(dim: float) -> float:
-    return float(dim) * 10 * 0.0254
+    # KiCad uses 1nm (0.000001mm) internal resolution → round to 6 decimal places
+    return round(float(dim) * 10 * 0.0254, 6)
 
 
 @dataclass
@@ -574,6 +592,16 @@ class EeFootprintArc:
 
 
 @dataclass
+class EeFootprintSolidRegion:
+    layer_id: int
+    path: str  # SVG path string (M/L/H/V/A/Z commands)
+    region_type: str  # "solid", "cutout", "npth"
+
+    def __post_init__(self) -> None:
+        self.layer_id = _safe_int(self.layer_id, 3)
+
+
+@dataclass
 class EeFootprintText:
     type: str
     center_x: float
@@ -667,3 +695,4 @@ class EeFootprint:
     arcs: list[EeFootprintArc] = field(default_factory=list)
     rectangles: list[EeFootprintRectangle] = field(default_factory=list)
     texts: list[EeFootprintText] = field(default_factory=list)
+    solid_regions: list[EeFootprintSolidRegion] = field(default_factory=list)

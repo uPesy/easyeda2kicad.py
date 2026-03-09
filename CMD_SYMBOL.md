@@ -6,8 +6,8 @@ This document provides a compact reference for all EasyEDA symbol shape commands
 
 ## Command Overview
 
-| Command | Description              | Implementation            |
-| ------- | ------------------------ | ------------------------- |
+| Command | Description              | Implementation           |
+|---------|--------------------------|--------------------------|
 | P       | Pin with number and name | ✅ Implemented            |
 | R       | Rectangle                | ✅ Implemented            |
 | C       | Circle                   | ✅ Implemented            |
@@ -16,7 +16,7 @@ This document provides a compact reference for all EasyEDA symbol shape commands
 | PL      | Polyline (open path)     | ✅ Implemented            |
 | PG      | Polygon (closed path)    | ✅ Implemented            |
 | PT      | Path (SVG path)          | ✅ Implemented            |
-| T       | Text label               | ❌ Not parsed             |
+| T       | Text label               | ✅ Implemented            |
 | PI      | Pie/Elliptical arc       | ❌ Not supported in KiCad |
 
 ---
@@ -37,20 +37,20 @@ P~show~0~1~350~310~180~gge6~0^^350~310^^M 350 310 h 10~#000000^^1~363.7~314~0~VS
 
 **Structure (Split by `^^`):**
 
-| Segment | Data           | Description                                         |
-| ------- | -------------- | --------------------------------------------------- |
-| 0       | Settings       | visibility~locked~type~x~y~rotation~id~flags        |
-| 1       | Dot position   | dot_x~dot_y                                         |
-| 2       | Pin path       | path~color                                          |
-| 3       | Pin name       | show~x~y~rotation~text~text_anchor~font~color       |
-| 4       | **Pin number** | show~x~y~rotation~**number**~text_anchor~font~color |
-| 5       | Dot circle     | show~circle_x~circle_y                              |
-| 6       | Clock symbol   | show~path                                           |
+| Segment | Data           | Description                                             |
+|---------|----------------|---------------------------------------------------------|
+| 0       | Settings       | visibility~locked~type~x~y~rotation~id~flags            |
+| 1       | Dot position   | dot_x~dot_y                                             |
+| 2       | Pin path       | path~color                                              |
+| 3       | Pin name       | show~x~y~rotation~text~text_anchor~font~font_size       |
+| 4       | **Pin number** | show~x~y~rotation~**number**~text_anchor~font~font_size |
+| 5       | Dot circle     | show~circle_x~circle_y                                  |
+| 6       | Clock symbol   | show~path                                               |
 
 **Settings Fields:**
 
 | Index | Field      | Type   | Description                                                          |
-| ----- | ---------- | ------ | -------------------------------------------------------------------- |
+|-------|------------|--------|----------------------------------------------------------------------|
 | 0     | P          | -      | Command identifier                                                   |
 | 1     | visibility | string | "show" or "hide"                                                     |
 | 2     | locked     | int    | 1 if locked, 0 if unlocked                                           |
@@ -92,7 +92,7 @@ R~360~298~2~2~80~34~#880000~1~0~none~gge4~0~
 **Fields:**
 
 | Index | Field        | Type   | Unit   | Description                                |
-| ----- | ------------ | ------ | ------ | ------------------------------------------ |
+|-------|--------------|--------|--------|--------------------------------------------|
 | 0     | R            | -      | -      | Command identifier                         |
 | 1     | x            | float  | pixels | X coordinate (top-left corner)             |
 | 2     | y            | float  | pixels | Y coordinate (top-left corner)             |
@@ -132,7 +132,7 @@ C~400~300~5~#880000~1~0~none~gge10~0
 **Fields:**
 
 | Index | Field        | Type        | Unit   | Description                   |
-| ----- | ------------ | ----------- | ------ | ----------------------------- |
+|-------|--------------|-------------|--------|-------------------------------|
 | 0     | C            | -           | -      | Command identifier            |
 | 1     | center_x     | float       | pixels | X coordinate of circle center |
 | 2     | center_y     | float       | pixels | Y coordinate of circle center |
@@ -163,7 +163,7 @@ E~365~303~1.5~1.5~#880000~1~0~#880000~gge3~0
 **Fields:**
 
 | Index | Field        | Type        | Unit   | Description                    |
-| ----- | ------------ | ----------- | ------ | ------------------------------ |
+|-------|--------------|-------------|--------|--------------------------------|
 | 0     | E            | -           | -      | Command identifier             |
 | 1     | center_x     | float       | pixels | X coordinate of ellipse center |
 | 2     | center_y     | float       | pixels | Y coordinate of ellipse center |
@@ -200,7 +200,7 @@ A~M 383.117 299.932 A 4 3.9 0 1 1 391.082 299.936~~#880000~1~0~none~gge17~0
 **Fields:**
 
 | Index | Field        | Type   | Description                                                                |
-| ----- | ------------ | ------ | -------------------------------------------------------------------------- |
+|-------|--------------|--------|----------------------------------------------------------------------------|
 | 0     | A            | -      | Command identifier                                                         |
 | 1     | path         | string | SVG arc path: `M startX startY A rx ry rotation large-arc sweep endX endY` |
 | 2     | helper_dots  | string | Helper dots for visual editing (usually empty)                             |
@@ -240,7 +240,7 @@ PL~380 290 390 290 390 310 380 310~#880000~1~0~none~gge8~0
 **Fields:**
 
 | Index | Field        | Type   | Unit   | Description                                          |
-| ----- | ------------ | ------ | ------ | ---------------------------------------------------- |
+|-------|--------------|--------|--------|------------------------------------------------------|
 | 0     | PL           | -      | -      | Command identifier                                   |
 | 1     | points       | string | pixels | Space-separated coordinates: `x1 y1 x2 y2 x3 y3 ...` |
 | 2     | stroke_color | string | -      | Line color (hex)                                     |
@@ -275,7 +275,7 @@ PG~380 290 390 290 390 310 380 310~#880000~1~0~#880000~gge9~0
 **Fields:**
 
 | Index | Field        | Type   | Unit   | Description                                          |
-| ----- | ------------ | ------ | ------ | ---------------------------------------------------- |
+|-------|--------------|--------|--------|------------------------------------------------------|
 | 0     | PG           | -      | -      | Command identifier                                   |
 | 1     | points       | string | pixels | Space-separated coordinates: `x1 y1 x2 y2 x3 y3 ...` |
 | 2     | stroke_color | string | -      | Border color (hex)                                   |
@@ -310,7 +310,7 @@ PT~M 380 300 L 390 300 L 390 310~#880000~1~0~none~gge11~0
 **Fields:**
 
 | Index | Field        | Type   | Description                                      |
-| ----- | ------------ | ------ | ------------------------------------------------ |
+|-------|--------------|--------|--------------------------------------------------|
 | 0     | PT           | -      | Command identifier                               |
 | 1     | path         | string | SVG path data (M=move, L=line, C=curve, Z=close) |
 | 2     | stroke_color | string | Line color (hex)                                 |
@@ -337,7 +337,7 @@ PT~M 380 300 L 390 300 L 390 310~#880000~1~0~none~gge11~0
 
 ---
 
-## T - Text Label (NOT IMPLEMENTED)
+## T - Text Label
 
 **Format:**
 
@@ -351,9 +351,19 @@ T~type~x~y~rotation~color~font~font_size~stroke_width~text_anchor~text_type~text
 T~L~400~290~0~#0000FF~Tahoma~11.5pt~0.1~~middle~comment~RP2040~1~middle~gge860~0~pinpart
 ```
 
-**Status**: ❌ This shape type is **NOT** currently parsed by easyeda2kicad. Text labels on symbols are silently ignored.
+**Fields used by parser:**
 
-**Impact**: Component names, values, and other text annotations on symbols will not appear in converted KiCad symbols.
+| Index | Field     | Description                                                   |
+|-------|-----------|---------------------------------------------------------------|
+| 2     | x         | X coordinate (canvas pixels)                                  |
+| 3     | y         | Y coordinate (canvas pixels)                                  |
+| 4     | rotation  | Rotation angle in degrees                                     |
+| 7     | font_size | Font size (e.g. `"11.5pt"`) → converted to mm (`pt * 0.3528`) |
+| 12    | text      | Text content                                                  |
+
+**Notes:**
+- Requires KiCad symbol library format version ≥ 20220102 to be preserved on save
+- Empty text fields are skipped
 
 ---
 
@@ -403,7 +413,7 @@ ki_y_mils = -(ee_y - bbox_y) * 10  # Note: Y inverted
 ## Pin Types
 
 | Value | Type          | Description                  |
-| ----- | ------------- | ---------------------------- |
+|-------|---------------|------------------------------|
 | 0     | Unspecified   | No electrical type specified |
 | 1     | Input         | Input signal                 |
 | 2     | Output        | Output signal                |
@@ -415,7 +425,7 @@ ki_y_mils = -(ee_y - bbox_y) * 10  # Note: Y inverted
 ## Stroke Styles
 
 | Value | Style  | Description     |
-| ----- | ------ | --------------- |
+|-------|--------|-----------------|
 | 0     | Solid  | Continuous line |
 | 1     | Dashed | Dashed line     |
 | 2     | Dotted | Dotted line     |
@@ -425,7 +435,7 @@ ki_y_mils = -(ee_y - bbox_y) * 10  # Note: Y inverted
 ## Common Colors
 
 | Color | Hex Code | Usage             |
-| ----- | -------- | ----------------- |
+|-------|----------|-------------------|
 | Red   | #880000  | Symbol outlines   |
 | Blue  | #0000FF  | Pin numbers, text |
 | Black | #000000  | Pin paths         |

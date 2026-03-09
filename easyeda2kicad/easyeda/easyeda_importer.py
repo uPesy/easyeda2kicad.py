@@ -29,6 +29,7 @@ from .parameters_easyeda import (
     EeFootprintInfo,
     EeFootprintPad,
     EeFootprintRectangle,
+    EeFootprintSolidRegion,
     EeFootprintText,
     EeFootprintTrack,
     EeFootprintVia,
@@ -40,6 +41,7 @@ from .parameters_easyeda import (
     EeSymbolInfo,
     EeSymbolPath,
     EeSymbolPin,
+    EeSymbolText,
     EeSymbolPinClock,
     EeSymbolPinDot,
     EeSymbolPinDotBis,
@@ -109,6 +111,14 @@ def convert_fields_to_types(
 
 
 def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol) -> None:
+    # Format: P~settings^^dot^^path^^name^^num^^dot_bis^^clock
+    #   settings: display~type~spice_pin_number~pos_x~pos_y~rotation~id~is_locked~length
+    #   dot:      dot_x~dot_y
+    #   path:     path~color
+    #   name:     is_displayed~pos_x~pos_y~rotation~text~font_size~font_style~color~text_anchor~id~is_locked
+    #   num:      (pin number segment, index [4][4] used for correct KiCad pin number)
+    #   dot_bis:  is_displayed~circle_x~circle_y
+    #   clock:    is_displayed~path
     segments = pin_data.split("^^")
     ee_segments = [seg.split("~") for seg in segments]
 
@@ -260,6 +270,7 @@ def add_easyeda_rectangle(rectangle_data: str, ee_symbol: EeSymbol) -> None:
 
 
 def add_easyeda_polyline(polyline_data: str, ee_symbol: EeSymbol) -> None:
+    # Format: PL~points~stroke_color~stroke_width~stroke_style~fill_color~id~locked
     polyline_dict = dict(
         zip(
             [f.name for f in fields(EeSymbolPolyline)],
@@ -272,6 +283,7 @@ def add_easyeda_polyline(polyline_data: str, ee_symbol: EeSymbol) -> None:
 
 
 def add_easyeda_polygon(polygon_data: str, ee_symbol: EeSymbol) -> None:
+    # Format: PG~points~stroke_color~stroke_width~stroke_style~fill_color~id~locked
     polygon_dict = dict(
         zip(
             [f.name for f in fields(EeSymbolPolygon)],
@@ -284,6 +296,7 @@ def add_easyeda_polygon(polygon_data: str, ee_symbol: EeSymbol) -> None:
 
 
 def add_easyeda_path(path_data: str, ee_symbol: EeSymbol) -> None:
+    # Format: PT~paths~stroke_color~stroke_width~stroke_style~fill_color~id~locked
     path_dict = dict(
         zip([f.name for f in fields(EeSymbolPath)], path_data.split("~")[1:])
     )
@@ -293,6 +306,7 @@ def add_easyeda_path(path_data: str, ee_symbol: EeSymbol) -> None:
 
 
 def add_easyeda_circle(circle_data: str, ee_symbol: EeSymbol) -> None:
+    # Format: C~center_x~center_y~radius~stroke_color~stroke_width~stroke_style~fill_color~id~locked
     circle_dict = dict(
         zip([f.name for f in fields(EeSymbolCircle)], circle_data.split("~")[1:])
     )
@@ -302,6 +316,7 @@ def add_easyeda_circle(circle_data: str, ee_symbol: EeSymbol) -> None:
 
 
 def add_easyeda_ellipse(ellipse_data: str, ee_symbol: EeSymbol) -> None:
+    # Format: E~center_x~center_y~radius_x~radius_y~stroke_color~stroke_width~stroke_style~fill_color~id~locked
     ellipse_dict = dict(
         zip(
             [f.name for f in fields(EeSymbolEllipse)],
@@ -314,8 +329,33 @@ def add_easyeda_ellipse(ellipse_data: str, ee_symbol: EeSymbol) -> None:
 
 
 def add_easyeda_arc(arc_data: str, ee_symbol: EeSymbol) -> None:
+    # Format: A~path~helper_dots~stroke_color~stroke_width~stroke_style~fill_color~id~locked
     arc_dict = dict(zip([f.name for f in fields(EeSymbolArc)], arc_data.split("~")[1:]))
     ee_symbol.arcs.append(EeSymbolArc(**convert_fields_to_types(arc_dict, EeSymbolArc)))
+
+
+def add_easyeda_text(text_data: str, ee_symbol: EeSymbol) -> None:
+    # Format: T~type~x~y~rotation~color~font~font_size~...~text~display~...
+    parts = text_data.split("~")
+    if len(parts) < 13 or not parts[12]:
+        return
+    font_size_str = parts[7]
+    try:
+        if "pt" in font_size_str:
+            font_size_mm = float(font_size_str.replace("pt", "")) * 0.3528
+        else:
+            font_size_mm = float(font_size_str) * 0.3528
+    except ValueError:
+        font_size_mm = 1.27
+    ee_symbol.texts.append(
+        EeSymbolText(
+            text=parts[12],
+            pos_x=_safe_float(parts[2]),
+            pos_y=_safe_float(parts[3]),
+            rotation=_safe_float(parts[4]),
+            font_size=round(font_size_mm, 3),
+        )
+    )
 
 
 easyeda_handlers = {
@@ -327,7 +367,8 @@ easyeda_handlers = {
     "PL": add_easyeda_polyline,
     "PG": add_easyeda_polygon,
     "PT": add_easyeda_path,
-    # "PI" : Pie, Elliptical arc seems to be not supported in Kicad
+    "T": add_easyeda_text,
+    # "PI" : Pie, Elliptical arc seems to be not supported in KiCad
 }
 
 
@@ -561,7 +602,14 @@ class EasyedaFootprintImporter:
                 ).output
 
             elif ee_designator == "SOLIDREGION":
-                pass  # Not yet implemented; see KiFootprintSolidRegion
+                # Format: SOLIDREGION~layer~net~path~type~id~is_locked
+                if len(ee_fields) >= 4:
+                    region = EeFootprintSolidRegion(
+                        layer_id=_safe_int(ee_fields[0], 3),
+                        path=ee_fields[2] if len(ee_fields) > 2 else "",
+                        region_type=ee_fields[3] if len(ee_fields) > 3 else "solid",
+                    )
+                    new_ee_footprint.solid_regions.append(region)
             else:
                 logging.warning(f"Unknown footprint designator: {ee_designator}")
 

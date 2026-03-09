@@ -2,15 +2,17 @@ from __future__ import annotations
 
 # Global imports
 import logging
+import re
 from math import acos, cos, isnan, pi, sin, sqrt
 
 # Local imports
-from ..easyeda.parameters_easyeda import EeFootprint
+from ..easyeda.parameters_easyeda import EeFootprint, EeFootprintSolidRegion
 from .parameters_kicad_footprint import (
     KI_ARC,
     KI_CIRCLE,
     KI_END_FILE,
     KI_FAB_REF,
+    KI_FP_POLY,
     KI_FP_TYPE,
     KI_HOLE,
     KI_LAYERS,
@@ -34,6 +36,7 @@ from .parameters_kicad_footprint import (
     KiFootprintInfo,
     KiFootprintPad,
     KiFootprintRectangle,
+    KiFootprintSolidRegion,
     KiFootprintText,
     KiFootprintTrack,
     KiFootprintVia,
@@ -146,7 +149,7 @@ def fp_to_ki(dim: float | str) -> float:
         return 0.0
     try:
         val = float(dim)
-        return round(val * 10 * 0.0254, 2) if not isnan(val) else 0.0
+        return round(val * 10 * 0.0254, 6) if not isnan(val) else 0.0
     except (ValueError, TypeError):
         return 0.0
 
@@ -198,6 +201,82 @@ def rotate(x: float, y: float, degrees: float) -> tuple[float, float]:
 
 # ---------------------------------------
 
+# Layers on which SOLIDREGION is imported.
+# Layer 5/6 (F.Paste/B.Paste) are skipped — paste areas belong to pad definitions, not graphics.
+# Layer 99 (ComponentShapeLayer/LIBBODY) is not visible in EasyEDA; imported as F.CrtYd outline.
+# Layer 100 is skipped — decorative lead shapes.
+# Layer 101 is skipped — decorative pin circles.
+_SOLID_REGION_LAYERS = {3, 4, 13, 14, 99}
+
+
+def _parse_solid_region_path(
+    path: str, bbox_x_px: float, bbox_y_px: float
+) -> list[tuple[float, float]]:
+    """Convert an EasyEDA SVG path string to a list of (x, y) mm points.
+
+    Handles M, L, H, V, Z commands. Arc commands (A) are approximated by
+    their endpoint only — sufficient for simple rounded shapes.
+    Subtracts bbox in pixel space before converting to mm to avoid
+    float rounding artifacts from subtracting two independently rounded values.
+    """
+    points: list[tuple[float, float]] = []
+    cur_x = cur_y = 0.0
+
+    for token in re.split(r"(?=[MLHVAZmlhvaz])", path.strip()):
+        token = token.strip()
+        if not token:
+            continue
+        cmd = token[0]
+        args = [a for a in re.split(r"[,\s]+", token[1:].strip()) if a]
+
+        if cmd == "M" and len(args) >= 2:
+            cur_x, cur_y = float(args[0]), float(args[1])
+            points.append((fp_to_ki(cur_x - bbox_x_px), fp_to_ki(cur_y - bbox_y_px)))
+        elif cmd == "L" and len(args) >= 2:
+            cur_x, cur_y = float(args[0]), float(args[1])
+            points.append((fp_to_ki(cur_x - bbox_x_px), fp_to_ki(cur_y - bbox_y_px)))
+        elif cmd == "H" and len(args) >= 1:
+            cur_x = float(args[0])
+            points.append((fp_to_ki(cur_x - bbox_x_px), fp_to_ki(cur_y - bbox_y_px)))
+        elif cmd == "V" and len(args) >= 1:
+            cur_y = float(args[0])
+            points.append((fp_to_ki(cur_x - bbox_x_px), fp_to_ki(cur_y - bbox_y_px)))
+        elif cmd == "A" and len(args) >= 7:
+            # Approximate arc by its endpoint only
+            cur_x, cur_y = float(args[5]), float(args[6])
+            points.append((fp_to_ki(cur_x - bbox_x_px), fp_to_ki(cur_y - bbox_y_px)))
+        elif cmd == "Z" and points and points[0] != points[-1]:
+            points.append(points[0])
+
+    return points
+
+
+def _convert_solid_region(
+    ee_region: EeFootprintSolidRegion, bbox_x: float, bbox_y: float
+) -> KiFootprintSolidRegion | None:
+    """Convert an EeFootprintSolidRegion to a KiFootprintSolidRegion.
+
+    Returns None if the layer is not imported or the path has < 3 points.
+    """
+    if ee_region.layer_id not in _SOLID_REGION_LAYERS:
+        return None
+    if ee_region.region_type not in ("solid", "npth"):
+        return None
+
+    layer = KI_LAYERS.get(ee_region.layer_id, "F.SilkS")
+    points = _parse_solid_region_path(ee_region.path, bbox_x, bbox_y)
+    if len(points) < 3:
+        logging.warning(
+            f"SOLIDREGION on layer {ee_region.layer_id}: "
+            f"skipping, only {len(points)} point(s) parsed"
+        )
+        return None
+
+    return KiFootprintSolidRegion(layer=layer, points=points)
+
+
+# ---------------------------------------
+
 
 class ExporterFootprintKicad:
     def __init__(self, footprint: EeFootprint):
@@ -208,6 +287,10 @@ class ExporterFootprintKicad:
             self.generate_kicad_footprint()
 
     def generate_kicad_footprint(self) -> None:
+        # Save raw pixel bbox before unit conversion (needed for SOLIDREGION path subtraction)
+        bbox_x_px = self.input.bbox.x
+        bbox_y_px = self.input.bbox.y
+
         # Convert dimension from easyeda to kicad
         self.input.bbox.convert_to_mm()
 
@@ -318,11 +401,9 @@ class ExporterFootprintKicad:
 
                     # Generate polygon with coordinates relative to the base pad's position.
                     path = "".join(
-                        "(xy {} {})".format(
-                            round(point_list[i] - self.input.bbox.x - ki_pad.pos_x, 2),
-                            round(
-                                point_list[i + 1] - self.input.bbox.y - ki_pad.pos_y, 2
-                            ),
+                        "(xy {:.6f} {:.6f})".format(
+                            point_list[i] - self.input.bbox.x - ki_pad.pos_x,
+                            point_list[i + 1] - self.input.bbox.y - ki_pad.pos_y,
                         )
                         for i in range(0, len(point_list), 2)
                     )
@@ -347,18 +428,10 @@ class ExporterFootprintKicad:
             # Generate line
             point_list = [fp_to_ki(point) for point in ee_track.points.split()]
             for i in range(0, len(point_list) - 2, 2):
-                ki_track.points_start_x.append(
-                    round(point_list[i] - self.input.bbox.x, 2)
-                )
-                ki_track.points_start_y.append(
-                    round(point_list[i + 1] - self.input.bbox.y, 2)
-                )
-                ki_track.points_end_x.append(
-                    round(point_list[i + 2] - self.input.bbox.x, 2)
-                )
-                ki_track.points_end_y.append(
-                    round(point_list[i + 3] - self.input.bbox.y, 2)
-                )
+                ki_track.points_start_x.append(point_list[i] - self.input.bbox.x)
+                ki_track.points_start_y.append(point_list[i + 1] - self.input.bbox.y)
+                ki_track.points_end_x.append(point_list[i + 2] - self.input.bbox.x)
+                ki_track.points_end_y.append(point_list[i + 3] - self.input.bbox.y)
 
             self.output.tracks.append(ki_track)
 
@@ -529,6 +602,12 @@ class ExporterFootprintKicad:
             ki_text.mirror = " mirror" if ki_text.layers[0] == "B" else ""
             self.output.texts.append(ki_text)
 
+        # For solid regions
+        for ee_region in self.input.solid_regions:
+            ki_region = _convert_solid_region(ee_region, bbox_x_px, bbox_y_px)
+            if ki_region is not None:
+                self.output.solid_regions.append(ki_region)
+
     def get_ki_footprint(self) -> KiFootprint:
         return self.output
 
@@ -556,10 +635,10 @@ class ExporterFootprintKicad:
         y_low = min((pad.pos_y for pad in ki.pads), default=0)
         y_high = max((pad.pos_y for pad in ki.pads), default=0)
 
-        ki_lib += KI_REFERENCE.format(pos_x="0", pos_y=y_low - 4)
+        ki_lib += KI_REFERENCE.format(pos_x=0.0, pos_y=y_low - 4)
 
         ki_lib += KI_PACKAGE_VALUE.format(
-            package_name=ki.info.name, pos_x="0", pos_y=y_high + 4
+            package_name=ki.info.name, pos_x=0.0, pos_y=y_high + 4
         )
         ki_lib += KI_FAB_REF
 
@@ -600,6 +679,23 @@ class ExporterFootprintKicad:
 
         for text in ki.texts:
             ki_lib += KI_TEXT.format(**vars(text))
+
+        for region in ki.solid_regions:
+            if region.layer == "F.CrtYd":
+                # Layer 99 (ComponentShapeLayer) has no fill in EasyEDA — emit as outline lines.
+                pts = region.points
+                for i in range(len(pts) - 1):
+                    ki_lib += KI_LINE.format(
+                        start_x=pts[i][0],
+                        start_y=pts[i][1],
+                        end_x=pts[i + 1][0],
+                        end_y=pts[i + 1][1],
+                        layers="F.CrtYd",
+                        stroke_width=0.05,
+                    )
+            else:
+                pts_str = " ".join(f"(xy {x:.6f} {y:.6f})" for x, y in region.points)
+                ki_lib += KI_FP_POLY.format(pts=pts_str, layer=region.layer)
 
         if ki.model_3d is not None:
             ki_lib += KI_MODEL_3D.format(

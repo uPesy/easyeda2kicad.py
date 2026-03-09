@@ -77,7 +77,7 @@ def update_component_in_symbol_lib_file(
             sym_lib_regex_pattern[kicad_version.name].format(
                 component_name=sanitize_for_regex(component_name)
             ),
-            component_content,
+            component_content.rstrip("\n"),
             current_lib,
             flags=re.DOTALL,
         )
@@ -109,18 +109,13 @@ def add_component_in_symbol_lib_file(
         if last_paren_pos == -1:
             raise ValueError("Invalid KiCad library file: no closing parenthesis found")
 
-        # Ensure proper indentation for the component content
-        # Split component_content into lines and add proper indentation
-        component_lines = component_content.split("\n")
-        indented_component = "\n".join(
-            "  " + line if line.strip() else line for line in component_lines
-        )
-
-        # Insert the component content before the closing parenthesis
+        # Insert the component content before the closing parenthesis.
+        # Ensure exactly one newline between the symbol and the closing paren.
+        sep = "" if component_content.endswith("\n") else "\n"
         new_lib_data = (
             current_lib_data[:last_paren_pos]
-            + indented_component
-            + "\n"
+            + component_content
+            + sep
             + current_lib_data[last_paren_pos:]
         )
 
