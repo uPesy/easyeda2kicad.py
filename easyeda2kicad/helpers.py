@@ -2,7 +2,6 @@ from __future__ import annotations
 
 # Global imports
 import logging
-import math
 import re
 
 __all__ = ["KicadVersion"]
@@ -12,7 +11,6 @@ from ._version import GENERATOR_URL
 from .kicad.parameters_kicad_symbol import KicadVersion
 
 sym_lib_regex_pattern = {
-    "v5": r"(#\n# {component_name}\n#\n.*?ENDDEF\n)",
     # v6 covers KiCad 6 through current (7/8/9/10+): the .kicad_sym S-Expression
     # format has been stable since KiCad 6.0.
     "v6": r'\n(\s*)\(symbol "{component_name}".*?\n\1\)(?=\n|$)',
@@ -91,51 +89,33 @@ def update_component_in_symbol_lib_file(
         lib_file.write(new_lib)
 
 
-def add_component_in_symbol_lib_file(
-    lib_path: str, component_content: str, kicad_version: KicadVersion
-) -> None:
-    if kicad_version == KicadVersion.v5:
-        with open(file=lib_path, mode="a+", encoding="utf-8") as lib_file:
-            lib_file.write(component_content)
-    elif kicad_version == KicadVersion.v6:
-        # Read the current library file
-        with open(file=lib_path, encoding="utf-8") as lib_file:
-            current_lib_data = lib_file.read()
+def add_component_in_symbol_lib_file(lib_path: str, component_content: str) -> None:
+    # Read the current library file
+    with open(file=lib_path, encoding="utf-8") as lib_file:
+        current_lib_data = lib_file.read()
 
-        # Find the position before the closing parenthesis of the library
-        # The library structure should be: (kicad_symbol_lib ... )
-        # We need to insert the symbol before the final closing parenthesis
-        last_paren_pos = current_lib_data.rfind(")")
-        if last_paren_pos == -1:
-            raise ValueError("Invalid KiCad library file: no closing parenthesis found")
+    # Find the position before the closing parenthesis of the library
+    # The library structure should be: (kicad_symbol_lib ... )
+    # We need to insert the symbol before the final closing parenthesis
+    last_paren_pos = current_lib_data.rfind(")")
+    if last_paren_pos == -1:
+        raise ValueError("Invalid KiCad library file: no closing parenthesis found")
 
-        # Insert the component content before the closing parenthesis.
-        # Ensure exactly one newline between the symbol and the closing paren.
-        sep = "" if component_content.endswith("\n") else "\n"
-        new_lib_data = (
-            current_lib_data[:last_paren_pos]
-            + component_content
-            + sep
-            + current_lib_data[last_paren_pos:]
-        )
+    # Insert the component content before the closing parenthesis.
+    # Ensure exactly one newline between the symbol and the closing paren.
+    sep = "" if component_content.endswith("\n") else "\n"
+    new_lib_data = (
+        current_lib_data[:last_paren_pos]
+        + component_content
+        + sep
+        + current_lib_data[last_paren_pos:]
+    )
 
-        # Write the updated library file
-        with open(file=lib_path, mode="w", encoding="utf-8") as lib_file:
-            lib_file.write(
-                new_lib_data.replace(
-                    "(generator kicad_symbol_editor)",
-                    f"(generator {GENERATOR_URL})",
-                )
+    # Write the updated library file
+    with open(file=lib_path, mode="w", encoding="utf-8") as lib_file:
+        lib_file.write(
+            new_lib_data.replace(
+                "(generator kicad_symbol_editor)",
+                f"(generator {GENERATOR_URL})",
             )
-
-
-def get_middle_arc_pos(
-    center_x: float,
-    center_y: float,
-    radius: float,
-    angle_start: float,
-    angle_end: float,
-) -> tuple[float, float]:
-    middle_x = center_x + radius * math.cos((angle_start + angle_end) / 2)
-    middle_y = center_y + radius * math.sin((angle_start + angle_end) / 2)
-    return middle_x, middle_y
+        )

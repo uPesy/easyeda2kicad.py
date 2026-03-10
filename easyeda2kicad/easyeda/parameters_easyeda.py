@@ -663,11 +663,6 @@ class Ee3dModelBase:
         self.y = _safe_float(self.y, 0.0)
         self.z = _safe_float(self.z, 0.0)
 
-    def convert_to_mm(self) -> None:
-        self.x = convert_to_mm(self.x)
-        self.y = convert_to_mm(self.y)
-        self.z = convert_to_mm(self.z)
-
 
 @dataclass
 class Ee3dModel:
@@ -677,9 +672,6 @@ class Ee3dModel:
     rotation: Ee3dModelBase
     raw_obj: str | None = None
     step: bytes | None = None
-
-    def convert_to_mm(self) -> None:
-        self.translation.convert_to_mm()
 
 
 @dataclass

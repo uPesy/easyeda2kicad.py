@@ -50,11 +50,12 @@ def v6_lib(tmp_path: Path) -> Path:
 
 @pytest.fixture()
 def v6_lib_with_a(v6_lib: Path) -> Path:
-    add_component_in_symbol_lib_file(str(v6_lib), V6_SYMBOL_A, KicadVersion.v6)
+    add_component_in_symbol_lib_file(str(v6_lib), V6_SYMBOL_A)
     return v6_lib
 
 
 # ---- id_already_in_symbol_lib ----
+
 
 def test_id_not_in_empty_lib(v6_lib: Path) -> None:
     assert not id_already_in_symbol_lib(str(v6_lib), "CompA", KicadVersion.v6)
@@ -70,22 +71,24 @@ def test_id_not_found_different_name(v6_lib_with_a: Path) -> None:
 
 # ---- add_component_in_symbol_lib_file ----
 
+
 def test_add_inserts_before_closing_paren(v6_lib: Path) -> None:
-    add_component_in_symbol_lib_file(str(v6_lib), V6_SYMBOL_A, KicadVersion.v6)
+    add_component_in_symbol_lib_file(str(v6_lib), V6_SYMBOL_A)
     content = v6_lib.read_text(encoding="utf-8")
     assert '"CompA"' in content
     assert content.rstrip().endswith(")")
 
 
 def test_add_two_components(v6_lib: Path) -> None:
-    add_component_in_symbol_lib_file(str(v6_lib), V6_SYMBOL_A, KicadVersion.v6)
-    add_component_in_symbol_lib_file(str(v6_lib), V6_SYMBOL_B, KicadVersion.v6)
+    add_component_in_symbol_lib_file(str(v6_lib), V6_SYMBOL_A)
+    add_component_in_symbol_lib_file(str(v6_lib), V6_SYMBOL_B)
     content = v6_lib.read_text(encoding="utf-8")
     assert '"CompA"' in content
     assert '"CompB"' in content
 
 
 # ---- update_component_in_symbol_lib_file (overwrite) ----
+
 
 def test_overwrite_does_not_duplicate_symbol(v6_lib_with_a: Path) -> None:
     """Overwriting with identical content must not create a second copy."""
@@ -109,7 +112,7 @@ def test_overwrite_replaces_content(v6_lib_with_a: Path) -> None:
 
 def test_overwrite_two_components_first_unchanged(v6_lib_with_a: Path) -> None:
     """Two components in lib: overwriting first with same content leaves lib semantically unchanged."""
-    add_component_in_symbol_lib_file(str(v6_lib_with_a), V6_SYMBOL_B, KicadVersion.v6)
+    add_component_in_symbol_lib_file(str(v6_lib_with_a), V6_SYMBOL_B)
     content_before = v6_lib_with_a.read_text(encoding="utf-8")
 
     update_component_in_symbol_lib_file(
@@ -126,7 +129,7 @@ def test_overwrite_two_components_first_unchanged(v6_lib_with_a: Path) -> None:
 
 def test_overwrite_leaves_other_components_intact(v6_lib_with_a: Path) -> None:
     """Overwriting CompA must not touch CompB."""
-    add_component_in_symbol_lib_file(str(v6_lib_with_a), V6_SYMBOL_B, KicadVersion.v6)
+    add_component_in_symbol_lib_file(str(v6_lib_with_a), V6_SYMBOL_B)
     update_component_in_symbol_lib_file(
         str(v6_lib_with_a), "CompA", V6_SYMBOL_A, KicadVersion.v6
     )

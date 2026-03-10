@@ -51,3 +51,12 @@ disable = [
 [tool.bandit]
 # tests = ["B201", "B301"]
 skips = []
+
+[tool.ruff.lint]
+select = ["S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101",  # assert is expected and correct in pytest tests
+    "S108",  # /tmp/... strings in tests are regex patterns, not real paths
+]

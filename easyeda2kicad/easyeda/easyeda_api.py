@@ -153,10 +153,10 @@ class EasyedaApi:
                 )
 
         try:
-            req = urllib.request.Request(
+            req = urllib.request.Request(  # noqa: S310
                 url=API_ENDPOINT.format(lcsc_id=lcsc_id), headers=self.headers
             )
-            with urllib.request.urlopen(
+            with urllib.request.urlopen(  # noqa: S310
                 req, timeout=30, context=self.ssl_context
             ) as response:
                 raw_data = response.read()
@@ -200,11 +200,11 @@ class EasyedaApi:
             return cached_data
 
         try:
-            req = urllib.request.Request(
+            req = urllib.request.Request(  # noqa: S310
                 url=ENDPOINT_3D_MODEL.format(uuid=uuid),
                 headers={"User-Agent": self.headers["User-Agent"]},
             )
-            with urllib.request.urlopen(
+            with urllib.request.urlopen(  # noqa: S310
                 req, timeout=30, context=self.ssl_context
             ) as response:
                 if response.status != 200:
@@ -230,11 +230,11 @@ class EasyedaApi:
             return cached_data
 
         try:
-            req = urllib.request.Request(
+            req = urllib.request.Request(  # noqa: S310
                 url=ENDPOINT_3D_MODEL_STEP.format(uuid=uuid),
                 headers={"User-Agent": self.headers["User-Agent"]},
             )
-            with urllib.request.urlopen(
+            with urllib.request.urlopen(  # noqa: S310
                 req, timeout=30, context=self.ssl_context
             ) as response:
                 if response.status != 200:
