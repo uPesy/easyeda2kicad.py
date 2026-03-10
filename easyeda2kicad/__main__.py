@@ -86,13 +86,6 @@ def get_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--v5",
-        required=False,
-        help="Convert library in legacy format for KiCad 5.x",
-        action="store_true",
-    )
-
-    parser.add_argument(
         "--project-relative",
         required=False,
         help="Sets the 3D file path stored relative to the project",
@@ -127,7 +120,7 @@ def valid_arguments(arguments: dict[str, Any]) -> bool:
         )
         return False
 
-    kicad_version = KicadVersion.v5 if arguments["v5"] else KicadVersion.v6
+    kicad_version = KicadVersion.v6
     arguments["kicad_version"] = kicad_version
 
     if arguments["project_relative"] and not arguments["output"]:
@@ -181,7 +174,7 @@ def valid_arguments(arguments: dict[str, Any]) -> bool:
         os.mkdir(f"{arguments['output']}.3dshapes")
         logging.info(f"Create {lib_name}.3dshapes 3D model folder in {base_folder}")
 
-    lib_extension = "kicad_sym" if kicad_version == KicadVersion.v6 else "lib"
+    lib_extension = "kicad_sym"
     if not os.path.isfile(f"{arguments['output']}.{lib_extension}"):
         with open(
             file=f"{arguments['output']}.{lib_extension}", mode="w+", encoding="utf-8"
@@ -194,8 +187,6 @@ def valid_arguments(arguments: dict[str, Any]) -> bool:
                   (generator {GENERATOR_URL})
                 )"""
                 )
-                if kicad_version == KicadVersion.v6
-                else "EESchema-LIBRARY Version 2.4\n#encoding utf-8\n"
             )
         logging.info(f"Create {lib_name}.{lib_extension} symbol lib in {base_folder}")
 
@@ -264,7 +255,6 @@ def _process_symbol(
         add_component_in_symbol_lib_file(
             lib_path=f"{arguments['output']}.{sym_lib_ext}",
             component_content=kicad_symbol_lib,
-            kicad_version=kicad_version,
         )
 
     if easyeda_symbol.sub_symbols:
@@ -377,7 +367,7 @@ def _process_component(
     api: EasyedaApi,
 ) -> bool:
     """Process a single LCSC component. Returns True on success, False on error."""
-    sym_lib_ext = "kicad_sym" if kicad_version == KicadVersion.v6 else "lib"
+    sym_lib_ext = "kicad_sym"
 
     # Get CAD data of the component using easyeda API
     cad_data = api.get_cad_data_of_component(lcsc_id=component_id)
