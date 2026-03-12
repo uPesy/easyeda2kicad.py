@@ -201,7 +201,7 @@ def _process_component(
         exporter = ExporterSymbolKicad(
             symbol=easyeda_symbol,
             lib_path=lib_path,
-            custom_fields=arguments.get("custom_fields", {}),
+            custom_fields=arguments["custom_fields"],
         )
         if not exporter.save_to_lib(
             lib_path=lib_path,

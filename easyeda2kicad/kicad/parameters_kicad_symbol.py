@@ -277,6 +277,7 @@ class KiSymbolInfo:
                 )
             )
 
+        # Built-in property IDs 0–9 are reserved; custom fields start at 10
         property_id = 10
         for key, value in self.custom_fields.items():
             field_offset_y += KiSymbolDefaults.FIELD_OFFSET_INCREMENT.value

@@ -130,6 +130,9 @@ easyeda2kicad --symbol --lcsc_id=C2040 --custom-field "Manufacturer:Texas Instru
 
 Malformed values (missing `:`) fail fast. Duplicate keys use the last value.
 
+If EasyEDA does not provide a datasheet URL for a symbol, easyeda2kicad falls
+back to `https://www.lcsc.com/datasheet/<LCSC-ID>.pdf`.
+
 ### Using a proxy server
 
 Set the `HTTPS_PROXY` environment variable — no extra argument needed:
