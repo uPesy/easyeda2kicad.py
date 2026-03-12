@@ -9,7 +9,7 @@
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 [![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
 
-A Python script that converts any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a Kicad library including **3D model** in color. This tool will speed up your PCB design workflow especially when using [JLCPCB SMT assembly services](https://jlcpcb.com/caa). **It supports library formats for both Kicad v6.x and Kicad v5.x.**
+A Python script that converts any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a KiCad library including **3D model** in color. This tool will speed up your PCB design workflow especially when using [JLCPCB SMT assembly services](https://jlcpcb.com/caa). **It supports KiCad v6 and newer.**
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/demo_symbol.png" width="500">
@@ -74,18 +74,15 @@ easyeda2kicad --symbol --lcsc_id=C2040
 easyeda2kicad --footprint --lcsc_id=C2040
 # For 3d model only
 easyeda2kicad --3d --lcsc_id=C2040
-# For symbol in Kicad v5.x legacy format
-easyeda2kicad --symbol --lcsc_id=C2040 --v5
 # Import multiple components at once
 easyeda2kicad --full --lcsc_id C2040 C20197 C163691
 ```
 
-By default, all librairies are saved in `~/Documents/Kicad/easyeda2kicad/` (Linux/macOS) or `C:/Users/your_name/Documents/Kicad/easyeda2kicad/` (Windows), with :
+By default, all libraries are saved in `~/Documents/Kicad/easyeda2kicad/` (Linux/macOS) or `C:/Users/your_name/Documents/Kicad/easyeda2kicad/` (Windows), with:
 
-- `easyeda2kicad.kicad_sym` file for Kicad v6.x symbol library
-- `easyeda2kicad.lib` file for Kicad v5.x legacy symbol library
+- `easyeda2kicad.kicad_sym` file for symbol library (KiCad v6+)
 - `easyeda2kicad.pretty/` folder for footprint libraries
-- `easyeda2kicad.3dshapes/` folder for 3d models (in .WRL and .STEP format )
+- `easyeda2kicad.3dshapes/` folder for 3D models (`.wrl` and `.step` format)
 
 If you want to save components symbol/footprint in your own libs, you can specify the output lib path by using `--output` option.
 
@@ -103,12 +100,6 @@ You can use the option `--overwrite` to update a component symbol/footprint that
 
 ```bash
 easyeda2kicad --symbol --footprint --lcsc_id=C2040 --output ~/libs/my_lib --overwrite
-```
-
-By default, easyeda2kicad will generate a symbol library for Kicad v6.x (.kicad_sym). You can generate a symbol lib in legacy format for Kicad v5.x (.lib) using `--v5` argument.
-
-```bash
-easyeda2kicad --symbol --lcsc_id=C2040 --v5
 ```
 
 ### Project-relative 3D model paths

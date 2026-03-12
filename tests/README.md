@@ -2,24 +2,32 @@
 
 Tests to ensure generated files remain consistent across versions.
 
-## Setup
+## Overview
 
-Create reference files first:
+`tests/reference_outputs/` contains the reference files used for comparison.
+This folder is listed in `.gitignore` and **not tracked in the repository** to
+keep the repo size small (~30 MB of `.step`, `.wrl`, `.kicad_mod`, `.kicad_sym` files).
+
+If no reference files are present, regression tests **skip automatically**.
+
+## Generate Reference Files
+
+Required once before running regression tests:
 
 ```bash
-pip install pytest
+pip install .[dev]
 pytest tests/test_regression.py --create-reference -v
 ```
 
 ## Run Tests
 
 ```bash
-pytest tests/test_regression.py -v
+pytest tests/ -v
 ```
 
 ## Update References
 
-When output changes are intentional:
+When output changes are intentional, regenerate all reference files:
 
 ```bash
 rm -rf tests/reference_outputs/
@@ -28,30 +36,18 @@ pytest tests/test_regression.py --create-reference -v
 
 ## Storing Reference Files with Git LFS (optional)
 
-`tests/reference_outputs/` is listed in `.gitignore` and not tracked by default.
-If you want to store the reference files in the repository, Git LFS is recommended
-because the folder contains large binary files (`.step`, `.wrl`).
+If you want to track reference files in the repository, Git LFS is recommended
+due to the large binary files.
 
 **One-time setup (repository maintainer):**
 
 ```bash
-# Install Git LFS
 git lfs install
-
-# Track the reference output files
 git lfs track "tests/reference_outputs/**"
 git add .gitattributes
 
-# Generate and add reference files
 pytest tests/test_regression.py --create-reference -v
 git add tests/reference_outputs/
 git commit -m "test: add regression reference files via Git LFS"
 git push
-```
-
-**For contributors** — generate reference files locally without committing:
-
-```bash
-pytest tests/test_regression.py --create-reference -v
-# Files are gitignored and stay local only
 ```

@@ -224,10 +224,15 @@ class TestRegression:
         self, component_id: str, temp_output_dir: str, reference_dir: Path
     ) -> None:
         """Test that symbol files are generated consistently."""
+        ref_component_dir = reference_dir / component_id / "symbols"
+        if not ref_component_dir.exists():
+            pytest.skip(
+                f"No reference files for {component_id}. Run:\n"
+                f"  pytest --create-reference {__file__}"
+            )
+
         output_path = Path(temp_output_dir) / "test_lib"
 
-        # Generate files with current version
-        # Use sys.argv style to simulate command line
         args = [
             "--lcsc_id",
             component_id,
@@ -242,21 +247,11 @@ class TestRegression:
         except SystemExit as e:
             assert e.code == 0, f"main() exited with code: {e.code}"
 
-        # Find generated symbol files (in temp_output_dir, not subdirectory)
         symbol_files = list(Path(temp_output_dir).glob("*.kicad_sym"))
         assert len(symbol_files) > 0, "No symbol files were generated"
 
-        # Compare with reference
         for new_file in symbol_files:
-            ref_file = reference_dir / component_id / "symbols" / new_file.name
-
-            if not ref_file.exists():
-                pytest.skip(
-                    f"Reference file not found: {ref_file}\n"
-                    f"To create reference files, run:\n"
-                    f"  pytest --create-reference {__file__}"
-                )
-
+            ref_file = ref_component_dir / new_file.name
             is_equal, message = self.compare_files(ref_file, new_file, "symbol")
             assert is_equal, f"Symbol file differs from reference:\n{message}"
 
@@ -265,9 +260,15 @@ class TestRegression:
         self, component_id: str, temp_output_dir: str, reference_dir: Path
     ) -> None:
         """Test that footprint files are generated consistently."""
+        ref_component_dir = reference_dir / component_id / "footprints"
+        if not ref_component_dir.exists():
+            pytest.skip(
+                f"No reference files for {component_id}. Run:\n"
+                f"  pytest --create-reference {__file__}"
+            )
+
         output_path = Path(temp_output_dir) / "test_lib"
 
-        # Generate files with current version
         args = [
             "--lcsc_id",
             component_id,
@@ -282,21 +283,11 @@ class TestRegression:
         except SystemExit as e:
             assert e.code == 0, f"main() exited with code: {e.code}"
 
-        # Find generated footprint files (in temp_output_dir, not subdirectory)
         footprint_files = list(Path(temp_output_dir).glob("*.pretty/*.kicad_mod"))
         assert len(footprint_files) > 0, "No footprint files were generated"
 
-        # Compare with reference
         for new_file in footprint_files:
-            ref_file = reference_dir / component_id / "footprints" / new_file.name
-
-            if not ref_file.exists():
-                pytest.skip(
-                    f"Reference file not found: {ref_file}\n"
-                    f"To create reference files, run:\n"
-                    f"  pytest --create-reference {__file__}"
-                )
-
+            ref_file = ref_component_dir / new_file.name
             is_equal, message = self.compare_files(ref_file, new_file, "footprint")
             assert is_equal, f"Footprint file differs from reference:\n{message}"
 
@@ -305,17 +296,16 @@ class TestRegression:
         self, component_id: str, temp_output_dir: str, reference_dir: Path
     ) -> None:
         """Test that 3D model files are generated consistently."""
+        ref_component_dir = reference_dir / component_id / "3dmodels"
+        if not ref_component_dir.exists():
+            pytest.skip(
+                f"No reference files for {component_id}. Run:\n"
+                f"  pytest --create-reference {__file__}"
+            )
+
         output_path = Path(temp_output_dir) / "test_lib"
 
-        # Generate files with current version
-        args = [
-            "--lcsc_id",
-            component_id,
-            "--output",
-            str(output_path),
-            "--footprint",
-            "--3d",
-        ]
+        args = ["--lcsc_id", component_id, "--output", str(output_path), "--3d"]
 
         try:
             result = main(args)
@@ -323,44 +313,23 @@ class TestRegression:
         except SystemExit as e:
             assert e.code == 0, f"main() exited with code: {e.code}"
 
-        # Find generated 3D model files (in temp_output_dir, not subdirectory)
         model_files = list(Path(temp_output_dir).glob("*.3dshapes/*.wrl"))
         model_files.extend(Path(temp_output_dir).glob("*.3dshapes/*.step"))
 
         if len(model_files) == 0:
             pytest.skip(f"No 3D model available for component {component_id}")
 
-        # Compare with reference
         for new_file in model_files:
-            ref_file = reference_dir / component_id / "3dmodels" / new_file.name
-
-            if not ref_file.exists():
-                pytest.skip(
-                    f"Reference file not found: {ref_file}\n"
-                    f"To create reference files, run:\n"
-                    f"  pytest --create-reference {__file__}"
-                )
-
+            ref_file = ref_component_dir / new_file.name
             is_equal, message = self.compare_files(ref_file, new_file, "3d_model")
             assert is_equal, f"3D model file differs from reference:\n{message}"
 
-    @pytest.mark.parametrize("component_id", TEST_COMPONENTS)
-    def test_full_generation(
-        self, component_id: str, temp_output_dir: str, reference_dir: Path
-    ) -> None:
-        """Test that all files together are generated consistently."""
-        output_name = "test_lib"
-        output_path = Path(temp_output_dir) / output_name
+    def test_full_generation(self, temp_output_dir: str) -> None:
+        """verify --full runs without error and produces output files."""
+        component_id = "C2040"
+        output_path = Path(temp_output_dir) / "test_lib"
 
-        # Generate all files with current version
-        args = [
-            "--lcsc_id",
-            component_id,
-            "--output",
-            str(output_path),
-            "--full",
-            "--3d",
-        ]
+        args = ["--lcsc_id", component_id, "--output", str(output_path), "--full"]
 
         try:
             result = main(args)
@@ -368,18 +337,5 @@ class TestRegression:
         except SystemExit as e:
             assert e.code == 0, f"main() exited with code: {e.code}"
 
-        # Verify all expected file types were generated
-        # Files are generated in temp_output_dir, not in a subdirectory
         generated_files = self.get_generated_files(Path(temp_output_dir), component_id)
-
         assert len(generated_files) > 0, f"No files were generated in {temp_output_dir}"
-
-        # Create a summary of what was generated
-        file_types: dict[str, int] = {}
-        for file in generated_files:
-            ext = file.suffix
-            file_types[ext] = file_types.get(ext, 0) + 1
-
-        print(f"\nGenerated files for {component_id}:")
-        for ext, count in file_types.items():
-            print(f"  {ext}: {count} file(s)")
