@@ -58,13 +58,13 @@
       (rectangle
         (start -19.05 24.13)
         (end 19.05 -24.13)
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type background))
       )
       (circle
         (center -17.78 22.86)
         (radius 0.38)
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (pin unspecified line

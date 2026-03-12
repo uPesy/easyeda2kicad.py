@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 import re
 from math import acos, cos, isnan, pi, sin, sqrt
+from pathlib import Path
 
 # Local imports
 from ..easyeda.parameters_easyeda import EeFootprint, EeFootprintSolidRegion
@@ -325,7 +326,7 @@ class ExporterFootprintKicad:
             # Do NOT call convert_to_mm() — that would double-scale the values.
 
             # XY+Z offset is fully baked into WRL vertices for all footprint types.
-            # Mirrors smt-gl-engine.js fi(): z_min always shifted to 0.
+            # z_min always shifted to 0.
             # KiCad offset is always (0,0,0).
             ki_3d_model_info = Ki3dModel(
                 name=self.input.model_3d.name,
@@ -710,6 +711,7 @@ class ExporterFootprintKicad:
 
         ki_lib += KI_END_FILE
 
+        Path(footprint_full_path).parent.mkdir(parents=True, exist_ok=True)
         with open(
             file=footprint_full_path,
             mode="w",

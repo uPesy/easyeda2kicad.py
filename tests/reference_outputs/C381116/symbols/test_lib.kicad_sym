@@ -65,56 +65,56 @@
       (rectangle
         (start -1.27 2.79)
         (end -0.25 -0.25)
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type background))
       )
       (arc
         (start -6.35 2.29)
         (mid -7.37 1.27)
         (end -6.35 0.25)
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy 1.27 1.27) (xy -0.25 1.27)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy -1.27 2.29) (xy -6.35 2.29)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy -1.27 0.25) (xy -6.35 0.25)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy 1.27 -3.81) (xy -6.10 -3.81) (xy -6.60 -2.79) (xy -7.11 -3.81)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy 1.27 -1.27) (xy -3.05 -1.27) (xy -3.05 -3.81) (xy -3.30 -2.54)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy -3.05 -3.81) (xy -2.79 -2.54)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (pin unspecified line

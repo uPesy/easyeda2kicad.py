@@ -3,31 +3,22 @@ from __future__ import annotations
 # Global imports
 import argparse
 import logging
-import os
-import re
 import sys
-from textwrap import dedent
+from pathlib import Path
 from typing import Any
 
 # Local imports
-from ._version import GENERATOR_URL, __version__
+from ._version import __version__
 from .easyeda.easyeda_api import EasyedaApi
 from .easyeda.easyeda_importer import (
     Easyeda3dModelImporter,
     EasyedaFootprintImporter,
     EasyedaSymbolImporter,
 )
-from .easyeda.parameters_easyeda import EeSymbol  # noqa: F401 – re-exported
-from .helpers import (
-    add_component_in_symbol_lib_file,
-    id_already_in_symbol_lib,
-    set_logger,
-    update_component_in_symbol_lib_file,
-)
+from .easyeda.parameters_easyeda import EeSymbol
 from .kicad.export_kicad_3d_model import Exporter3dModelKicad
 from .kicad.export_kicad_footprint import ExporterFootprintKicad
 from .kicad.export_kicad_symbol import ExporterSymbolKicad
-from .kicad.parameters_kicad_symbol import KicadVersion
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -120,9 +111,6 @@ def valid_arguments(arguments: dict[str, Any]) -> bool:
         )
         return False
 
-    kicad_version = KicadVersion.v6
-    arguments["kicad_version"] = kicad_version
-
     if arguments["project_relative"] and not arguments["output"]:
         logging.error(
             "A project specific library path should be given with --output option when"
@@ -134,261 +122,122 @@ def valid_arguments(arguments: dict[str, Any]) -> bool:
         return False
 
     if arguments["output"]:
-        output_normalized = arguments["output"].replace("\\", "/").rstrip("/")
-        base_folder = "/".join(output_normalized.split("/")[:-1])
-        lib_name = (
-            output_normalized.split("/")[-1].split(".lib")[0].split(".kicad_sym")[0]
-        )
+        output_path = Path(arguments["output"])
 
         # If the user passed a directory (no filename), use default lib name
-        if os.path.isdir(output_normalized) or not lib_name:
-            base_folder = output_normalized
+        if output_path.is_dir():
+            base_folder = output_path
             lib_name = "EasyEDA"
+        else:
+            base_folder = output_path.parent
+            lib_name = output_path.stem or "EasyEDA"
 
-        if not os.path.isdir(base_folder):
+        if not base_folder.is_dir():
             logging.error(f"Can't find the folder : {base_folder}")
             return False
     else:
-        default_folder = os.path.join(
-            os.path.expanduser("~"),
-            "Documents",
-            "Kicad",
-            "easyeda2kicad",
-        )
-        if not os.path.isdir(default_folder):
-            os.makedirs(default_folder, exist_ok=True)
-
-        base_folder = default_folder
+        base_folder = Path.home() / "Documents" / "Kicad" / "easyeda2kicad"
+        base_folder.mkdir(parents=True, exist_ok=True)
         lib_name = "easyeda2kicad"
         arguments["use_default_folder"] = True
 
-    arguments["output"] = f"{base_folder}/{lib_name}"
-
-    # Create new footprint folder if it does not exist
-    if not os.path.isdir(f"{arguments['output']}.pretty"):
-        os.mkdir(f"{arguments['output']}.pretty")
-        logging.info(f"Create {lib_name}.pretty footprint folder in {base_folder}")
-
-    # Create new 3d model folder if don't exist
-    if not os.path.isdir(f"{arguments['output']}.3dshapes"):
-        os.mkdir(f"{arguments['output']}.3dshapes")
-        logging.info(f"Create {lib_name}.3dshapes 3D model folder in {base_folder}")
-
-    lib_extension = "kicad_sym"
-    if not os.path.isfile(f"{arguments['output']}.{lib_extension}"):
-        with open(
-            file=f"{arguments['output']}.{lib_extension}", mode="w+", encoding="utf-8"
-        ) as my_lib:
-            my_lib.write(
-                dedent(
-                    f"""\
-                (kicad_symbol_lib
-                  (version 20211014)
-                  (generator {GENERATOR_URL})
-                )"""
-                )
-            )
-        logging.info(f"Create {lib_name}.{lib_extension} symbol lib in {base_folder}")
+    arguments["output"] = str(base_folder / lib_name)
 
     return True
-
-
-def delete_component_in_symbol_lib(
-    lib_path: str, component_id: str, component_name: str
-) -> None:
-    with open(file=lib_path, encoding="utf-8") as f:
-        current_lib = f.read()
-        new_data = re.sub(
-            rf'(#\n# {component_name}\n#\n.*?F6 "{component_id}".*?ENDDEF\n)',
-            "",
-            current_lib,
-            flags=re.DOTALL,
-        )
-
-    with open(file=lib_path, mode="w", encoding="utf-8") as my_lib:
-        my_lib.write(new_data)
-
-
-def fp_already_in_footprint_lib(lib_path: str, package_name: str) -> bool:
-    if os.path.isfile(f"{lib_path}/{package_name}.kicad_mod"):
-        logging.warning(f"The footprint for this id is already in {lib_path}")
-        return True
-    return False
-
-
-def _process_symbol(
-    component_id: str,
-    arguments: dict[str, Any],
-    cad_data: dict[str, Any],
-    kicad_version: KicadVersion,
-    sym_lib_ext: str,
-) -> bool:
-    easyeda_symbol: EeSymbol = EasyedaSymbolImporter(
-        easyeda_cp_cad_data=cad_data
-    ).get_symbol()
-
-    is_id_already_in_symbol_lib = id_already_in_symbol_lib(
-        lib_path=f"{arguments['output']}.{sym_lib_ext}",
-        component_name=easyeda_symbol.info.name,
-        kicad_version=kicad_version,
-    )
-
-    if not arguments["overwrite"] and is_id_already_in_symbol_lib:
-        logging.error(
-            f"Symbol for {component_id} already exists. Use --overwrite to update"
-        )
-        return False
-
-    footprint_lib_name = arguments["output"].split("/")[-1].split(".")[0]
-    kicad_symbol_lib = ExporterSymbolKicad(
-        symbol=easyeda_symbol, kicad_version=kicad_version
-    ).export(footprint_lib_name=footprint_lib_name)
-
-    if is_id_already_in_symbol_lib:
-        update_component_in_symbol_lib_file(
-            lib_path=f"{arguments['output']}.{sym_lib_ext}",
-            component_name=easyeda_symbol.info.name,
-            component_content=kicad_symbol_lib,
-            kicad_version=kicad_version,
-        )
-    else:
-        add_component_in_symbol_lib_file(
-            lib_path=f"{arguments['output']}.{sym_lib_ext}",
-            component_content=kicad_symbol_lib,
-        )
-
-    if easyeda_symbol.sub_symbols:
-        logging.info(
-            f"Integrated {len(easyeda_symbol.sub_symbols)} sub-symbols into main symbol"
-        )
-    logging.info(
-        f"Created Kicad symbol for ID : {component_id}\n"
-        f"       Symbol name : {easyeda_symbol.info.name}\n"
-        f"       Library path : {arguments['output']}.{sym_lib_ext}"
-    )
-    return True
-
-
-def _process_footprint(
-    component_id: str, arguments: dict[str, Any], cad_data: dict[str, Any]
-) -> bool:
-    # ---------------- FOOTPRINT ----------------
-    fp_importer = EasyedaFootprintImporter(easyeda_cp_cad_data=cad_data)
-    easyeda_footprint = fp_importer.get_footprint()
-
-    is_id_already_in_footprint_lib = fp_already_in_footprint_lib(
-        lib_path=f"{arguments['output']}.pretty",
-        package_name=easyeda_footprint.info.name,
-    )
-    if not arguments["overwrite"] and is_id_already_in_footprint_lib:
-        logging.error(
-            f"Footprint for {component_id} already exists. Use --overwrite to replace"
-        )
-        return False
-
-    ki_footprint = ExporterFootprintKicad(footprint=easyeda_footprint)
-    footprint_filename = f"{easyeda_footprint.info.name}.kicad_mod"
-    footprint_path = f"{arguments['output']}.pretty"
-    model_3d_path = f"{arguments['output']}.3dshapes".replace("\\", "/").replace(
-        "./", "/"
-    )
-
-    if arguments.get("use_default_folder"):
-        model_3d_path = "${EASYEDA2KICAD}/easyeda2kicad.3dshapes"
-    if arguments["project_relative"]:
-        # Use a path relative to CWD so ${KIPRJMOD} is not prepended with an
-        # absolute filesystem path. os.path.relpath converts the absolute
-        # model_3d_path to a path relative to the current working directory,
-        # which is the project root when running from a KiCad project folder.
-        model_3d_path = "${KIPRJMOD}/" + os.path.relpath(model_3d_path).replace(
-            "\\", "/"
-        )
-
-    ki_footprint.export(
-        footprint_full_path=f"{footprint_path}/{footprint_filename}",
-        model_3d_path=model_3d_path,
-    )
-
-    logging.info(
-        f"Created Kicad footprint for ID: {component_id}\n"
-        f"       Footprint name: {easyeda_footprint.info.name}\n"
-        f"       Footprint path: {os.path.join(footprint_path, footprint_filename)}"
-    )
-    return True
-
-
-def _process_3d_model(
-    component_id: str,
-    arguments: dict[str, Any],
-    cad_data: dict[str, Any],
-    api: EasyedaApi,
-) -> None:
-    # ---------------- 3D MODEL ----------------
-    _head = cad_data.get("packageDetail", {}).get("dataStr", {}).get("head", {})
-    _canvas_ox = float(_head.get("x", 0) or 0)
-    _canvas_oy = float(_head.get("y", 0) or 0)
-
-    model_exporter = Exporter3dModelKicad(
-        model_3d=Easyeda3dModelImporter(
-            easyeda_cp_cad_data=cad_data,
-            download_raw_3d_model=True,
-            api=api,
-            canvas_origin_x=_canvas_ox,
-            canvas_origin_y=_canvas_oy,
-        ).output,
-    )
-    model_exporter.export(output_dir=f"{arguments['output']}.3dshapes")
-    if model_exporter.output:
-        filename_wrl = f"{model_exporter.output.name}.wrl"
-        filename_step = f"{model_exporter.output.name}.step"
-        lib_path = f"{arguments['output']}.3dshapes"
-
-        logging.info(
-            f"Created 3D model for ID: {component_id}\n"
-            f"       3D model name: {model_exporter.output.name}\n"
-            + (
-                f"       3D model path (wrl): {os.path.join(lib_path, filename_wrl)}\n"
-                if filename_wrl
-                else ""
-            )
-            + (
-                "       3D model path (step):"
-                f" {os.path.join(lib_path, filename_step)}\n"
-                if filename_step
-                else ""
-            )
-        )
 
 
 def _process_component(
     component_id: str,
     arguments: dict[str, Any],
-    kicad_version: KicadVersion,
     api: EasyedaApi,
 ) -> bool:
     """Process a single LCSC component. Returns True on success, False on error."""
-    sym_lib_ext = "kicad_sym"
-
-    # Get CAD data of the component using easyeda API
     cad_data = api.get_cad_data_of_component(lcsc_id=component_id)
-
-    # API returned no data
     if not cad_data:
         logging.error(f"Failed to fetch data from EasyEDA API for part {component_id}")
         return False
 
+    output = arguments["output"]
+
     if arguments["symbol"]:
-        if not _process_symbol(
-            component_id, arguments, cad_data, kicad_version, sym_lib_ext
+        # ---------------- SYMBOL ----------------
+        easyeda_symbol: EeSymbol = EasyedaSymbolImporter(
+            easyeda_cp_cad_data=cad_data
+        ).get_symbol()
+        lib_path = f"{output}.kicad_sym"
+        exporter = ExporterSymbolKicad(symbol=easyeda_symbol, lib_path=lib_path)
+        if not exporter.save_to_lib(
+            lib_path=lib_path,
+            footprint_lib_name=Path(output).stem,
+            overwrite=arguments["overwrite"],
         ):
+            logging.error(
+                f"Symbol for {component_id} already exists. Use --overwrite to update"
+            )
             return False
+        if easyeda_symbol.sub_symbols:
+            logging.info(
+                f"Integrated {len(easyeda_symbol.sub_symbols)} sub-symbols into main symbol"
+            )
+        logging.info(
+            f"Created Kicad symbol for ID : {component_id}\n"
+            f"       Symbol name : {easyeda_symbol.info.name}\n"
+            f"       Library path : {lib_path}"
+        )
 
     if arguments["footprint"]:
-        if not _process_footprint(component_id, arguments, cad_data):
+        # ---------------- FOOTPRINT ----------------
+        easyeda_footprint = EasyedaFootprintImporter(
+            easyeda_cp_cad_data=cad_data
+        ).get_footprint()
+        if (
+            Path(f"{output}.pretty") / f"{easyeda_footprint.info.name}.kicad_mod"
+        ).is_file() and not arguments["overwrite"]:
+            logging.error(
+                f"Footprint for {component_id} already exists. Use --overwrite to replace"
+            )
             return False
+        footprint_path = Path(f"{output}.pretty")
+        if arguments.get("use_default_folder"):
+            model_3d_path = "${EASYEDA2KICAD}/easyeda2kicad.3dshapes"
+        elif arguments["project_relative"]:
+            model_3d_path = (
+                "${KIPRJMOD}/"
+                + Path(f"{output}.3dshapes").relative_to(Path.cwd()).as_posix()
+            )
+        else:
+            model_3d_path = Path(f"{output}.3dshapes").as_posix()
+        footprint_filename = f"{easyeda_footprint.info.name}.kicad_mod"
+        ExporterFootprintKicad(footprint=easyeda_footprint).export(
+            footprint_full_path=str(footprint_path / footprint_filename),
+            model_3d_path=model_3d_path,
+        )
+        logging.info(
+            f"Created Kicad footprint for ID: {component_id}\n"
+            f"       Footprint name: {easyeda_footprint.info.name}\n"
+            f"       Footprint path: {footprint_path / footprint_filename}"
+        )
 
     if arguments["3d"]:
-        _process_3d_model(component_id, arguments, cad_data, api)
+        # ---------------- 3D MODEL ----------------
+        model_exporter = Exporter3dModelKicad(
+            model_3d=Easyeda3dModelImporter(
+                easyeda_cp_cad_data=cad_data,
+                download_raw_3d_model=True,
+                api=api,
+            ).output,
+        )
+        output_dir = Path(f"{output}.3dshapes")
+        model_exporter.export(output_dir=str(output_dir))
+        if not model_exporter.output:
+            logging.warning(f"No 3D model available for ID: {component_id}")
+        else:
+            logging.info(
+                f"Created 3D model for ID: {component_id}\n"
+                f"       3D model name: {model_exporter.output.name}\n"
+                f"       3D model path (wrl): {output_dir / f'{model_exporter.output.name}.wrl'}\n"
+                f"       3D model path (step): {output_dir / f'{model_exporter.output.name}.step'}"
+            )
 
     return True
 
@@ -404,20 +253,21 @@ def main(argv: list[str] = sys.argv[1:]) -> int:
         return err.code if isinstance(err.code, int) else 1
     arguments = vars(args)
 
-    if arguments["debug"]:
-        set_logger(log_file=None, log_level=logging.DEBUG)
-    else:
-        set_logger(log_file=None, log_level=logging.INFO)
+    log_level = logging.DEBUG if arguments["debug"] else logging.INFO
+    handler = logging.StreamHandler()
+    handler.setLevel(log_level)
+    handler.setFormatter(logging.Formatter(fmt="[{levelname}] {message}", style="{"))
+    logging.getLogger().setLevel(log_level)
+    logging.getLogger().addHandler(handler)
 
     if not valid_arguments(arguments=arguments):
         return 1
 
-    kicad_version = arguments["kicad_version"]
     api = EasyedaApi()
     had_errors = False
 
     for component_id in arguments["lcsc_id"]:
-        if not _process_component(component_id, arguments, kicad_version, api):
+        if not _process_component(component_id, arguments, api):
             had_errors = True
 
     return 1 if had_errors else 0

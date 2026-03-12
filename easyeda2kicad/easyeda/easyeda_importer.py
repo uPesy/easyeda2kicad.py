@@ -477,7 +477,6 @@ class EasyedaFootprintImporter:
     def __init__(self, easyeda_cp_cad_data: dict[str, Any]):
         self.input = easyeda_cp_cad_data
         _c_para = self.input["packageDetail"]["dataStr"]["head"]["c_para"]
-        # Mirror smt-gl-engine.js: i.tht = n.customData?.jlcPara?.assemblyProcess
         # Primary source: customData.jlcPara.assemblyProcess ("SMT" / "THT").
         # Fallback: top-level SMT flag + title heuristic for older API responses.
         _assembly = (
@@ -584,9 +583,8 @@ class EasyedaFootprintImporter:
                 )
                 new_ee_footprint.texts.append(ee_text)
             elif ee_designator == "SVGNODE":
-                # Mirror smt-gl-engine.js _I(): canvas.split("~")[16] and [17]
-                # are the authoritative canvas origin. Fall back to head.x/y
-                # if the canvas string is absent or too short.
+                # canvas.split("~")[16] and [17] are the authoritative canvas origin.
+                # Fall back to head.x/y if the canvas string is absent or too short.
                 _canvas_parts = ee_data_str.get("canvas", "").split("~")
                 if len(_canvas_parts) > 17:
                     _cox = _safe_float(_canvas_parts[16])
@@ -620,9 +618,9 @@ class EasyedaFootprintImporter:
 
 
 class Easyeda3dModelImporter:
-    # EasyEDA canvas scale: 1 canvas-unit = 0.254 mm (confirmed from smt-gl-engine.js)
+    # EasyEDA canvas scale: 1 canvas-unit = 0.254 mm
     _CANVAS_SCALE = 0.254
-    # Outline-fix threshold from smt-gl-engine.js: if |outline_centre - c_origin| > 0.1mm
+    # Outline-fix threshold: if |outline_centre - c_origin| > 0.1mm
     _FIX_THRESHOLD = 0.1
 
     def __init__(
@@ -630,14 +628,25 @@ class Easyeda3dModelImporter:
         easyeda_cp_cad_data: dict[str, Any] | list[str],
         download_raw_3d_model: bool,
         api: EasyedaApi | None = None,
-        canvas_origin_x: float = 0.0,
-        canvas_origin_y: float = 0.0,
+        canvas_origin_x: float | None = None,
+        canvas_origin_y: float | None = None,
     ):
         self.input = easyeda_cp_cad_data
         self.download_raw_3d_model = download_raw_3d_model
         self.api = api
-        self.canvas_origin_x = canvas_origin_x
-        self.canvas_origin_y = canvas_origin_y
+        if canvas_origin_x is None or canvas_origin_y is None:
+            _head = (
+                easyeda_cp_cad_data.get("packageDetail", {})
+                .get("dataStr", {})
+                .get("head", {})
+                if isinstance(easyeda_cp_cad_data, dict)
+                else {}
+            )
+            self.canvas_origin_x = float(_head.get("x", 0) or 0)
+            self.canvas_origin_y = float(_head.get("y", 0) or 0)
+        else:
+            self.canvas_origin_x = canvas_origin_x
+            self.canvas_origin_y = canvas_origin_y
         self.output = self.create_3d_model()
 
     def create_3d_model(self) -> Ee3dModel | None:
@@ -675,7 +684,7 @@ class Easyeda3dModelImporter:
         return {}
 
     def _outline_centre_mm(self, node: dict[str, Any]) -> tuple[float, float] | None:
-        """Compute 2D outline bbox centre in mm, mirroring smt-gl-engine.js logic.
+        """Compute 2D outline bbox centre in mm.
 
         Returns (cx_mm, cy_mm) or None if no childNode points are found.
         """
@@ -702,12 +711,12 @@ class Easyeda3dModelImporter:
         c_oy = _safe_float(co[1] if len(co) > 1 else "0")
 
         # Primary offset: (c_origin - canvas_origin) * scale, Y negated
-        # Matches smt-gl-engine.js: f(b,x) = [(b - canvas_x)*e, -(x - canvas_y)*e]
+        # tx = (c_ox - ox)*scale, ty = -(c_oy - oy)*scale
         tx = (c_ox - ox) * scale
         ty = -(c_oy - oy) * scale
         tz = _safe_float(info.get("z", "0")) * scale
 
-        # Outline-centre correction (smt-gl-engine.js: if |centre - offset| > 0.1mm → use centre)
+        # Outline-centre correction: if |centre - offset| > 0.1mm → use centre
         outline = self._outline_centre_mm(node)
         if outline is not None:
             out_x, out_y = outline

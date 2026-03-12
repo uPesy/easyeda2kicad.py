@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import re
 import textwrap
+from pathlib import Path
 
 # Local imports
 from ..easyeda.parameters_easyeda import Ee3dModel
@@ -108,7 +109,7 @@ def generate_wrl_model(model_3d: Ee3dModel) -> Ki3dModel:
 
     # Step 1: Center XY on (0,0); shift Z so bottom sits at z=0 (always).
     # Step 2: Apply EE metadata offset (c_origin - canvas_origin) in mm.
-    # Mirrors smt-gl-engine.js fi(): s.translate1(-g, -b, -x) with x=o.minZ,
+    # translate(-bbox_cx, -bbox_cy, -z_min) then apply EE offset,
     # applied unconditionally for both SMD and THT.
     offset_x, offset_y, offset_z = 0.0, 0.0, 0.0
     bbox = _get_obj_bbox(model_3d.raw_obj)
@@ -251,6 +252,7 @@ class Exporter3dModelKicad:
 
     def export(self, output_dir: str) -> None:
         """Write WRL and/or STEP files into *output_dir* (the .3dshapes folder)."""
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         if self.output and self.output.raw_wrl:
             with open(
                 file=f"{output_dir}/{self.output.name}.wrl",

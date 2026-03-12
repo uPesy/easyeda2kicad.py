@@ -65,7 +65,7 @@
       (rectangle
         (start -10.16 5.08)
         (end 10.16 -5.08)
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type background))
       )
       (pin unspecified line

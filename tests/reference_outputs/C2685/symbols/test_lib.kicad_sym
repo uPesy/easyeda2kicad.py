@@ -66,77 +66,77 @@
         (pts
           (xy 0.00 1.78) (xy 2.54 1.78) (xy 2.54 2.54) (xy 5.08 2.54) (xy 5.08 0.51)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy 0.00 -0.00) (xy 2.54 -0.00) (xy 2.54 -2.54) (xy 5.08 -2.54) (xy 5.08 -0.76)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy 2.54 -1.78) (xy 0.00 -1.78)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy -0.51 2.29) (xy -0.51 -2.29)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy 0.00 2.29) (xy 0.00 1.27)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy 0.00 -0.51) (xy 0.00 0.51)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy 0.00 -2.29) (xy 0.00 -1.27)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy -2.54 -0.00) (xy -0.51 -0.00)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy 4.32 -1.02) (xy 4.57 -0.76) (xy 5.59 -0.76) (xy 5.84 -0.51)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type none))
       )
       (polyline
         (pts
           (xy 2.54 -0.00) (xy 1.02 0.51) (xy 1.02 -0.51) (xy 2.54 -0.00)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type background))
       )
       (polyline
         (pts
           (xy 5.08 -0.76) (xy 5.84 0.51) (xy 4.32 0.51) (xy 5.08 -0.76)
         )
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type background))
       )
       (pin unspecified line

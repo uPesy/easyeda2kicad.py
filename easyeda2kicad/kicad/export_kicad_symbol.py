@@ -4,10 +4,11 @@ from __future__ import annotations
 import logging
 import math
 import re
+from pathlib import Path
 from typing import Sequence
 
 # Local imports
-from ..helpers import sanitize_for_regex
+from .._version import GENERATOR_URL
 from ..easyeda.parameters_easyeda import (
     EasyedaPinType,
     EeSymbol,
@@ -24,7 +25,7 @@ from ..easyeda.parameters_easyeda import (
 )
 from ..easyeda.svg_path_parser import SvgPathEllipticalArc, SvgPathMoveTo
 from .parameters_kicad_symbol import (
-    KicadVersion,
+    KICAD_SYM_VERSIONS_SORTED,
     KiPinStyle,
     KiPinType,
     KiSymbol,
@@ -36,6 +37,91 @@ from .parameters_kicad_symbol import (
     KiSymbolRectangle,
     KiSymbolText,
 )
+
+_SYM_LIB_REGEX = r'\n(\s*)\(symbol "{component_name}".*?\n\1\)(?=\n|$)'
+
+
+def read_symbol_lib_version(lib_path: str | None) -> int:
+    """Return the .kicad_sym format version to use for the given library file.
+
+    - If lib_path is None or the file cannot be read: oldest known version.
+    - If the file has no (version ...) field: oldest known version.
+    - Otherwise: the largest known version that is <= the version in the file.
+    """
+    if lib_path is not None:
+        try:
+            with open(lib_path, encoding="utf-8") as f:
+                content = f.read(512)  # version is always near the top
+            match = re.search(r"\(version\s+(\d+)\)", content)
+            if match:
+                file_version = int(match.group(1))
+                result = KICAD_SYM_VERSIONS_SORTED[0]
+                for v in KICAD_SYM_VERSIONS_SORTED:
+                    if v <= file_version:
+                        result = v
+                return result
+        except OSError:
+            pass
+    return KICAD_SYM_VERSIONS_SORTED[0]
+
+
+def id_already_in_symbol_lib(lib_path: str, component_name: str) -> bool:
+    if not Path(lib_path).is_file():
+        return False
+    with open(lib_path, encoding="utf-8") as lib_file:
+        current_lib = lib_file.read()
+        component = re.findall(
+            _SYM_LIB_REGEX.format(component_name=re.escape(component_name)),
+            current_lib,
+            flags=re.DOTALL,
+        )
+        if component != []:
+            logging.warning(f"This id is already in {lib_path}")
+            return True
+    return False
+
+
+def write_component_in_symbol_lib_file(
+    lib_path: str,
+    component_name: str,
+    component_content: str,
+    version: int = KICAD_SYM_VERSIONS_SORTED[0],
+    generator: str = GENERATOR_URL,
+) -> None:
+    """Write a symbol into the library, replacing it if it already exists."""
+    if not Path(lib_path).is_file():
+        Path(lib_path).write_text(
+            f"(kicad_symbol_lib\n  (version {version})\n  (generator {generator})\n)",
+            encoding="utf-8",
+        )
+        logging.info(f"Created symbol lib: {lib_path}")
+
+    current = Path(lib_path).read_text(encoding="utf-8")
+
+    pattern = _SYM_LIB_REGEX.format(component_name=re.escape(component_name))
+    if re.search(pattern, current, flags=re.DOTALL):
+        # Symbol exists — replace it
+        new_lib = re.sub(
+            pattern, component_content.rstrip("\n"), current, flags=re.DOTALL
+        )
+    else:
+        # Symbol is new — insert before closing parenthesis
+        last_paren_pos = current.rfind(")")
+        if last_paren_pos == -1:
+            raise ValueError("Invalid KiCad library file: no closing parenthesis found")
+        sep = "" if component_content.endswith("\n") else "\n"
+        new_lib = (
+            current[:last_paren_pos]
+            + component_content
+            + sep
+            + current[last_paren_pos:]
+        )
+
+    new_lib = new_lib.replace(
+        "(generator kicad_symbol_editor)", f"(generator {GENERATOR_URL})"
+    )
+    Path(lib_path).write_text(new_lib, encoding="utf-8")
+
 
 # EasyEDA uses a 5px grid (= 1.27mm = 50mil). Snapping bbox coordinates to this
 # boundary ensures pin coordinates land on the KiCad grid after subtraction.
@@ -506,7 +592,7 @@ def integrate_sub_units(
     if not sub_symbols:
         return main_symbol
 
-    name = sanitize_for_regex(component_name)
+    name = re.escape(component_name)
     sub_units = []
     for i, sub_content in enumerate(sub_symbols, 1):
         match = re.search(
@@ -532,9 +618,13 @@ def integrate_sub_units(
 
 
 class ExporterSymbolKicad:
-    def __init__(self, symbol: EeSymbol, kicad_version: KicadVersion) -> None:
+    def __init__(
+        self, symbol: EeSymbol, lib_path: str | None = None, version: int | None = None
+    ) -> None:
         self.input: EeSymbol = symbol
-        self.version = kicad_version
+        self.version = (
+            version if version is not None else read_symbol_lib_version(lib_path)
+        )
         self.output = convert_to_kicad(ee_symbol=self.input)
 
     def export(self, footprint_lib_name: str) -> str:
@@ -542,13 +632,13 @@ class ExporterSymbolKicad:
             ki_symbol=self.output,
             footprint_lib_name=footprint_lib_name,
         )
-        main_content = self.output.export(kicad_version=self.version)
+        main_content = self.output.export(version=self.version)
 
-        if not self.input.sub_symbols or self.version != KicadVersion.v6:
+        if not self.input.sub_symbols:
             return main_content
 
         sub_contents = [
-            ExporterSymbolKicad(symbol=sub, kicad_version=self.version).export(
+            ExporterSymbolKicad(symbol=sub, version=self.version).export(
                 footprint_lib_name=footprint_lib_name
             )
             for sub in self.input.sub_symbols
@@ -558,3 +648,25 @@ class ExporterSymbolKicad:
             sub_symbols=sub_contents,
             component_name=self.input.info.name,
         )
+
+    def save_to_lib(
+        self, lib_path: str, footprint_lib_name: str, overwrite: bool
+    ) -> bool:
+        """Export the symbol and write it into the .kicad_sym library file.
+
+        Returns False if the symbol already exists and overwrite is False.
+        """
+        already_exists = id_already_in_symbol_lib(
+            lib_path=lib_path, component_name=self.input.info.name
+        )
+        if already_exists and not overwrite:
+            return False
+
+        content = self.export(footprint_lib_name=footprint_lib_name)
+        write_component_in_symbol_lib_file(
+            lib_path=lib_path,
+            component_name=self.input.info.name,
+            component_content=content,
+            version=self.version,
+        )
+        return True

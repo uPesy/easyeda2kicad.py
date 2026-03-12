@@ -58,7 +58,7 @@
       (rectangle
         (start -29.21 48.26)
         (end 29.21 -48.26)
-        (stroke (width 0) (type default) (color 0 0 0 0))
+        (stroke (width 0) (type default))
         (fill (type background))
       )
       (text "RP2040"
