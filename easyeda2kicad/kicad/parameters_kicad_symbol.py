@@ -146,6 +146,7 @@ class KiSymbolInfo:
     mpn: str = ""
     keywords: str = ""
     description: str = ""
+    custom_fields: dict[str, str] = field(default_factory=dict)
     y_low: int | float = 0
     y_high: int | float = 0
 
@@ -275,6 +276,23 @@ class KiSymbolInfo:
                     version=version,
                 )
             )
+
+        property_id = 10
+        for key, value in self.custom_fields.items():
+            field_offset_y += KiSymbolDefaults.FIELD_OFFSET_INCREMENT.value
+            header.append(
+                _make_property(
+                    key=key,
+                    value=value,
+                    id_=property_id,
+                    pos_y=self.y_low - field_offset_y,
+                    font_size=KiSymbolDefaults.PROPERTY_FONT_SIZE.value,
+                    style="",
+                    hide="hide",
+                    version=version,
+                )
+            )
+            property_id += 1
 
         return header
 

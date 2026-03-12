@@ -21,6 +21,24 @@ from .kicad.export_kicad_footprint import ExporterFootprintKicad
 from .kicad.export_kicad_symbol import ExporterSymbolKicad
 
 
+def parse_custom_fields(custom_field_args: list[str]) -> dict[str, str]:
+    custom_fields: dict[str, str] = {}
+    for custom_field in custom_field_args:
+        key, separator, value = custom_field.partition(":")
+        key = key.strip()
+        value = value.strip()
+        if not separator:
+            raise ValueError(
+                f'Invalid custom field "{custom_field}". Expected KEY:VALUE.'
+            )
+        if not key:
+            raise ValueError(
+                f'Invalid custom field "{custom_field}". Key must not be empty.'
+            )
+        custom_fields[key] = value
+    return custom_fields
+
+
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
@@ -91,6 +109,15 @@ def get_parser() -> argparse.ArgumentParser:
         action="store_true",
     )
 
+    parser.add_argument(
+        "--custom-field",
+        dest="custom_field",
+        nargs="+",
+        default=[],
+        metavar="KEY:VALUE",
+        help="Add custom symbol properties, e.g. --custom-field 'Mfr:TI' 'Package:SOT-23'",
+    )
+
     return parser
 
 
@@ -109,6 +136,12 @@ def valid_arguments(arguments: dict[str, Any]) -> bool:
             "  easyeda2kicad --lcsc_id=C2040 --footprint\n"
             "  easyeda2kicad --lcsc_id=C2040 --symbol"
         )
+        return False
+
+    try:
+        arguments["custom_fields"] = parse_custom_fields(arguments["custom_field"])
+    except ValueError as err:
+        logging.error(str(err))
         return False
 
     if arguments["project_relative"] and not arguments["output"]:
@@ -165,7 +198,11 @@ def _process_component(
             easyeda_cp_cad_data=cad_data
         ).get_symbol()
         lib_path = f"{output}.kicad_sym"
-        exporter = ExporterSymbolKicad(symbol=easyeda_symbol, lib_path=lib_path)
+        exporter = ExporterSymbolKicad(
+            symbol=easyeda_symbol,
+            lib_path=lib_path,
+            custom_fields=arguments.get("custom_fields", {}),
+        )
         if not exporter.save_to_lib(
             lib_path=lib_path,
             footprint_lib_name=Path(output).stem,

@@ -120,6 +120,16 @@ You can import several components in a single call:
 easyeda2kicad --full --lcsc_id C2040 C20197 C163691
 ```
 
+### Custom symbol fields
+
+Use `--custom-field` to add extra properties to generated symbols:
+
+```bash
+easyeda2kicad --symbol --lcsc_id=C2040 --custom-field "Manufacturer:Texas Instruments" "Package:LQFN-56"
+```
+
+Malformed values (missing `:`) fail fast. Duplicate keys use the last value.
+
 ### Using a proxy server
 
 Set the `HTTPS_PROXY` environment variable — no extra argument needed:
