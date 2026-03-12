@@ -15,7 +15,6 @@ from .parameters_kicad_footprint import (
 )
 from .parameters_kicad_symbol import (
     KiBoxFill,
-    KicadVersion,
     KiPinStyle,
     KiPinType,
     KiSymbol,
@@ -30,7 +29,6 @@ __all__ = [
     "ExporterFootprintKicad",
     "Exporter3dModelKicad",
     # Symbol parameters
-    "KicadVersion",
     "KiSymbol",
     "KiSymbolInfo",
     "KiSymbolPin",

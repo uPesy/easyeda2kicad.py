@@ -22,7 +22,6 @@ from .easyeda.easyeda_importer import (
 from .kicad.export_kicad_3d_model import Exporter3dModelKicad
 from .kicad.export_kicad_footprint import ExporterFootprintKicad
 from .kicad.export_kicad_symbol import ExporterSymbolKicad
-from .kicad.parameters_kicad_symbol import KicadVersion
 
 __all__ = [
     "__version__",
@@ -35,5 +34,4 @@ __all__ = [
     "ExporterSymbolKicad",
     "ExporterFootprintKicad",
     "Exporter3dModelKicad",
-    "KicadVersion",
 ]

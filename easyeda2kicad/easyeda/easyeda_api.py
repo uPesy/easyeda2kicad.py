@@ -8,13 +8,17 @@ import logging
 import ssl
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from types import ModuleType
 from typing import Any
 
 # Local imports
-from .._version import __version__
+try:
+    from .._version import __version__
+except ImportError:
+    __version__ = "1.0.0"
 
 # Optional import for SSL certificate verification
 _certifi: ModuleType | None = None
@@ -26,10 +30,22 @@ try:
 except ImportError:
     HAS_CERTIFI = False
 
-API_ENDPOINT = "https://easyeda.com/api/products/{lcsc_id}/components?version=6.4.19.5"
+API_BASE_LEGACY = "https://easyeda.com"
+API_ENDPOINT = "https://easyeda.com/api/products/{lcsc_id}/components"
 ENDPOINT_3D_MODEL = "https://modules.easyeda.com/3dmodel/{uuid}"
 ENDPOINT_3D_MODEL_STEP = "https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/{uuid}"
-# ENDPOINT_3D_MODEL_STEP found in https://modules.lceda.cn/smt-gl-engine/0.8.22.6032922c/smt-gl-engine.js : points to the bucket containing the step files.
+
+# EasyEDA Pro API (v2) endpoints
+API_BASE_V2 = "https://pro.easyeda.com"
+ENDPOINT_V2_SEARCH_BY_NUMBERS = "/api/components/searchByNumbers"
+ENDPOINT_V2_COMPONENT = "/api/v2/components/{uuid}"  # requires auth
+ENDPOINT_V2_COMPONENT_SEARCH_BY_IDS = "/api/v2/components/searchByIds"  # requires auth
+ENDPOINT_V2_DEVICE = "/api/v2/devices/{uuid}"  # requires auth
+ENDPOINT_V2_DEVICE_SEARCH_BY_IDS = "/api/devices/searchByIds"  # requires auth
+ENDPOINT_V2_DOCUMENT_DATASTR = "/api/documents/{uuid}/datastrid"  # requires auth
+
+# JLCPCB component search returns lcsc, name, package, stock, price
+JLCPCB_SEARCH_API = "https://jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/smtGood/selectSmtComponentList"
 
 # ------------------------------------------------------------
 
@@ -100,6 +116,13 @@ class EasyedaApi:
         except Exception as e:
             logging.warning(f"Failed to write cache {cache_path}: {e}")
 
+    @staticmethod
+    def _decode_response(raw: bytes) -> str:
+        """Decompress gzip if needed and decode bytes to UTF-8 string."""
+        if raw[:2] == b"\x1f\x8b":
+            return gzip.decompress(raw).decode("utf-8")
+        return raw.decode("utf-8")
+
     def _create_ssl_context(self) -> ssl.SSLContext:
         """Create SSL context with proper certificate handling for macOS."""
         context = ssl.create_default_context()
@@ -159,12 +182,7 @@ class EasyedaApi:
             with urllib.request.urlopen(  # noqa: S310
                 req, timeout=30, context=self.ssl_context
             ) as response:
-                raw_data = response.read()
-                # Handle gzip compression
-                if raw_data[:2] == b"\x1f\x8b":  # gzip magic number
-                    data = gzip.decompress(raw_data).decode("utf-8")
-                else:
-                    data = raw_data.decode("utf-8")
+                data = self._decode_response(response.read())
                 try:
                     api_response: dict[str, Any] = json.loads(data)
                 except json.JSONDecodeError as e:
@@ -249,3 +267,121 @@ class EasyedaApi:
         except urllib.error.URLError as e:
             logging.error(f"Failed to get STEP model for uuid:{uuid}: {e}")
             return None
+
+    # ------------------------------------------------------------------
+    # EasyEDA Pro v2 API helpers
+    # ------------------------------------------------------------------
+
+    def _get_v2_json(self, path: str, base: str = API_BASE_V2) -> dict[str, Any]:
+        """GET request against an EasyEDA API base, returns parsed JSON."""
+        url = base + path
+        try:
+            req = urllib.request.Request(url=url, headers=self.headers)  # noqa: S310
+            with urllib.request.urlopen(  # noqa: S310
+                req, timeout=30, context=self.ssl_context
+            ) as response:
+                result: dict[str, Any] = json.loads(
+                    self._decode_response(response.read())
+                )
+                return result
+        except (urllib.error.URLError, json.JSONDecodeError) as e:
+            logging.error(f"v2 GET {path} failed: {e}")
+            return {}
+
+    def search_v2_component_uuids_by_lcsc(
+        self, lcsc_numbers: list[str]
+    ) -> dict[str, Any]:
+        """POST /api/components/searchByNumbers — resolve LCSC numbers to component UUIDs.
+
+        Body format: numbers=json.dumps([...]) as form-encoded, not JSON.
+        """
+        url = API_BASE_LEGACY + ENDPOINT_V2_SEARCH_BY_NUMBERS
+        try:
+            params = urllib.parse.urlencode(
+                {"numbers": json.dumps(lcsc_numbers)}
+            ).encode("utf-8")
+            req = urllib.request.Request(  # noqa: S310
+                url=url,
+                data=params,
+                headers={
+                    **self.headers,
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                },
+            )
+            with urllib.request.urlopen(  # noqa: S310
+                req, timeout=30, context=self.ssl_context
+            ) as response:
+                result: dict[str, Any] = json.loads(
+                    self._decode_response(response.read())
+                )
+                return result
+        except (urllib.error.URLError, json.JSONDecodeError) as e:
+            logging.error(f"searchByNumbers failed: {e}")
+            return {}
+
+    def search_jlcpcb_components(
+        self,
+        keyword: str,
+        page: int = 1,
+        page_size: int = 10,
+        part_type: str | None = None,
+    ) -> dict[str, Any]:
+        """POST JLCPCB_SEARCH_API — keyword search across the JLCPCB parts library.
+
+        Works anonymously. Returns dict with 'total' and 'results' list; each result
+        contains: lcsc, name, model, brand, package, category, stock, type, price,
+        description, url, datasheet.  part_type: "base" = Basic, "expand" = Extended.
+        """
+        payload: dict[str, Any] = {
+            "keyword": keyword,
+            "currentPage": page,
+            "pageSize": page_size,
+        }
+        if part_type:
+            payload["componentLibraryType"] = part_type
+
+        try:
+            req = urllib.request.Request(  # noqa: S310
+                url=JLCPCB_SEARCH_API,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    **self.headers,
+                    "Content-Type": "application/json",
+                    "Origin": "https://jlcpcb.com",
+                    "Referer": "https://jlcpcb.com/parts",
+                },
+            )
+            with urllib.request.urlopen(  # noqa: S310
+                req, timeout=15, context=self.ssl_context
+            ) as response:
+                raw: dict[str, Any] = json.loads(self._decode_response(response.read()))
+        except (urllib.error.URLError, json.JSONDecodeError) as e:
+            logging.error(f"JLCPCB search failed: {e}")
+            return {"total": 0, "results": []}
+
+        page_info: dict[str, Any] = (raw.get("data") or {}).get(
+            "componentPageInfo"
+        ) or {}
+        items: list[dict[str, Any]] = page_info.get("list") or []
+        results = []
+        for item in items:
+            prices = item.get("componentPrices") or []
+            results.append(
+                {
+                    "lcsc": item.get("componentCode", ""),
+                    "name": item.get("componentName", ""),
+                    "model": item.get("componentModelEn", ""),
+                    "brand": item.get("componentBrandEn", ""),
+                    "package": item.get("componentSpecificationEn", ""),
+                    "category": item.get("componentTypeEn", ""),
+                    "stock": item.get("stockCount", 0),
+                    "type": "Basic"
+                    if item.get("componentLibraryType") == "base"
+                    else "Extended",
+                    "price": prices[0].get("productPrice") if prices else None,
+                    "description": item.get("describe", ""),
+                    "url": item.get("lcscGoodsUrl", ""),
+                    "datasheet": item.get("dataManualUrl", ""),
+                }
+            )
+        return {"total": page_info.get("total", 0), "results": results}
