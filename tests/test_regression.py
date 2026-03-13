@@ -5,8 +5,10 @@ This test compares the output of the current version with reference files
 from a known-good version to detect any unintended changes in output.
 """
 
+import difflib
 import re
 import shutil
+import tempfile
 from pathlib import Path
 from typing import List, Tuple
 
@@ -33,96 +35,11 @@ TEST_COMPONENTS = [
 ]
 
 
-class TestCreateReference:
-    """Helper to create reference files for regression testing."""
-
-    @pytest.mark.parametrize("component_id", TEST_COMPONENTS)
-    def test_create_reference_files(
-        self,
-        component_id: str,
-        temp_output_dir: str,
-        reference_dir: Path,
-        create_reference: bool,
-    ) -> None:
-        """Create reference files for regression tests."""
-        if not create_reference:
-            pytest.skip("Run with --create-reference to generate reference files")
-
-        output_path = Path(temp_output_dir) / "test_lib"
-        ref_component_dir = reference_dir / component_id
-
-        # Generate all files
-        args = [
-            "--lcsc_id",
-            component_id,
-            "--output",
-            str(output_path),
-            "--full",
-            "--3d",
-        ]
-
-        try:
-            result = main(args)
-            assert result == 0, f"main() returned error code: {result}"
-        except SystemExit as e:
-            assert e.code == 0, f"main() exited with code: {e.code}"
-
-        # Copy generated files to reference directory.
-        # Text files are normalized (temp paths replaced) before writing so that
-        # reference files don't change on every --create-reference run.
-        temp_path = Path(temp_output_dir)
-
-        def copy_normalized(src: Path, dst: Path) -> None:
-            """Copy a file, normalizing temp paths in text files."""
-            if src.suffix in (".step",):
-                shutil.copy2(src, dst)
-            else:
-                content = src.read_text(encoding="utf-8", errors="ignore")
-                content = re.sub(
-                    r"/tmp/easyeda2kicad_test_[^/]+/", "/tmp/test/", content
-                )
-                content = re.sub(r"/tmp/tmp[a-z0-9_]+/", "/tmp/test/", content)
-                dst.write_text(content, encoding="utf-8")
-
-        # Symbols
-        symbol_dir = ref_component_dir / "symbols"
-        symbol_dir.mkdir(parents=True, exist_ok=True)
-        for file in temp_path.glob("*.kicad_sym"):
-            copy_normalized(file, symbol_dir / file.name)
-            print(f"Created reference: {symbol_dir / file.name}")
-
-        # Footprints
-        footprint_dir = ref_component_dir / "footprints"
-        footprint_dir.mkdir(parents=True, exist_ok=True)
-        for file in temp_path.glob("*.pretty/*.kicad_mod"):
-            copy_normalized(file, footprint_dir / file.name)
-            print(f"Created reference: {footprint_dir / file.name}")
-
-        # 3D Models
-        model_dir = ref_component_dir / "3dmodels"
-        model_dir.mkdir(parents=True, exist_ok=True)
-        for file in temp_path.glob("*.3dshapes/*"):
-            if file.is_file():
-                copy_normalized(file, model_dir / file.name)
-                print(f"Created reference: {model_dir / file.name}")
-
-        print(f"\nReference files created for {component_id}")
-
-
 class TestRegression:
     """Regression tests for file generation consistency."""
 
-    def normalize_file_content(self, content: str, file_ext: str) -> str:
-        """
-        Normalize file content to ignore expected differences.
-
-        - Remove timestamps and version strings
-        - Normalize whitespace
-        - Normalize temporary paths
-        - Sort entries where order doesn't matter
-        """
-        import re
-
+    def normalize_file_content(self, content: str) -> str:
+        """Normalize file content to ignore expected differences like timestamps and temp paths."""
         lines = content.split("\n")
         normalized = []
 
@@ -147,60 +64,36 @@ class TestRegression:
 
         return "\n".join(normalized)
 
-    def compare_files(
-        self, ref_file: Path, new_file: Path, file_type: str
-    ) -> Tuple[bool, str]:
-        """
-        Compare two files and return (is_equal, diff_message).
-
-        Args:
-            ref_file: Reference file path
-            new_file: New generated file path
-            file_type: Type of file (symbol, footprint, 3d_model)
-
-        Returns:
-            Tuple of (is_equal, difference_description)
-        """
+    def compare_files(self, ref_file: Path, new_file: Path) -> Tuple[bool, str]:
+        """Compare two files and return (is_equal, unified_diff)."""
         if not ref_file.exists():
             return False, f"Reference file does not exist: {ref_file}"
 
         if not new_file.exists():
             return False, f"New file was not generated: {new_file}"
 
-        # Read and normalize both files
         with open(ref_file, "r", encoding="utf-8", errors="ignore") as f:
-            ref_content = self.normalize_file_content(f.read(), file_type)
+            ref_content = self.normalize_file_content(f.read())
 
         with open(new_file, "r", encoding="utf-8", errors="ignore") as f:
-            new_content = self.normalize_file_content(f.read(), file_type)
+            new_content = self.normalize_file_content(f.read())
 
         if ref_content == new_content:
             return True, "Files are identical (after normalization)"
 
-        # Calculate difference
-        ref_lines = ref_content.split("\n")
-        new_lines = new_content.split("\n")
+        diff = list(
+            difflib.unified_diff(
+                ref_content.split("\n"),
+                new_content.split("\n"),
+                fromfile="reference",
+                tofile="new",
+                lineterm="",
+                n=2,
+            )
+        )
+        return False, "\n".join(diff)
 
-        diff_lines = []
-        max_lines = max(len(ref_lines), len(new_lines))
-
-        for i in range(max_lines):
-            ref_line = ref_lines[i] if i < len(ref_lines) else "<missing>"
-            new_line = new_lines[i] if i < len(new_lines) else "<missing>"
-
-            if ref_line != new_line:
-                diff_lines.append(f"Line {i + 1}:")
-                diff_lines.append(f"  REF: {ref_line}")
-                diff_lines.append(f"  NEW: {new_line}")
-
-                # Only show first 10 differences
-                if len(diff_lines) > 30:
-                    diff_lines.append("... (more differences)")
-                    break
-
-        return False, "\n".join(diff_lines)
-
-    def get_generated_files(self, output_dir: Path, component_id: str) -> List[Path]:
+    def get_generated_files(self, output_dir: Path) -> List[Path]:
         """Get list of all generated files for a component."""
         files: list[Path] = []
         output_dir = Path(output_dir)
@@ -239,6 +132,7 @@ class TestRegression:
             "--output",
             str(output_path),
             "--symbol",
+            "--use-cache",
         ]
 
         try:
@@ -252,7 +146,7 @@ class TestRegression:
 
         for new_file in symbol_files:
             ref_file = ref_component_dir / new_file.name
-            is_equal, message = self.compare_files(ref_file, new_file, "symbol")
+            is_equal, message = self.compare_files(ref_file, new_file)
             assert is_equal, f"Symbol file differs from reference:\n{message}"
 
     @pytest.mark.parametrize("component_id", TEST_COMPONENTS)
@@ -275,6 +169,7 @@ class TestRegression:
             "--output",
             str(output_path),
             "--footprint",
+            "--use-cache",
         ]
 
         try:
@@ -288,7 +183,7 @@ class TestRegression:
 
         for new_file in footprint_files:
             ref_file = ref_component_dir / new_file.name
-            is_equal, message = self.compare_files(ref_file, new_file, "footprint")
+            is_equal, message = self.compare_files(ref_file, new_file)
             assert is_equal, f"Footprint file differs from reference:\n{message}"
 
     @pytest.mark.parametrize("component_id", TEST_COMPONENTS)
@@ -305,7 +200,14 @@ class TestRegression:
 
         output_path = Path(temp_output_dir) / "test_lib"
 
-        args = ["--lcsc_id", component_id, "--output", str(output_path), "--3d"]
+        args = [
+            "--lcsc_id",
+            component_id,
+            "--output",
+            str(output_path),
+            "--3d",
+            "--use-cache",
+        ]
 
         try:
             result = main(args)
@@ -321,7 +223,7 @@ class TestRegression:
 
         for new_file in model_files:
             ref_file = ref_component_dir / new_file.name
-            is_equal, message = self.compare_files(ref_file, new_file, "3d_model")
+            is_equal, message = self.compare_files(ref_file, new_file)
             assert is_equal, f"3D model file differs from reference:\n{message}"
 
     def test_full_generation(self, temp_output_dir: str) -> None:
@@ -329,7 +231,14 @@ class TestRegression:
         component_id = "C2040"
         output_path = Path(temp_output_dir) / "test_lib"
 
-        args = ["--lcsc_id", component_id, "--output", str(output_path), "--full"]
+        args = [
+            "--lcsc_id",
+            component_id,
+            "--output",
+            str(output_path),
+            "--full",
+            "--use-cache",
+        ]
 
         try:
             result = main(args)
@@ -337,5 +246,71 @@ class TestRegression:
         except SystemExit as e:
             assert e.code == 0, f"main() exited with code: {e.code}"
 
-        generated_files = self.get_generated_files(Path(temp_output_dir), component_id)
+        generated_files = self.get_generated_files(Path(temp_output_dir))
         assert len(generated_files) > 0, f"No files were generated in {temp_output_dir}"
+
+
+# ---------------------------------------------------------------------------
+# Reference file generation — run once with: pytest --create-reference
+# ---------------------------------------------------------------------------
+
+
+def _copy_normalized(src: Path, dst: Path) -> None:
+    """Copy a file, normalizing temp paths in text files so references stay stable."""
+    if src.suffix == ".step":
+        shutil.copy2(src, dst)
+    else:
+        content = src.read_text(encoding="utf-8", errors="ignore")
+        content = re.sub(r"/tmp/easyeda2kicad_test_[^/]+/", "/tmp/test/", content)
+        content = re.sub(r"/tmp/tmp[a-z0-9_]+/", "/tmp/test/", content)
+        dst.write_text(content, encoding="utf-8")
+
+
+def test_create_reference_files(
+    create_reference: bool,
+    reference_dir: Path,
+) -> None:
+    """Create reference files for all test components. Run with --create-reference."""
+    if not create_reference:
+        pytest.skip("Run with --create-reference to generate reference files")
+
+    for component_id in TEST_COMPONENTS:
+        with tempfile.TemporaryDirectory(prefix="easyeda2kicad_test_") as tmp:
+            output_path = Path(tmp) / "test_lib"
+            args = [
+                "--lcsc_id",
+                component_id,
+                "--output",
+                str(output_path),
+                "--full",
+                "--use-cache",
+            ]
+            try:
+                result = main(args)
+                assert result == 0, f"main() returned error code: {result}"
+            except SystemExit as e:
+                assert e.code == 0, f"main() exited with code: {e.code}"
+
+            ref_dir = reference_dir / component_id
+            tmp_path = Path(tmp)
+
+            for file in tmp_path.glob("*.kicad_sym"):
+                d = ref_dir / "symbols"
+                d.mkdir(parents=True, exist_ok=True)
+                _copy_normalized(file, d / file.name)
+                print(f"Created reference: {d / file.name}")
+
+            for file in tmp_path.glob("*.pretty/*.kicad_mod"):
+                d = ref_dir / "footprints"
+                d.mkdir(parents=True, exist_ok=True)
+                _copy_normalized(file, d / file.name)
+                print(f"Created reference: {d / file.name}")
+
+            for file in tmp_path.glob("*.3dshapes/*"):
+                if file.is_file():
+                    d = ref_dir / "3dmodels"
+                    d.mkdir(parents=True, exist_ok=True)
+                    _copy_normalized(file, d / file.name)
+                    print(f"Created reference: {d / file.name}")
+
+        print(f"Reference files created for {component_id}")

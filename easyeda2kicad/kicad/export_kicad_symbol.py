@@ -94,7 +94,7 @@ def write_component_in_symbol_lib_file(
             f"(kicad_symbol_lib\n  (version {version})\n  (generator {generator})\n)",
             encoding="utf-8",
         )
-        logging.info(f"Created symbol lib: {lib_path}")
+        logging.debug(f"Created symbol lib: {lib_path}")
 
     current = Path(lib_path).read_text(encoding="utf-8")
 

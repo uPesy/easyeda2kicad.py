@@ -88,8 +88,8 @@ def get_parser() -> argparse.ArgumentParser:
         "--overwrite",
         required=False,
         help=(
-            "overwrite symbol and footprint lib if there is already a component with"
-            " this lcsc_id"
+            "overwrite symbol, footprint, and 3D model if there is already a component"
+            " with this lcsc_id"
         ),
         action="store_true",
     )
@@ -104,6 +104,15 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--debug",
         help="set the logging level to debug",
+        required=False,
+        default=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--use-cache",
+        dest="use_cache",
+        help="cache API responses in .easyeda_cache/ to avoid repeated network requests",
         required=False,
         default=False,
         action="store_true",
@@ -265,15 +274,22 @@ def _process_component(
             ).output,
         )
         output_dir = Path(f"{output}.3dshapes")
-        model_exporter.export(output_dir=str(output_dir))
         if not model_exporter.output:
             logging.warning(f"No 3D model available for ID: {component_id}")
+        elif not model_exporter.export(
+            output_dir=str(output_dir), overwrite=arguments["overwrite"]
+        ):
+            logging.error(
+                f"3D model for {component_id} already exists. Use --overwrite to replace"
+            )
+            return False
         else:
+            model_name = model_exporter.output.name
             logging.info(
                 f"Created 3D model for ID: {component_id}\n"
-                f"       3D model name: {model_exporter.output.name}\n"
-                f"       3D model path (wrl): {output_dir / f'{model_exporter.output.name}.wrl'}\n"
-                f"       3D model path (step): {output_dir / f'{model_exporter.output.name}.step'}"
+                f"       3D model name: {model_name}\n"
+                f"       3D model path (wrl): {output_dir / f'{model_name}.wrl'}\n"
+                f"       3D model path (step): {output_dir / f'{model_name}.step'}"
             )
 
     return True
@@ -291,16 +307,20 @@ def main(argv: list[str] = sys.argv[1:]) -> int:
     arguments = vars(args)
 
     log_level = logging.DEBUG if arguments["debug"] else logging.INFO
-    handler = logging.StreamHandler()
-    handler.setLevel(log_level)
-    handler.setFormatter(logging.Formatter(fmt="[{levelname}] {message}", style="{"))
-    logging.getLogger().setLevel(log_level)
-    logging.getLogger().addHandler(handler)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
+    if not root_logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setLevel(log_level)
+        handler.setFormatter(
+            logging.Formatter(fmt="[{levelname}] {message}", style="{")
+        )
+        root_logger.addHandler(handler)
 
     if not valid_arguments(arguments=arguments):
         return 1
 
-    api = EasyedaApi()
+    api = EasyedaApi(use_cache=arguments["use_cache"])
     had_errors = False
 
     for component_id in arguments["lcsc_id"]:

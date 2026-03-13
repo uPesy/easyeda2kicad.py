@@ -250,19 +250,30 @@ class Exporter3dModelKicad:
         )
         self.output_step = model_3d.step if model_3d else None
 
-    def export(self, output_dir: str) -> None:
-        """Write WRL and/or STEP files into *output_dir* (the .3dshapes folder)."""
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
-        if self.output and self.output.raw_wrl:
-            with open(
-                file=f"{output_dir}/{self.output.name}.wrl",
-                mode="w",
-                encoding="utf-8",
-            ) as my_lib:
-                my_lib.write(self.output.raw_wrl)
-        if self.output_step and self.output:
-            with open(
-                file=f"{output_dir}/{self.output.name}.step",
-                mode="wb",
-            ) as my_lib:
-                my_lib.write(self.output_step)
+    def export(self, output_dir: str, overwrite: bool = True) -> bool:
+        """Write WRL and STEP files into *output_dir* (the .3dshapes folder).
+
+        EasyEDA always provides both OBJ (→WRL) and STEP for the same UUID.
+        Returns False if files already exist and overwrite is False, True otherwise.
+        """
+        if not self.output:
+            return False
+
+        model_name = self.output.name
+        output_path = Path(output_dir)
+        wrl_path = output_path / f"{model_name}.wrl"
+        step_path = output_path / f"{model_name}.step"
+
+        if not overwrite and (wrl_path.exists() or step_path.exists()):
+            logging.warning(f"3D model files already exist, skipping: {model_name}")
+            return False
+
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        if self.output.raw_wrl:
+            wrl_path.write_text(self.output.raw_wrl, encoding="utf-8")
+
+        if self.output_step:
+            step_path.write_bytes(self.output_step)
+
+        return True

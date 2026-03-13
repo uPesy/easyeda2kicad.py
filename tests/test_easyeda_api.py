@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import json
-import logging
-from collections.abc import Generator
 from pathlib import Path
 
 import pytest
@@ -14,18 +12,10 @@ from easyeda2kicad.easyeda.easyeda_api import EasyedaApi
 
 @pytest.fixture()
 def api_with_cache(tmp_path: Path) -> EasyedaApi:
-    """EasyedaApi instance with debug cache enabled and tmp cache dir."""
-    logging.getLogger().setLevel(logging.DEBUG)
-    api = EasyedaApi()
+    """EasyedaApi instance with cache enabled and tmp cache dir."""
+    api = EasyedaApi(use_cache=True)
     api.cache_dir = tmp_path
     return api
-
-
-@pytest.fixture(autouse=True)
-def reset_log_level() -> Generator[None, None, None]:
-    """Restore log level after each test."""
-    yield
-    logging.getLogger().setLevel(logging.WARNING)
 
 
 # ---------------------------------------------------------------------------
@@ -77,16 +67,14 @@ class TestCacheRoundtripText:
         assert api_with_cache._read_from_cache(path) is None
 
     def test_no_write_when_cache_disabled(self, tmp_path: Path) -> None:
-        logging.getLogger().setLevel(logging.WARNING)
-        api = EasyedaApi()
+        api = EasyedaApi(use_cache=False)
         api.cache_dir = tmp_path
         path = api._get_cache_path("disabled", "txt")
         api._write_to_cache(path, "data")
         assert not path.exists()
 
     def test_no_read_when_cache_disabled(self, tmp_path: Path) -> None:
-        logging.getLogger().setLevel(logging.WARNING)
-        api = EasyedaApi()
+        api = EasyedaApi(use_cache=False)
         api.cache_dir = tmp_path
         path = tmp_path / "disabled.txt"
         path.write_text("data")

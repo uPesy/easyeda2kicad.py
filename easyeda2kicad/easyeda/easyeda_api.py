@@ -51,7 +51,7 @@ JLCPCB_SEARCH_API = "https://jlcpcb.com/api/overseas-pcb-order/v1/shoppingCart/s
 
 
 class EasyedaApi:
-    def __init__(self) -> None:
+    def __init__(self, use_cache: bool = False) -> None:
         self.headers = {
             "Accept-Encoding": "gzip, deflate",
             "Accept": "application/json, text/javascript, */*; q=0.01",
@@ -60,11 +60,7 @@ class EasyedaApi:
         }
         self.ssl_context = self._create_ssl_context()
         self.cache_dir = Path.cwd() / ".easyeda_cache"
-
-    @property
-    def debug_cache_enabled(self) -> bool:
-        # Evaluated lazily so the log level set after __init__ is respected.
-        return logging.getLogger().level <= logging.DEBUG
+        self.use_cache = use_cache
 
     def _get_cache_path(self, identifier: str, extension: str) -> Path:
         """Get the cache file path for a specific resource."""
@@ -75,7 +71,7 @@ class EasyedaApi:
         self, cache_path: Path, binary: bool = False
     ) -> str | bytes | None:
         """Read data from cache if it exists."""
-        if not self.debug_cache_enabled or not cache_path.exists():
+        if not self.use_cache or not cache_path.exists():
             return None
         try:
             mode = "rb" if binary else "r"
@@ -91,7 +87,7 @@ class EasyedaApi:
         self, cache_path: Path, data: str | bytes, binary: bool = False
     ) -> None:
         """Write data to cache."""
-        if not self.debug_cache_enabled:
+        if not self.use_cache:
             return
         try:
             cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -142,7 +138,7 @@ class EasyedaApi:
                 if Path(cert_path).is_file():
                     try:
                         context.load_verify_locations(cafile=cert_path)
-                        logging.info(f"Using KiCad certificate bundle: {cert_path}")
+                        logging.debug(f"Using KiCad certificate bundle: {cert_path}")
                         return context
                     except Exception as e:
                         logging.warning(f"Failed to load cert from {cert_path}: {e}")
@@ -159,7 +155,7 @@ class EasyedaApi:
             logging.debug("certifi package not available")
 
         # Fall back to default context (uses system certificates)
-        logging.info("Using system default SSL certificates")
+        logging.debug("Using system default SSL certificates")
         return context
 
     def get_info_from_easyeda_api(self, lcsc_id: str) -> dict[str, Any]:
