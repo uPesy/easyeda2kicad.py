@@ -1,4 +1,4 @@
-"""Unit tests for EasyedaApi.search_jlcpcb_components — no network required."""
+"""Unit tests for EasyedaApi.search_jlcpcb_components and get_product_image_url — no network required."""
 
 from __future__ import annotations
 
@@ -249,3 +249,129 @@ class TestSearchJlcpcbComponents:
 
         result = api.search_jlcpcb_components("ghost")
         assert result == {"total": 0, "results": []}
+
+
+# ---------------------------------------------------------------------------
+# get_product_image_url — HTML scraping, no network
+# ---------------------------------------------------------------------------
+
+IMAGE_URL = "https://assets.lcsc.com/images/lcsc/900x900/20221229_C25744_front.jpg"
+
+_HTML_OG_IMAGE = f"""\
+<html><head>
+<meta property="og:image" content="{IMAGE_URL}">
+</head><body></body></html>"""
+
+_HTML_OG_IMAGE_NAME_ATTR = f"""\
+<html><head>
+<meta name="og:image" content="{IMAGE_URL}">
+</head><body></body></html>"""
+
+_HTML_JSON_LD_ONLY = f"""\
+<html><head>
+<script type="application/ld+json">
+{{"@context":"http://schema.org","@type":"Product","image":"{IMAGE_URL}"}}
+</script>
+</head><body></body></html>"""
+
+_HTML_JSON_LD_IMAGE_OBJECT = f"""\
+<html><head>
+<script type="application/ld+json">
+{{"@context":"http://schema.org","@type":"ImageObject","contentUrl":"{IMAGE_URL}"}}
+</script>
+</head><body></body></html>"""
+
+_HTML_NO_IMAGE = "<html><head></head><body></body></html>"
+
+
+def _fake_html_response(html: str) -> MagicMock:
+    """Monkeypatch stub that returns raw HTML bytes."""
+    body = html.encode("utf-8")
+    cm = MagicMock()
+    cm.__enter__ = MagicMock(return_value=io.BytesIO(body))
+    cm.__exit__ = MagicMock(return_value=False)
+    return MagicMock(return_value=cm)
+
+
+class TestGetProductImageUrl:
+    def test_og_image_property(
+        self, api: EasyedaApi, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """og:image with property= attribute is the primary extraction path."""
+        monkeypatch.setattr(
+            "urllib.request.urlopen", _fake_html_response(_HTML_OG_IMAGE)
+        )
+        assert (
+            api.get_product_image_url("https://www.lcsc.com/product-detail/C25744.html")
+            == IMAGE_URL
+        )
+
+    def test_og_image_name_attr(
+        self, api: EasyedaApi, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """og:image with name= attribute is also accepted."""
+        monkeypatch.setattr(
+            "urllib.request.urlopen", _fake_html_response(_HTML_OG_IMAGE_NAME_ATTR)
+        )
+        assert (
+            api.get_product_image_url("https://www.lcsc.com/product-detail/C25744.html")
+            == IMAGE_URL
+        )
+
+    def test_json_ld_product_fallback(
+        self, api: EasyedaApi, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Falls back to JSON-LD Product.image when og:image is absent."""
+        monkeypatch.setattr(
+            "urllib.request.urlopen", _fake_html_response(_HTML_JSON_LD_ONLY)
+        )
+        assert (
+            api.get_product_image_url("https://www.lcsc.com/product-detail/C25744.html")
+            == IMAGE_URL
+        )
+
+    def test_json_ld_image_object_contenturl(
+        self, api: EasyedaApi, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Falls back to JSON-LD ImageObject.contentUrl when og:image is absent."""
+        monkeypatch.setattr(
+            "urllib.request.urlopen", _fake_html_response(_HTML_JSON_LD_IMAGE_OBJECT)
+        )
+        assert (
+            api.get_product_image_url("https://www.lcsc.com/product-detail/C25744.html")
+            == IMAGE_URL
+        )
+
+    def test_returns_none_when_no_image_found(
+        self, api: EasyedaApi, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Returns None when HTML contains no recognisable image metadata."""
+        monkeypatch.setattr(
+            "urllib.request.urlopen", _fake_html_response(_HTML_NO_IMAGE)
+        )
+        assert (
+            api.get_product_image_url("https://www.lcsc.com/product-detail/C25744.html")
+            is None
+        )
+
+    def test_returns_none_for_empty_url(self, api: EasyedaApi) -> None:
+        """Empty lcsc_url short-circuits without any network call."""
+        assert api.get_product_image_url("") is None
+
+    def test_rejects_non_lcsc_host(self, api: EasyedaApi) -> None:
+        """URLs outside lcsc.com are rejected without making a network request."""
+        assert api.get_product_image_url("https://evil.example.com/page") is None
+
+    def test_network_error_returns_none(
+        self, api: EasyedaApi, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """URLError is caught; function returns None without raising."""
+
+        def fail(*_args: object, **_kwargs: object) -> None:
+            raise urllib.error.URLError("simulated timeout")
+
+        monkeypatch.setattr("urllib.request.urlopen", fail)
+        assert (
+            api.get_product_image_url("https://www.lcsc.com/product-detail/C25744.html")
+            is None
+        )

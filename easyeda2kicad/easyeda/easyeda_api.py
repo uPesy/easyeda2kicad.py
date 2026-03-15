@@ -5,6 +5,7 @@ import glob  # noqa: F401  # used inside sys.platform=="darwin" block
 import gzip
 import json
 import logging
+import re
 import ssl
 import sys
 import urllib.error
@@ -398,3 +399,64 @@ class EasyedaApi:
                 }
             )
         return {"total": page_info.get("total", 0), "results": results}
+
+    def get_product_image_url(self, lcsc_url: str) -> str | None:
+        """Fetch the 900x900 product image URL for an LCSC product page.
+
+        Extraction order (most reliable first):
+        1. og:image meta tag — always in <head>, no JS needed
+        2. JSON-LD image/contentUrl/thumbnail — fallback for pages without og:image
+
+        Only fetches from lcsc.com to prevent unintended external requests.
+        Returns None if the page cannot be fetched or contains no image.
+        """
+        if not lcsc_url:
+            return None
+        parsed = urllib.parse.urlparse(lcsc_url)
+        if parsed.hostname not in ("lcsc.com", "www.lcsc.com"):
+            logging.warning(
+                f"get_product_image_url: unexpected host {parsed.hostname!r}, skipping"
+            )
+            return None
+        try:
+            req = urllib.request.Request(  # noqa: S310
+                url=lcsc_url,
+                headers={
+                    **self.headers,
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                },
+            )
+            with urllib.request.urlopen(  # noqa: S310
+                req, timeout=10, context=self.ssl_context
+            ) as response:
+                html = self._decode_response(response.read())
+        except (urllib.error.URLError, OSError) as e:
+            logging.error(f"Failed to fetch LCSC product page: {e}")
+            return None
+
+        # 1) og:image — attribute order varies between name= and property=
+        og = re.search(
+            r'<meta[^>]+(?:name|property)=["\']og:image["\'][^>]+content=["\']([^"\'>\s]+)["\']',
+            html,
+        ) or re.search(
+            r'<meta[^>]+content=["\']([^"\'>\s]+)["\'][^>]+(?:name|property)=["\']og:image["\']',
+            html,
+        )
+        if og:
+            return og.group(1)
+
+        # 2) JSON-LD fallback
+        for blob in re.findall(
+            r'<script[^>]+type="application/ld\+json"[^>]*>(.*?)</script>',
+            html,
+            re.DOTALL,
+        ):
+            try:
+                data: dict[str, Any] = json.loads(blob)
+            except json.JSONDecodeError:
+                continue
+            for key in ("image", "contentUrl", "thumbnail"):
+                value = data.get(key)
+                if isinstance(value, str) and value.startswith("http"):
+                    return value
+        return None
