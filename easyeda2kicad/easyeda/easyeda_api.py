@@ -326,7 +326,8 @@ class EasyedaApi:
 
         Works anonymously. Returns dict with 'total' and 'results' list; each result
         contains: lcsc, name, model, brand, package, category, stock, type, price,
-        description, url, datasheet.  part_type: "base" = Basic, "expand" = Extended.
+        price_breaks, min_qty, reel_qty, description, url, datasheet, attributes.
+        part_type: "base" = Basic, "expand" = Extended.
         """
         payload: dict[str, Any] = {
             "keyword": keyword,
@@ -375,9 +376,25 @@ class EasyedaApi:
                     if item.get("componentLibraryType") == "base"
                     else "Extended",
                     "price": prices[0].get("productPrice") if prices else None,
+                    "price_breaks": [
+                        {"qty": p.get("startNumber"), "price": p.get("productPrice")}
+                        for p in prices
+                    ],
+                    "min_qty": item.get("minPurchaseNum", 1),
+                    "reel_qty": item.get("encapsulationNumber"),
                     "description": item.get("describe", ""),
                     "url": item.get("lcscGoodsUrl", ""),
                     "datasheet": item.get("dataManualUrl", ""),
+                    # Technical specs list; entries with value "-" are omitted as uninformative.
+                    "attributes": [
+                        {
+                            "name": a.get("attribute_name_en", ""),
+                            "value": a["attribute_value_name"],
+                        }
+                        for a in (item.get("attributes") or [])
+                        if a.get("attribute_value_name")
+                        and a["attribute_value_name"] != "-"
+                    ],
                 }
             )
         return {"total": page_info.get("total", 0), "results": results}
