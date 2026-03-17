@@ -274,6 +274,11 @@ class Exporter3dModelKicad:
             wrl_path.write_text(self.output.raw_wrl, encoding="utf-8")
 
         if self.output_step:
+            # TODO: STEP is copied as-is without offset baking (unlike WRL).
+            # KiCad offset stays (0,0,0), so STEP is misplaced when
+            # model_3d.translation != (0,0,0) (i.e. c_origin != canvas_origin).
+            # Fix options: (a) write translation into .kicad_mod and remove WRL baking
+            # to avoid double-offset; (b) transform STEP geometry (needs opencascade).
             step_path.write_bytes(self.output_step)
 
         return True
