@@ -33,6 +33,7 @@ except ImportError:
 
 API_BASE_LEGACY = "https://easyeda.com"
 API_ENDPOINT = "https://easyeda.com/api/products/{lcsc_id}/components"
+ENDPOINT_SVG = "https://easyeda.com/api/products/{lcsc_id}/svgs"
 ENDPOINT_3D_MODEL = "https://modules.easyeda.com/3dmodel/{uuid}"
 ENDPOINT_3D_MODEL_STEP = "https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/{uuid}"
 
@@ -200,7 +201,7 @@ class EasyedaApi:
 
     def get_cad_data_of_component(self, lcsc_id: str) -> dict[str, Any]:
         cp_cad_info = self.get_info_from_easyeda_api(lcsc_id=lcsc_id)
-        if cp_cad_info == {}:
+        if not cp_cad_info:
             return {}
         result: dict[str, Any] = cp_cad_info["result"]
         return result
@@ -227,7 +228,7 @@ class EasyedaApi:
                         f"No raw 3D model data found for uuid:{uuid} on easyeda"
                     )
                     return None
-                data: str = response.read().decode()
+                data: str = self._decode_response(response.read())
                 # Write to cache
                 self._write_to_cache(cache_path, data, binary=False)
                 return data
@@ -399,6 +400,47 @@ class EasyedaApi:
                 }
             )
         return {"total": page_info.get("total", 0), "results": results}
+
+    def get_svg_from_api(self, lcsc_id: str) -> dict[str, Any]:
+        """Return pre-rendered SVGs from the EasyEDA /svgs endpoint as ``{"symbol": str, "footprint": str}``.
+
+        The API returns one entry per symbol unit plus one footprint entry (last).
+        Multi-unit symbols yield multiple symbol SVGs; only the first unit is returned here.
+        Results are cached as JSON when caching is enabled.
+        """
+        cache_path = self._get_cache_path(f"{lcsc_id}_svg", "json")
+        cached_data = self._read_from_cache(cache_path, binary=False)
+        if cached_data is not None:
+            try:
+                result: dict[str, Any] = json.loads(cached_data)
+                return result
+            except json.JSONDecodeError:
+                pass
+
+        try:
+            req = urllib.request.Request(  # noqa: S310
+                url=ENDPOINT_SVG.format(lcsc_id=lcsc_id),
+                headers=self.headers,
+            )
+            with urllib.request.urlopen(  # noqa: S310
+                req, timeout=15, context=self.ssl_context
+            ) as response:
+                raw = self._decode_response(response.read())
+                data: dict[str, Any] = json.loads(raw)
+        except (urllib.error.URLError, json.JSONDecodeError) as e:
+            logging.error(f"get_svg_from_api failed for {lcsc_id}: {e}")
+            return {"symbol": "", "footprint": ""}
+
+        entries: list[dict[str, Any]] = data.get("result") or []
+        if not entries:
+            return {"symbol": "", "footprint": ""}
+
+        # Last entry = footprint, all earlier entries = symbol units
+        symbol_svg: str = entries[0].get("svg", "") if len(entries) >= 2 else ""
+        footprint_svg: str = entries[-1].get("svg", "") if len(entries) >= 1 else ""
+        result = {"symbol": symbol_svg, "footprint": footprint_svg}
+        self._write_to_cache(cache_path, json.dumps(result), binary=False)
+        return result
 
     def get_product_image_url(self, lcsc_url: str) -> str | None:
         """Fetch the 900x900 product image URL for an LCSC product page.
