@@ -6,18 +6,17 @@ This document provides a compact reference for all EasyEDA symbol shape commands
 
 ## Command Overview
 
-| Command | Description              | Implementation           |
-|---------|--------------------------|--------------------------|
-| P       | Pin with number and name | ✅ Implemented            |
-| R       | Rectangle                | ✅ Implemented            |
-| C       | Circle                   | ✅ Implemented            |
-| E       | Ellipse                  | ✅ Implemented            |
-| A       | Arc                      | ✅ Implemented            |
-| PL      | Polyline (open path)     | ✅ Implemented            |
-| PG      | Polygon (closed path)    | ✅ Implemented            |
-| PT      | Path (SVG path)          | ✅ Implemented            |
-| T       | Text label               | ✅ Implemented            |
-| PI      | Pie/Elliptical arc       | ❌ Not supported in KiCad |
+| Command | Description              | Implementation |
+|---------|--------------------------|----------------|
+| P       | Pin with number and name | ✅ Implemented  |
+| R       | Rectangle                | ✅ Implemented  |
+| C       | Circle                   | ✅ Implemented  |
+| E       | Ellipse                  | ✅ Implemented  |
+| A       | Arc                      | ✅ Implemented  |
+| PL      | Polyline (open path)     | ✅ Implemented  |
+| PG      | Polygon (closed path)    | ✅ Implemented  |
+| PT      | Path (SVG path)          | ✅ Implemented  |
+| T       | Text label               | ✅ Implemented  |
 
 ---
 
@@ -26,7 +25,7 @@ This document provides a compact reference for all EasyEDA symbol shape commands
 **Format:**
 
 ```
-P~visibility~locked~type~x~y~rotation~id~flags^^dot_x~dot_y^^path~color^^name_data^^number_data^^dot_data^^clock_data
+P~visibility~type~spice_pin_number~x~y~rotation~id~is_locked^^dot_x~dot_y^^path~color^^name_data^^number_data^^dot_data^^clock_data
 ```
 
 **Example:**
@@ -37,29 +36,29 @@ P~show~0~1~350~310~180~gge6~0^^350~310^^M 350 310 h 10~#000000^^1~363.7~314~0~VS
 
 **Structure (Split by `^^`):**
 
-| Segment | Data           | Description                                             |
-|---------|----------------|---------------------------------------------------------|
-| 0       | Settings       | visibility~locked~type~x~y~rotation~id~flags            |
-| 1       | Dot position   | dot_x~dot_y                                             |
-| 2       | Pin path       | path~color                                              |
-| 3       | Pin name       | show~x~y~rotation~text~text_anchor~font~font_size       |
-| 4       | **Pin number** | show~x~y~rotation~**number**~text_anchor~font~font_size |
-| 5       | Dot circle     | show~circle_x~circle_y                                  |
-| 6       | Clock symbol   | show~path                                               |
+| Segment | Data           | Description                                                |
+|---------|----------------|------------------------------------------------------------|
+| 0       | Settings       | visibility~type~spice_pin_number~x~y~rotation~id~is_locked |
+| 1       | Dot position   | dot_x~dot_y                                                |
+| 2       | Pin path       | path~color                                                 |
+| 3       | Pin name       | show~x~y~rotation~text~text_anchor~font~font_size          |
+| 4       | **Pin number** | show~x~y~rotation~**number**~text_anchor~font~font_size    |
+| 5       | Dot circle     | show~circle_x~circle_y                                     |
+| 6       | Clock symbol   | show~path                                                  |
 
 **Settings Fields:**
 
-| Index | Field      | Type   | Description                                                          |
-|-------|------------|--------|----------------------------------------------------------------------|
-| 0     | P          | -      | Command identifier                                                   |
-| 1     | visibility | string | "show" or "hide"                                                     |
-| 2     | locked     | int    | 1 if locked, 0 if unlocked                                           |
-| 3     | type       | int    | Pin type: 0=unspecified, 1=input, 2=output, 3=bidirectional, 4=power |
-| 4     | x          | float  | X coordinate                                                         |
-| 5     | y          | float  | Y coordinate                                                         |
-| 6     | rotation   | int    | Rotation angle (0, 90, 180, 270)                                     |
-| 7     | id         | string | Unique element ID                                                    |
-| 8     | flags      | int    | Additional flags                                                     |
+| Index | Field            | Type   | Description                                                                 |
+|-------|------------------|--------|-----------------------------------------------------------------------------|
+| 0     | P                | -      | Command identifier                                                          |
+| 1     | visibility       | string | "show" or "hide"                                                            |
+| 2     | type             | int    | Pin type: 0 or ""=unspecified, 1=input, 2=output, 3=bidirectional, 4=power  |
+| 3     | spice_pin_number | string | Internal SPICE pin number (overridden by segment 4 field 4; can be any int) |
+| 4     | x                | float  | X coordinate                                                                |
+| 5     | y                | float  | Y coordinate                                                                |
+| 6     | rotation         | int    | Rotation angle (0, 90, 180, 270)                                            |
+| 7     | id               | string | Unique element ID                                                           |
+| 8     | is_locked        | int    | 1 if locked, 0 if unlocked                                                  |
 
 **Pin Number Extraction:**
 
@@ -68,22 +67,29 @@ P~show~0~1~350~310~180~gge6~0^^350~310^^M 350 310 h 10~#000000^^1~363.7~314~0~VS
 
 **Notes:**
 
-- Pin path defines the visual line from the symbol to the pin connection point
-- Name and number have independent visibility flags
-- Dot circle is used for inverted pins (active low)
-- Clock symbol appears on clock input pins
+- Dot circle (segment 5) is used for inverted pins (active low)
+- Clock symbol (segment 6) appears on clock input pins
+- Field [2] (type) is often `0` or `""` (EasyEDA Standard leaves it unset for most pins)
 
 ---
 
 ## R - Rectangle
 
-**Format:**
+EasyEDA uses two variants depending on whether rounded corners are present:
+
+**Format 1** — without rounded corners (positions 3+4 are empty strings):
+
+```
+R~x~y~~width~height~stroke_color~stroke_width~stroke_style~fill_color~id~locked
+```
+
+**Format 2** — with rounded corners (positions 3+4 carry radii):
 
 ```
 R~x~y~rx~ry~width~height~stroke_color~stroke_width~stroke_style~fill_color~id~locked
 ```
 
-**Example:**
+**Example (Format 2):**
 
 ```
 R~360~298~2~2~80~34~#880000~1~0~none~gge4~0~
@@ -91,27 +97,21 @@ R~360~298~2~2~80~34~#880000~1~0~none~gge4~0~
 
 **Fields:**
 
-| Index | Field        | Type   | Unit   | Description                                |
-|-------|--------------|--------|--------|--------------------------------------------|
-| 0     | R            | -      | -      | Command identifier                         |
-| 1     | x            | float  | pixels | X coordinate (top-left corner)             |
-| 2     | y            | float  | pixels | Y coordinate (top-left corner)             |
-| 3     | rx           | float  | pixels | X-radius for rounded corners (0 for sharp) |
-| 4     | ry           | float  | pixels | Y-radius for rounded corners (0 for sharp) |
-| 5     | width        | float  | pixels | Rectangle width                            |
-| 6     | height       | float  | pixels | Rectangle height                           |
-| 7     | stroke_color | string | -      | Border color (hex, e.g., "#880000")        |
-| 8     | stroke_width | float  | pixels | Border line width                          |
-| 9     | stroke_style | int    | -      | Line style (0=solid, 1=dashed, etc.)       |
-| 10    | fill_color   | string | -      | Fill color ("none" for transparent)        |
-| 11    | id           | string | -      | Unique element ID                          |
-| 12    | locked       | int    | -      | 1 if locked, 0 if unlocked                 |
-
-**Notes:**
-
-- Can have rounded corners using rx/ry
-- If rx=0 and ry=0, corners are sharp (90°)
-- Fill color "none" means transparent/unfilled
+| Index | Field        | Type   | Unit   | Description                                         |
+|-------|--------------|--------|--------|-----------------------------------------------------|
+| 0     | R            | -      | -      | Command identifier                                  |
+| 1     | x            | float  | pixels | X coordinate (top-left corner)                      |
+| 2     | y            | float  | pixels | Y coordinate (top-left corner)                      |
+| 3     | rx           | float  | pixels | X-radius for rounded corners — empty string if none |
+| 4     | ry           | float  | pixels | Y-radius for rounded corners — empty string if none |
+| 5     | width        | float  | pixels | Rectangle width                                     |
+| 6     | height       | float  | pixels | Rectangle height                                    |
+| 7     | stroke_color | string | -      | Border color (hex, e.g., "#880000")                 |
+| 8     | stroke_width | float  | pixels | Border line width                                   |
+| 9     | stroke_style | int    | -      | Line style (0=solid, 1=dashed, etc.)                |
+| 10    | fill_color   | string | -      | Fill color ("none" for transparent)                 |
+| 11    | id           | string | -      | Unique element ID                                   |
+| 12    | locked       | int    | -      | 1 if locked, 0 if unlocked                          |
 
 ---
 
@@ -176,11 +176,6 @@ E~365~303~1.5~1.5~#880000~1~0~#880000~gge3~0
 | 9     | id           | string      | -      | Unique element ID              |
 | 10    | locked       | int         | -      | 1 if locked, 0 if unlocked     |
 
-**Notes:**
-
-- If radius_x == radius_y, it's effectively a circle
-- Can be filled or outline only
-
 ---
 
 ## A - Arc
@@ -220,8 +215,8 @@ A~M 383.117 299.932 A 4 3.9 0 1 1 391.082 299.936~~#880000~1~0~none~gge17~0
   - `large-arc-flag` - 0 or 1 (use larger arc)
   - `sweep-flag` - 0 or 1 (sweep direction)
   - `x, y` - End point
-
----
+  
+  ---
 
 ## PL - Polyline
 
@@ -249,12 +244,6 @@ PL~380 290 390 290 390 310 380 310~#880000~1~0~none~gge8~0
 | 5     | fill_color   | string | -      | Fill color (usually "none" for polyline)             |
 | 6     | id           | string | -      | Unique element ID                                    |
 | 7     | locked       | int    | -      | 1 if locked, 0 if unlocked                           |
-
-**Notes:**
-
-- **Open path** - does not automatically close back to start
-- Typically not filled
-- Used for drawing complex outlines
 
 ---
 
@@ -285,12 +274,6 @@ PG~380 290 390 290 390 310 380 310~#880000~1~0~#880000~gge9~0
 | 6     | id           | string | -      | Unique element ID                                    |
 | 7     | locked       | int    | -      | 1 if locked, 0 if unlocked                           |
 
-**Notes:**
-
-- **Closed path** - automatically closes back to first point
-- Can be filled with solid color
-- Used for solid shapes in symbols
-
 ---
 
 ## PT - Path
@@ -309,31 +292,26 @@ PT~M 380 300 L 390 300 L 390 310~#880000~1~0~none~gge11~0
 
 **Fields:**
 
-| Index | Field        | Type   | Description                                      |
-|-------|--------------|--------|--------------------------------------------------|
-| 0     | PT           | -      | Command identifier                               |
-| 1     | path         | string | SVG path data (M=move, L=line, C=curve, Z=close) |
-| 2     | stroke_color | string | Line color (hex)                                 |
-| 3     | stroke_width | float  | Line width                                       |
-| 4     | stroke_style | int    | Line style                                       |
-| 5     | fill_color   | string | Fill color or "none"                             |
-| 6     | id           | string | Unique element ID                                |
-| 7     | locked       | int    | 1 if locked, 0 if unlocked                       |
+| Index | Field        | Type   | Description                                     |
+|-------|--------------|--------|-------------------------------------------------|
+| 0     | PT           | -      | Command identifier                              |
+| 1     | path         | string | SVG path data — M, L, Z and C/Q (bezier curves) |
+| 2     | stroke_color | string | Line color (hex)                                |
+| 3     | stroke_width | float  | Line width                                      |
+| 4     | stroke_style | int    | Line style                                      |
+| 5     | fill_color   | string | Fill color or "none"                            |
+| 6     | id           | string | Unique element ID                               |
+| 7     | locked       | int    | 1 if locked, 0 if unlocked                      |
 
 **SVG Path Commands:**
 
-- `M x y` - Move to
-- `L x y` - Line to
-- `C x1 y1 x2 y2 x y` - Cubic Bezier curve
-- `Q x1 y1 x y` - Quadratic Bezier curve
-- `A rx ry rotation large-arc sweep x y` - Arc
-- `Z` - Close path
-
-**Notes:**
-
-- Most flexible shape type
-- Supports complex curves and Bezier paths
-- Can combine multiple drawing operations
+| Command             | Arguments | Description                                                       |
+|---------------------|-----------|-------------------------------------------------------------------|
+| `M x y`             | —         | Move to                                                           |
+| `L x y`             | —         | Line to                                                           |
+| `C x1 y1 x2 y2 x y` | 6 args    | Cubic Bezier curve → KiCad `(bezier ...)` with 4 control points   |
+| `Q x1 y1 x y`       | 4 args    | Quadratic Bezier curve → elevated to cubic → KiCad `(bezier ...)` |
+| `Z`                 | —         | Close path                                                        |
 
 ---
 
@@ -342,7 +320,7 @@ PT~M 380 300 L 390 300 L 390 310~#880000~1~0~none~gge11~0
 **Format:**
 
 ```
-T~type~x~y~rotation~color~font~font_size~stroke_width~text_anchor~text_type~text~display~id~locked
+T~type~x~y~rotation~color~font~font_size~stroke_width~baseline~text_anchor~role~text~display~[anchor2]~id~locked~[tag]
 ```
 
 **Example:**
@@ -353,27 +331,22 @@ T~L~400~290~0~#0000FF~Tahoma~11.5pt~0.1~~middle~comment~RP2040~1~middle~gge860~0
 
 **Fields used by parser:**
 
-| Index | Field     | Description                                                   |
-|-------|-----------|---------------------------------------------------------------|
-| 2     | x         | X coordinate (canvas pixels)                                  |
-| 3     | y         | Y coordinate (canvas pixels)                                  |
-| 4     | rotation  | Rotation angle in degrees                                     |
-| 7     | font_size | Font size (e.g. `"11.5pt"`) → converted to mm (`pt * 0.3528`) |
-| 12    | text      | Text content                                                  |
+| Index | Field       | Description                                                   |
+|-------|-------------|---------------------------------------------------------------|
+| 2     | x           | X coordinate (canvas pixels)                                  |
+| 3     | y           | Y coordinate (canvas pixels)                                  |
+| 4     | rotation    | Rotation angle in degrees                                     |
+| 5     | color       | Text color (hex, e.g. `"#0000FF"`)                            |
+| 7     | font_size   | Font size (e.g. `"11.5pt"`) → converted to mm (`pt * 0.3528`) |
+| 9     | baseline    | Vertical alignment (usually empty)                            |
+| 10    | text_anchor | Horizontal anchor: `"start"`, `"middle"`, `"end"`             |
+| 11    | role        | Text role (e.g. `"comment"`, `"pinpart"`)                     |
+| 12    | text        | Text content                                                  |
+| 13    | display     | `"1"` if visible, `"0"` if hidden                             |
 
 **Notes:**
 - Requires KiCad symbol library format version ≥ 20220102 to be preserved on save
 - Empty text fields are skipped
-
----
-
-## PI - Pie/Elliptical Arc (NOT SUPPORTED)
-
-**Format**: Unknown
-
-**Status**: ❌ Referenced in code but not implemented. Not supported in KiCad.
-
-**Impact**: If components use pie-shaped or elliptical arc shapes, they will be silently ignored with a warning message.
 
 ---
 
@@ -440,27 +413,3 @@ ki_y_mils = -(ee_y - bbox_y) * 10  # Note: Y inverted
 | Blue  | #0000FF  | Pin numbers, text |
 | Black | #000000  | Pin paths         |
 | Green | #008000  | Alternative       |
-
----
-
-## Rectangle Format Variants
-
-EasyEDA has **two formats** for rectangles:
-
-**Format 1**: Without rounded corners
-
-```
-R~x~y~~width~height~stroke_color~stroke_width~stroke_style~fill_color~id~locked
-```
-
-- Empty fields at positions 3,4 (rx, ry)
-
-**Format 2**: With rounded corners
-
-```
-R~x~y~rx~ry~width~height~stroke_color~stroke_width~stroke_style~fill_color~id~locked
-```
-
-- rx, ry values at positions 3,4
-
-The parser handles both formats automatically.

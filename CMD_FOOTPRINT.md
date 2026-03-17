@@ -26,7 +26,7 @@ This document provides a compact reference for all EasyEDA footprint shape comma
 **Format:**
 
 ```
-PAD~shape~center_x~center_y~width~height~layer_id~net~number~hole_radius~points~rotation~id~hole_length~hole_point~is_plated~is_locked~[extra_fields]
+PAD~shape~center_x~center_y~width~height~layer_id~net~number~hole_radius~points~rotation~id~hole_length~slot_outline~is_plated~is_locked~clearance1~clearance2~hole_point
 ```
 
 **Example:**
@@ -37,31 +37,32 @@ PAD~RECT~3994.299~2995~9.0551~9.0551~11~~1~2.7559~3989.7715 2990.4725 3998.8266 
 
 **Fields:**
 
-| Index | Field       | Type   | Unit     | Description                                  |
-|-------|-------------|--------|----------|----------------------------------------------|
-| 0     | PAD         | -      | -        | Command identifier                           |
-| 1     | shape       | string | -        | Shape: RECT, OVAL, ELLIPSE, POLYGON          |
-| 2     | center_x    | float  | EE units | X coordinate of pad center                   |
-| 3     | center_y    | float  | EE units | Y coordinate of pad center                   |
-| 4     | width       | float  | EE units | Pad width                                    |
-| 5     | height      | float  | EE units | Pad height                                   |
-| 6     | layer_id    | int    | -        | Layer ID (1=F.Cu, 2=B.Cu, 11=\*.Cu)          |
-| 7     | net         | string | -        | Net name (empty for no net)                  |
-| 8     | number      | string | -        | Pad number (1, 2, 3, etc.)                   |
-| 9     | hole_radius | float  | EE units | Drill hole radius (0 for SMD)                |
-| 10    | points      | string | EE units | Space-separated coordinates for polygon pads |
-| 11    | rotation    | float  | degrees  | Pad rotation angle                           |
-| 12    | id          | string | -        | Unique element ID (e.g., "gge118")           |
-| 13    | hole_length | float  | EE units | Oval hole length (0 for round)               |
-| 14    | hole_point  | string | -        | Hole coordinates                             |
-| 15    | is_plated   | string | -        | "Y" for plated, "N" for non-plated           |
-| 16    | is_locked   | int    | -        | 1 if locked, 0 if unlocked                   |
+| Index | Field        | Type   | Unit     | Description                                                  |
+|-------|--------------|--------|----------|--------------------------------------------------------------|
+| 0     | PAD          | -      | -        | Command identifier                                           |
+| 1     | shape        | string | -        | Shape: RECT, OVAL, ELLIPSE, POLYGON                          |
+| 2     | center_x     | float  | EE units | X coordinate of pad center                                   |
+| 3     | center_y     | float  | EE units | Y coordinate of pad center                                   |
+| 4     | width        | float  | EE units | Pad width                                                    |
+| 5     | height       | float  | EE units | Pad height                                                   |
+| 6     | layer_id     | int    | -        | Layer ID (1=F.Cu, 2=B.Cu, 11=\*.Cu)                          |
+| 7     | net          | string | -        | Net name (empty for no net)                                  |
+| 8     | number       | string | -        | Pad number (1, 2, 3, etc.)                                   |
+| 9     | hole_radius  | float  | EE units | Drill hole radius (0 for SMD)                                |
+| 10    | points       | string | EE units | Space-separated coordinates for polygon pads                 |
+| 11    | rotation     | float  | degrees  | Pad rotation angle                                           |
+| 12    | id           | string | -        | Unique element ID (e.g., "gge118")                           |
+| 13    | hole_length  | float  | EE units | Slot/oval hole length (0 for round hole)                     |
+| 14    | slot_outline | string | EE units | Space-separated points for slot center line (empty if round) |
+| 15    | is_plated    | string | -        | "Y" for plated (copper), "N" for non-plated (bare hole)      |
+| 16    | is_locked    | int    | -        | 1 if locked, 0 if unlocked                                   |
+| 17    | clearance1   | float  | EE units | Clearance value (internal use)                               |
+| 18    | clearance2   | float  | EE units | Clearance value (internal use)                               |
+| 19    | hole_point   | string | -        | Hole center override as "x,y" (not captured by importer)     |
 
 **Notes:**
 
-- Through-hole pads have `hole_radius > 0`
-- SMD pads have `hole_radius = 0`
-- POLYGON shape pads use the `points` field for custom outlines
+- `slot_outline` [14] is loaded into the dataclass field of the same name; `hole_point` [19] is not read
 
 ---
 
@@ -93,9 +94,7 @@ TRACK~1~3~~3966.65 3007.66 3957.1495 3007.6495 3957.1495 3015.6495 3966.65 3015.
 
 **Notes:**
 
-- Points form a polyline (connected line segments)
 - Minimum 2 points (4 values: x1 y1 x2 y2)
-- Used for copper traces, silkscreen lines, and fabrication outlines
 
 ---
 
@@ -104,7 +103,7 @@ TRACK~1~3~~3966.65 3007.66 3957.1495 3007.6495 3957.1495 3015.6495 3966.65 3015.
 **Format:**
 
 ```
-RECT~x~y~width~height~stroke_width~id~layer_id~is_locked~[fill_color]~[...]
+RECT~x~y~width~height~layer_id~id~is_locked~stroke_width~fill_color~[...]
 ```
 
 **Example:**
@@ -115,24 +114,23 @@ RECT~3980.15~2979.15~12.5~4.5~3~gge226~0~1~none~~~
 
 **Fields:**
 
-| Index | Field        | Type   | Unit     | Description                          |
-|-------|--------------|--------|----------|--------------------------------------|
-| 0     | RECT         | -      | -        | Command identifier                   |
-| 1     | x            | float  | EE units | X coordinate (top-left corner)       |
-| 2     | y            | float  | EE units | Y coordinate (top-left corner)       |
-| 3     | width        | float  | EE units | Rectangle width                      |
-| 4     | height       | float  | EE units | Rectangle height                     |
-| 5     | stroke_width | float  | EE units | Border line width                    |
-| 6     | id           | string | -        | Unique element ID                    |
-| 7     | layer_id     | int    | -        | Layer ID (0=F.Fab, 3=F.SilkS, etc.)  |
-| 8     | is_locked    | int    | -        | 1 if locked, 0 if unlocked           |
-| 9+    | ...          | -      | -        | Additional fields (fill color, etc.) |
+| Index | Field        | Type   | Unit     | Description                         |
+|-------|--------------|--------|----------|-------------------------------------|
+| 0     | RECT         | -      | -        | Command identifier                  |
+| 1     | x            | float  | EE units | X coordinate (top-left corner)      |
+| 2     | y            | float  | EE units | Y coordinate (top-left corner)      |
+| 3     | width        | float  | EE units | Rectangle width                     |
+| 4     | height       | float  | EE units | Rectangle height                    |
+| 5     | layer_id     | int    | -        | Layer ID (3=F.SilkS, 13=F.Fab, ...) |
+| 6     | id           | string | -        | Unique element ID                   |
+| 7     | is_locked    | int    | -        | 1 if locked, 0 if unlocked          |
+| 8     | stroke_width | float  | EE units | Border line width                   |
+| 9     | fill_color   | string | -        | Fill color ("none" for transparent) |
 
 **Notes:**
 
 - `stroke_width` applies to **all 4 border lines** of the rectangle
 - Converted to 4 separate fp_line entries in KiCad
-- After our fix: `stroke_width` is correctly converted (was missing before)
 
 ---
 
@@ -165,8 +163,7 @@ CIRCLE~4011.819~2995~2.9528~5.9055~12~gge381~0~~
 
 **Notes:**
 
-- Drawn as outline circle in KiCad (fp_circle)
-- `stroke_width` defines the line thickness
+- Drawn as outline circle in KiCad (`fp_circle`)
 
 ---
 
@@ -195,11 +192,6 @@ HOLE~4011.819~2995~6.2598~gge130~0
 | 4     | id        | string | -        | Unique element ID           |
 | 5     | is_locked | int    | -        | 1 if locked, 0 if unlocked  |
 
-**Notes:**
-
-- Non-plated holes (mounting holes, mechanical holes)
-- Diameter = radius × 2
-
 ---
 
 ## VIA - Via Connection
@@ -207,31 +199,30 @@ HOLE~4011.819~2995~6.2598~gge130~0
 **Format:**
 
 ```
-VIA~center_x~center_y~diameter~net~radius~id~is_locked
+VIA~center_x~center_y~pad_diameter~net~drill_radius~id~is_locked
 ```
 
 **Example:**
 
 ```
-VIA~3978~3003~3.9370~VCC~4.9213~gge150~0
+VIA~3998.032~2998.032~2.4~~0.6~gge1042~0
 ```
 
 **Fields:**
 
-| Index | Field     | Type   | Unit     | Description                |
-|-------|-----------|--------|----------|----------------------------|
-| 0     | VIA       | -      | -        | Command identifier         |
-| 1     | center_x  | float  | EE units | X coordinate of via center |
-| 2     | center_y  | float  | EE units | Y coordinate of via center |
-| 3     | diameter  | float  | EE units | Via hole diameter          |
-| 4     | net       | string | -        | Net name                   |
-| 5     | radius    | float  | EE units | Via pad radius             |
-| 6     | id        | string | -        | Unique element ID          |
-| 7     | is_locked | int    | -        | 1 if locked, 0 if unlocked |
+| Index | Field        | Type   | Unit     | Description                            |
+|-------|--------------|--------|----------|----------------------------------------|
+| 0     | VIA          | -      | -        | Command identifier                     |
+| 1     | center_x     | float  | EE units | X coordinate of via center             |
+| 2     | center_y     | float  | EE units | Y coordinate of via center             |
+| 3     | pad_diameter | float  | EE units | Via pad diameter (copper annular ring) |
+| 4     | net          | string | -        | Net name                               |
+| 5     | drill_radius | float  | EE units | Drill hole radius                      |
+| 6     | id           | string | -        | Unique element ID                      |
+| 7     | is_locked    | int    | -        | 1 if locked, 0 if unlocked             |
 
 **Notes:**
 
-- Plated through-hole connecting copper layers
 - Converted to pad in KiCad with drill
 
 ---
@@ -265,8 +256,7 @@ ARC~1~3~~M 3980 3000 A 5 5 0 0 1 3985 3005~~gge200~0
 
 **Notes:**
 
-- Path uses SVG arc format: `M startX startY A radiusX radiusY rotation large-arc-flag sweep-flag endX endY`
-- Converted to KiCad fp_arc using arc computation
+- Converted to KiCad `fp_arc` using arc computation
 
 ---
 
@@ -307,7 +297,6 @@ TEXT~P~3986~3003~1~0~0~13~~7~REF**~M3986,3003~1~gge300~0
 **Notes:**
 
 - Type "N" is typically hidden in KiCad (value text on F.Fab)
-- Type "P" is the reference designator
 
 ---
 
@@ -316,7 +305,7 @@ TEXT~P~3986~3003~1~0~0~13~~7~REF**~M3986,3003~1~gge300~0
 **Format:**
 
 ```
-SOLIDREGION~layer_id~net~path~region_type~id~is_locked~[...]
+SOLIDREGION~layer_id~net~path~region_type~id~~[is_locked]
 ```
 
 **Example:**
@@ -335,7 +324,8 @@ SOLIDREGION~99~~M 3976.4252 3009.7242 L 3979.5748 3009.7242 L 3979.5748 3012.873
 | 3     | path        | string | EE units | SVG path defining the filled polygon                     |
 | 4     | region_type | string | -        | "solid", "cutout", or "npth"                             |
 | 5     | id          | string | -        | Unique element ID                                        |
-| 6     | is_locked   | int    | -        | 1 if locked, 0 if unlocked                               |
+| 6     | (empty)     | -      | -        | Always empty in observed data                            |
+| 7     | is_locked   | int    | -        | 1 if locked, 0 if unlocked (position may vary)           |
 
 **Notes:**
 
@@ -380,9 +370,8 @@ SVGNODE~{"gId":"g1_outline","attrs":{"uuid":"ed3be94b43cd45f99a7c943270463433","
 
 **Notes:**
 
-- Used to extract 3D model information
-- UUID is used to download .obj and .step files from EasyEDA servers
-- See [CMD_3D_MODEL.md](CMD_3D_MODEL.md) for detailed 3D model download and conversion documentation
+- UUID is used to download `.obj` and `.step` files from EasyEDA servers
+- See [CMD_3D_MODEL.md](CMD_3D_MODEL.md) for detailed 3D model documentation
 
 ---
 
@@ -402,9 +391,8 @@ mm = easyeda_units * 10 * 0.0254
 
 **Common stroke_width values:**
 
-- 1 EE unit → 0.254 mm (thin lines, silkscreen)
-- 3 EE units → 0.762 mm (thick lines, before our fix conversion)
-- 3 EE units → 0.194 mm (after our fix with double conversion for rectangles)
+- 1 EE unit → 0.254 mm (typical silkscreen/courtyard line)
+- 3 EE units → 0.762 mm (thick courtyard/fabrication line)
 
 ---
 
@@ -431,43 +419,3 @@ mm = easyeda_units * 10 * 0.0254
 | 99  | ComponentShapeLayer    | F.CrtYd     | Component body                           |
 | 100 | LeadShapeLayer         | (skipped)   | Decorative lead shapes — not imported    |
 | 101 | ComponentPolarityLayer | (skipped)   | Decorative polarity marks — not imported |
-
----
-
-## Recent Fixes
-
-### Fix 1: Rectangle Missing Closing Line (2025)
-
-**Problem:** The 4th line of rectangles had zero length (start == end)
-
-```python
-# Before (WRONG):
-points_start_y = [start_y, start_y, start_y + height, start_y]  # Last should be start_y + height
-
-# After (FIXED):
-points_start_y = [start_y, start_y, start_y + height, start_y + height]
-```
-
-### Fix 2: Rectangle stroke_width Not Converted (2025)
-
-**Problem:** `stroke_width` was not converted to mm in `EeFootprintRectangle.convert_to_mm()`
-
-```python
-# Before (MISSING):
-def convert_to_mm(self):
-    self.x = convert_to_mm(self.x)
-    self.y = convert_to_mm(self.y)
-    self.width = convert_to_mm(self.width)
-    self.height = convert_to_mm(self.height)
-    # stroke_width was NOT converted!
-
-# After (FIXED):
-def convert_to_mm(self):
-    self.x = convert_to_mm(self.x)
-    self.y = convert_to_mm(self.y)
-    self.width = convert_to_mm(self.width)
-    self.height = convert_to_mm(self.height)
-    self.stroke_width = convert_to_mm(self.stroke_width)  # ADDED
-```
-
-**Result:** Rectangle lines now have correct width
