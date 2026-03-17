@@ -30,6 +30,7 @@ from .parameters_kicad_symbol import (
     KiPinType,
     KiSymbol,
     KiSymbolArc,
+    KiSymbolBezier,
     KiSymbolCircle,
     KiSymbolInfo,
     KiSymbolPin,
@@ -350,8 +351,6 @@ def convert_ee_arcs(
             continue
         else:
             svg_arc = ee_arc.path[1]
-            radius = px_to_mm(max(float(svg_arc.radius_x), float(svg_arc.radius_y)))
-
             svg_sx = float(ee_arc.path[0].start_x)
             svg_sy = float(ee_arc.path[0].start_y)
             svg_ex = float(svg_arc.end_x)
@@ -381,7 +380,6 @@ def convert_ee_arcs(
             end_y = -px_to_mm(svg_sy - ee_bbox.y)
 
             ki_arc = KiSymbolArc(
-                radius=radius,
                 start_x=start_x,
                 start_y=start_y,
                 middle_x=middle_x,
@@ -440,73 +438,107 @@ def convert_ee_polygons(
 def convert_ee_paths(
     ee_paths: list[EeSymbolPath],
     ee_bbox: EeSymbolBbox,
-) -> list[KiSymbolPolygon]:
-    """Convert EasyEDA PT path shapes to KiCad polygons.
+) -> tuple[list[KiSymbolPolygon], list[KiSymbolBezier]]:
+    """Convert EasyEDA PT path shapes to KiCad polygons and bezier curves.
 
-    Supports M, L, Z commands exactly. Curve commands (C, Q, A) are approximated
-    by their endpoint so the polygon stays closed — the curve shape is lost.
-    A warning is emitted when curves are present.
+    M, L, Z → KiSymbolPolygon segments (straight lines).
+    C       → KiSymbolBezier with 4 control points [start, c1, c2, end].
+    Q       → KiSymbolBezier with 4 control points (elevated to cubic).
 
-    TODO: replace endpoint approximation with proper tessellation once KiCad
-    supports native bezier/arc in symbols or verified test cases are available.
+    Mixed paths (L + C interspersed) are split: M/L segments become polygon
+    sub-paths and each C/Q becomes a separate KiSymbolBezier, all sharing
+    endpoints so the segments stay visually connected.
+
+    KiSymbolBezier requires KiCad format >= 20220914; older versions fall back
+    to a straight line in KiSymbolBezier.export().
     """
-    kicad_polygons: list[KiSymbolPolygon] = []
+    polygons: list[KiSymbolPolygon] = []
+    beziers: list[KiSymbolBezier] = []
 
-    # (total args, 0-based index of endpoint x) per curve command
-    # C: x1 y1 x2 y2 x y   Q: x1 y1 x y   A: rx ry rot fA fS x y
-    _curve_cmd: dict[str, tuple[int, int]] = {"C": (6, 4), "Q": (4, 2), "A": (7, 5)}
+    def _ki(ex: float, ey: float) -> list[float]:
+        return [px_to_mm(ex - ee_bbox.x), -px_to_mm(ey - ee_bbox.y)]
 
     for ee_path in ee_paths:
         raw_pts = ee_path.paths.split()
+        n_before = len(polygons) + len(beziers)
 
-        x_points = []
-        y_points = []
-        has_curves = False
+        poly_pts: list[list[float]] = []  # current polygon sub-path (KiCad mm)
+        cur_x = 0.0  # current pen position in EE pixels
+        cur_y = 0.0
+        first_pt: list[float] = []  # for Z close
+
+        def _flush_poly() -> None:
+            if len(poly_pts) >= 2:
+                closed = poly_pts[0] == poly_pts[-1]
+                polygons.append(
+                    KiSymbolPolygon(
+                        points=list(poly_pts),
+                        points_number=len(poly_pts),
+                        is_closed=closed,
+                    )
+                )
+            poly_pts.clear()
 
         # Minimal SVG path parser: https://www.w3.org/TR/SVG11/paths.html#PathElement
         idx = 0
         while idx < len(raw_pts):
-            token = raw_pts[idx]
-            if token in ("M", "L"):
-                x_points.append(px_to_mm(float(raw_pts[idx + 1]) - ee_bbox.x))
-                y_points.append(-px_to_mm(float(raw_pts[idx + 2]) - ee_bbox.y))
+            cmd = raw_pts[idx]
+            if cmd in ("M", "L"):
+                cur_x = float(raw_pts[idx + 1])
+                cur_y = float(raw_pts[idx + 2])
+                pt = _ki(cur_x, cur_y)
+                poly_pts.append(pt)
+                if cmd == "M":
+                    first_pt = pt
                 idx += 3
-            elif token == "Z":  # noqa: S105 — SVG path command, not a password
-                if x_points:
-                    x_points.append(x_points[0])
-                    y_points.append(y_points[0])
+            elif cmd == "Z":
+                if poly_pts and first_pt:
+                    poly_pts.append(first_pt)
                 idx += 1
-            elif token in _curve_cmd:
-                n_args, ep_idx = _curve_cmd[token]
-                # Use the curve endpoint as straight-line approximation
-                x_points.append(px_to_mm(float(raw_pts[idx + ep_idx + 1]) - ee_bbox.x))
-                y_points.append(-px_to_mm(float(raw_pts[idx + ep_idx + 2]) - ee_bbox.y))
-                has_curves = True
-                idx += 1 + n_args
+            elif cmd == "C":
+                x1, y1 = float(raw_pts[idx + 1]), float(raw_pts[idx + 2])
+                x2, y2 = float(raw_pts[idx + 3]), float(raw_pts[idx + 4])
+                x, y = float(raw_pts[idx + 5]), float(raw_pts[idx + 6])
+                _flush_poly()
+                beziers.append(
+                    KiSymbolBezier(
+                        points=[_ki(cur_x, cur_y), _ki(x1, y1), _ki(x2, y2), _ki(x, y)]
+                    )
+                )
+                cur_x, cur_y = x, y
+                poly_pts.append(_ki(cur_x, cur_y))  # anchor for next M/L/C segment
+                idx += 7
+            elif cmd == "Q":
+                qx1, qy1 = float(raw_pts[idx + 1]), float(raw_pts[idx + 2])
+                qx, qy = float(raw_pts[idx + 3]), float(raw_pts[idx + 4])
+                # Degree elevation: quadratic → cubic
+                cx1 = cur_x + 2 / 3 * (qx1 - cur_x)
+                cy1 = cur_y + 2 / 3 * (qy1 - cur_y)
+                cx2 = qx + 2 / 3 * (qx1 - qx)
+                cy2 = qy + 2 / 3 * (qy1 - qy)
+                _flush_poly()
+                beziers.append(
+                    KiSymbolBezier(
+                        points=[
+                            _ki(cur_x, cur_y),
+                            _ki(cx1, cy1),
+                            _ki(cx2, cy2),
+                            _ki(qx, qy),
+                        ]
+                    )
+                )
+                cur_x, cur_y = qx, qy
+                poly_pts.append(_ki(cur_x, cur_y))
+                idx += 5
             else:
-                idx += 1  # unknown token or stray coordinate
+                idx += 1  # unknown cmd or stray coordinate
 
-        if has_curves:
-            logging.warning(
-                f"PT path in symbol '{ee_path.paths[:40]}...': "
-                f"curve commands (C/Q/A) approximated as straight lines — "
-                f"shape may differ from original"
-            )
+        _flush_poly()
 
-        if x_points:
-            ki_polygon = KiSymbolPolygon(
-                points=[
-                    [x_points[i], y_points[i]]
-                    for i in range(min(len(x_points), len(y_points)))
-                ],
-                points_number=min(len(x_points), len(y_points)),
-                is_closed=x_points[0] == x_points[-1] and y_points[0] == y_points[-1],
-            )
-            kicad_polygons.append(ki_polygon)
-        else:
+        if len(polygons) + len(beziers) == n_before:
             logging.warning("PT path: skipping shape with no parseable points")
 
-    return kicad_polygons
+    return polygons, beziers
 
 
 def convert_ee_texts(
@@ -560,9 +592,11 @@ def convert_to_kicad(
         ee_ellipses=ee_symbol.ellipses, ee_bbox=snapped_bbox
     )
 
-    kicad_symbol.polygons = convert_ee_paths(
+    path_polygons, path_beziers = convert_ee_paths(
         ee_paths=ee_symbol.paths, ee_bbox=snapped_bbox
     )
+    kicad_symbol.polygons = path_polygons
+    kicad_symbol.beziers = path_beziers
     kicad_symbol.polygons += convert_ee_polylines(
         ee_polylines=ee_symbol.polylines, ee_bbox=snapped_bbox
     )
