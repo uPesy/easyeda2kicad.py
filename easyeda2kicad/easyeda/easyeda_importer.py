@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-# Global imports
 import json
 import logging
 from dataclasses import fields
@@ -14,7 +13,6 @@ __all__ = [
 ]
 
 
-# Local imports
 from .easyeda_api import EasyedaApi
 from .parameters_easyeda import (
     _safe_bool,
@@ -112,11 +110,11 @@ def convert_fields_to_types(
 
 def add_easyeda_pin(pin_data: str, ee_symbol: EeSymbol) -> None:
     # Format: P~settings^^dot^^path^^name^^num^^dot_bis^^clock
-    #   settings: display~type~spice_pin_number~pos_x~pos_y~rotation~id~is_locked~length
+    #   settings: visibility~type~spice_pin_number~pos_x~pos_y~rotation~id~is_locked
     #   dot:      dot_x~dot_y
     #   path:     path~color
-    #   name:     is_displayed~pos_x~pos_y~rotation~text~font_size~font_style~color~text_anchor~id~is_locked
-    #   num:      (pin number segment, index [4][4] used for correct KiCad pin number)
+    #   name:     is_displayed~pos_x~pos_y~rotation~text~text_anchor~font~font_size
+    #   num:      show~x~y~rotation~number~text_anchor~font~font_size (index [4][4] = KiCad pin number)
     #   dot_bis:  is_displayed~circle_x~circle_y
     #   clock:    is_displayed~path
     segments = pin_data.split("^^")
@@ -296,7 +294,7 @@ def add_easyeda_polygon(polygon_data: str, ee_symbol: EeSymbol) -> None:
 
 
 def add_easyeda_path(path_data: str, ee_symbol: EeSymbol) -> None:
-    # Format: PT~paths~stroke_color~stroke_width~stroke_style~fill_color~id~locked
+    # Format: PT~path~stroke_color~stroke_width~stroke_style~fill_color~id~locked
     path_dict = dict(
         zip([f.name for f in fields(EeSymbolPath)], path_data.split("~")[1:])
     )
@@ -335,7 +333,7 @@ def add_easyeda_arc(arc_data: str, ee_symbol: EeSymbol) -> None:
 
 
 def add_easyeda_text(text_data: str, ee_symbol: EeSymbol) -> None:
-    # Format: T~type~x~y~rotation~color~font~font_size~...~text~display~...
+    # Format: T~type~x~y~rotation~color~font~font_size~stroke_width~baseline~text_anchor~role~text~display~...
     parts = text_data.split("~")
     if len(parts) < 13 or not parts[12]:
         return
@@ -368,7 +366,6 @@ easyeda_handlers = {
     "PG": add_easyeda_polygon,
     "PT": add_easyeda_path,
     "T": add_easyeda_text,
-    # "PI" : Pie, Elliptical arc seems to be not supported in KiCad
 }
 
 
@@ -608,7 +605,7 @@ class EasyedaFootprintImporter:
                 ).output
 
             elif ee_designator == "SOLIDREGION":
-                # Format: SOLIDREGION~layer~net~path~type~id~is_locked
+                # Format: SOLIDREGION~layer_id~net~path~region_type~id~~[is_locked]
                 if len(ee_fields) >= 4:
                     region = EeFootprintSolidRegion(
                         layer_id=_safe_int(ee_fields[0], 3),

@@ -288,29 +288,8 @@ class ExporterFootprintKicad:
             self.generate_kicad_footprint()
 
     def generate_kicad_footprint(self) -> None:
-        # Save raw pixel bbox before unit conversion (needed for SOLIDREGION path subtraction)
-        bbox_x_px = self.input.bbox.x
-        bbox_y_px = self.input.bbox.y
-
-        # Convert dimension from easyeda to kicad
-        self.input.bbox.convert_to_mm()
-
-        for pad in self.input.pads:
-            pad.convert_to_mm()
-        for track in self.input.tracks:
-            track.convert_to_mm()
-        for hole in self.input.holes:
-            hole.convert_to_mm()
-        for via in self.input.vias:
-            via.convert_to_mm()
-        for circle in self.input.circles:
-            circle.convert_to_mm()
-        for rectangle in self.input.rectangles:
-            rectangle.convert_to_mm()
-        for arc in self.input.arcs:
-            arc.convert_to_mm()
-        for text in self.input.texts:
-            text.convert_to_mm()
+        bbox_x_px = self.input.bbox.x_px
+        bbox_y_px = self.input.bbox.y_px
 
         ki_info = KiFootprintInfo(
             name=self.input.info.name,
@@ -322,12 +301,6 @@ class ExporterFootprintKicad:
         )
 
         if self.input.model_3d is not None:
-            # translation is already in mm (computed from EE canvas coordinates).
-            # Do NOT call convert_to_mm() — that would double-scale the values.
-
-            # XY+Z offset is fully baked into WRL vertices for all footprint types.
-            # z_min always shifted to 0.
-            # KiCad offset is always (0,0,0).
             ki_3d_model_info = Ki3dModel(
                 name=self.input.model_3d.name,
                 translation=Ki3dModelBase(
@@ -396,8 +369,9 @@ class ExporterFootprintKicad:
                     ki_pad.width = 0.005
                     ki_pad.height = 0.005
 
-                    # FIXME: Polygon anchor points are set at orientation=0; empirically correct for all
-                    # observed EasyEDA parts, but not formally verified across all pad variants.
+                    # Polygon points already carry baked-in rotation (EasyEDA applies
+                    # the pad rotation to the point coordinates before serialization,
+                    # unlike RECT pads where rotation is stored separately).
                     ki_pad.orientation = 0
 
                     # Generate polygon with coordinates relative to the base pad's position.
@@ -476,10 +450,6 @@ class ExporterFootprintKicad:
             self.output.circles.append(ki_circle)
 
         # For rectangles
-        # FIXME: RECT stroke_width is passed through fp_to_ki() even though convert_to_mm() was already called.
-        # Empirically, RECT stroke_width uses a different unit than other shapes in EasyEDA
-        # (e.g. stroke_width=3 → ~0.194 mm here vs ~0.762 mm via convert_to_mm() alone).
-        # The exact unit origin is unknown; the double conversion is a workaround.
         for ee_rectangle in self.input.rectangles:
             ki_rectangle = KiFootprintRectangle(
                 layers=(
@@ -487,7 +457,7 @@ class ExporterFootprintKicad:
                     if ee_rectangle.layer_id in KI_LAYERS
                     else "F.Fab"
                 ),
-                stroke_width=max(fp_to_ki(ee_rectangle.stroke_width), 0.01),
+                stroke_width=max(ee_rectangle.stroke_width, 0.01),
             )
 
             start_x = ee_rectangle.x - self.input.bbox.x
