@@ -2,6 +2,7 @@ from __future__ import annotations
 
 # Global imports
 from dataclasses import dataclass, field
+from typing import Optional
 
 # ---------------------------- FOOTPRINT PART ----------------------------
 
@@ -238,14 +239,14 @@ class Ki3dModel:
     name: str
     translation: Ki3dModelBase
     rotation: Ki3dModelBase
-    raw_wrl: str | None = None
+    raw_wrl: Optional[str] = None
 
 
 # ---------------- FOOTPRINT  ----------------
 @dataclass
 class KiFootprint:
     info: KiFootprintInfo
-    model_3d: Ki3dModel | None
+    model_3d: Optional[Ki3dModel]
     pads: list[KiFootprintPad] = field(default_factory=list)
     tracks: list[KiFootprintTrack] = field(default_factory=list)
     vias: list[KiFootprintVia] = field(default_factory=list)

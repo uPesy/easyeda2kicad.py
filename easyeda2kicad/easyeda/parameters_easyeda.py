@@ -3,7 +3,7 @@ from __future__ import annotations
 # Global imports
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 # Local imports
 from .svg_path_parser import parse_svg_path
@@ -11,7 +11,9 @@ from .svg_path_parser import parse_svg_path
 
 # Safe conversion helpers – used by all EasyEDA dataclass __post_init__ methods.
 # EasyEDA API returns all field values as strings; these helpers handle the conversion.
-def _safe_float(value: str | float | int | bool | None, default: float = 0.0) -> float:
+def _safe_float(
+    value: Union[str, float, int, bool, None], default: float = 0.0
+) -> float:
     if value is None or value == "":
         return default
     try:
@@ -20,7 +22,7 @@ def _safe_float(value: str | float | int | bool | None, default: float = 0.0) ->
         return default
 
 
-def _safe_int(value: str | float | int | bool | None, default: int = 0) -> int:
+def _safe_int(value: Union[str, float, int, bool, None], default: int = 0) -> int:
     if value is None or value == "":
         return default
     try:
@@ -29,7 +31,9 @@ def _safe_int(value: str | float | int | bool | None, default: int = 0) -> int:
         return default
 
 
-def _safe_bool(value: str | float | int | bool | None, default: bool = False) -> bool:
+def _safe_bool(
+    value: Union[str, float, int, bool, None], default: bool = False
+) -> bool:
     if value is None or value == "":
         return default
     if isinstance(value, bool):
@@ -60,10 +64,10 @@ class EeSymbolBbox:
 
     def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
-        self.x = _safe_float(self.x, 0.0)
-        self.y = _safe_float(self.y, 0.0)
-        self.width = _safe_float(self.width, 0.0)
-        self.height = _safe_float(self.height, 0.0)
+        self.x = _safe_float(self.x)
+        self.y = _safe_float(self.y)
+        self.width = _safe_float(self.width)
+        self.height = _safe_float(self.height)
 
 
 # ---------------- PIN ----------------
@@ -80,16 +84,16 @@ class EeSymbolPinSettings:
 
     def __post_init__(self) -> None:
         # Convert string values safely
-        self.is_displayed = _safe_bool(self.is_displayed, False)
-        self.is_locked = _safe_bool(self.is_locked, False)
-        self.rotation = _safe_int(self.rotation, 0)
-        self.pos_x = _safe_float(self.pos_x, 0.0)
-        self.pos_y = _safe_float(self.pos_y, 0.0)
+        self.is_displayed = _safe_bool(self.is_displayed)
+        self.is_locked = _safe_bool(self.is_locked)
+        self.rotation = _safe_int(self.rotation)
+        self.pos_x = _safe_float(self.pos_x)
+        self.pos_y = _safe_float(self.pos_y)
         self.spice_pin_number = (
             str(self.spice_pin_number) if self.spice_pin_number else ""
         )
         if isinstance(self.type, str):
-            type_val = _safe_int(self.type, 0)
+            type_val = _safe_int(self.type)
             self.type = (
                 EasyedaPinType(type_val)
                 if type_val in EasyedaPinType._value2member_map_
@@ -103,8 +107,8 @@ class EeSymbolPinDot:
     dot_y: float
 
     def __post_init__(self) -> None:
-        self.dot_x = _safe_float(self.dot_x, 0.0)
-        self.dot_y = _safe_float(self.dot_y, 0.0)
+        self.dot_x = _safe_float(self.dot_x)
+        self.dot_y = _safe_float(self.dot_y)
 
 
 @dataclass
@@ -130,9 +134,9 @@ class EeSymbolPinName:
 
     def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
-        self.pos_x = _safe_float(self.pos_x, 0.0)
-        self.pos_y = _safe_float(self.pos_y, 0.0)
-        self.rotation = _safe_int(self.rotation, 0)
+        self.pos_x = _safe_float(self.pos_x)
+        self.pos_y = _safe_float(self.pos_y)
+        self.rotation = _safe_int(self.rotation)
         self.is_displayed = _safe_bool(self.is_displayed, True)
         if isinstance(self.font_size, str) and "pt" in self.font_size:
             self.font_size = _safe_float(self.font_size.replace("pt", ""), 7.0)
@@ -147,8 +151,8 @@ class EeSymbolPinDotBis:
     circle_y: float
 
     def __post_init__(self) -> None:
-        self.circle_x = _safe_float(self.circle_x, 0.0)
-        self.circle_y = _safe_float(self.circle_y, 0.0)
+        self.circle_x = _safe_float(self.circle_x)
+        self.circle_y = _safe_float(self.circle_y)
         self.is_displayed = _safe_bool(self.is_displayed, True)
 
 
@@ -184,18 +188,18 @@ class EeSymbolRectangle:
     fill_color: str
     id: str
     is_locked: bool
-    rx: float | None = None
-    ry: float | None = None
+    rx: Optional[float] = None
+    ry: Optional[float] = None
 
     def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
-        self.pos_x = _safe_float(self.pos_x, 0.0)
-        self.pos_y = _safe_float(self.pos_y, 0.0)
-        self.rx = _safe_float(self.rx, 0.0) if self.rx is not None else None
-        self.ry = _safe_float(self.ry, 0.0) if self.ry is not None else None
-        self.width = _safe_float(self.width, 0.0)
-        self.height = _safe_float(self.height, 0.0)
-        self.is_locked = _safe_bool(self.is_locked, False)
+        self.pos_x = _safe_float(self.pos_x)
+        self.pos_y = _safe_float(self.pos_y)
+        self.rx = _safe_float(self.rx) if self.rx is not None else None
+        self.ry = _safe_float(self.ry) if self.ry is not None else None
+        self.width = _safe_float(self.width)
+        self.height = _safe_float(self.height)
+        self.is_locked = _safe_bool(self.is_locked)
         # Convert empty strings to None for all string fields
         for field_name in [
             "stroke_color",
@@ -224,16 +228,16 @@ class EeSymbolCircle:
 
     def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
-        self.center_x = _safe_float(self.center_x, 0.0)
-        self.center_y = _safe_float(self.center_y, 0.0)
-        self.radius = _safe_float(self.radius, 0.0)
-        self.is_locked = _safe_bool(self.is_locked, False)
+        self.center_x = _safe_float(self.center_x)
+        self.center_y = _safe_float(self.center_y)
+        self.radius = _safe_float(self.radius)
+        self.is_locked = _safe_bool(self.is_locked)
         if isinstance(self.fill_color, str):
             self.fill_color = bool(
                 self.fill_color and self.fill_color.lower() != "none"
             )
         else:
-            self.fill_color = _safe_bool(self.fill_color, False)
+            self.fill_color = _safe_bool(self.fill_color)
 
 
 # ---------------- ARC ----------------
@@ -250,13 +254,13 @@ class EeSymbolArc:
 
     def __post_init__(self) -> None:
         # Safe conversions for all fields
-        self.is_locked = _safe_bool(self.is_locked, False)
+        self.is_locked = _safe_bool(self.is_locked)
         if isinstance(self.fill_color, str):
             self.fill_color = bool(
                 self.fill_color and self.fill_color.lower() != "none"
             )
         else:
-            self.fill_color = _safe_bool(self.fill_color, False)
+            self.fill_color = _safe_bool(self.fill_color)
         if isinstance(self.path, str):
             self.path = parse_svg_path(svg_path=self.path)
 
@@ -276,17 +280,17 @@ class EeSymbolEllipse:
 
     def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
-        self.center_x = _safe_float(self.center_x, 0.0)
-        self.center_y = _safe_float(self.center_y, 0.0)
-        self.radius_x = _safe_float(self.radius_x, 0.0)
-        self.radius_y = _safe_float(self.radius_y, 0.0)
-        self.is_locked = _safe_bool(self.is_locked, False)
+        self.center_x = _safe_float(self.center_x)
+        self.center_y = _safe_float(self.center_y)
+        self.radius_x = _safe_float(self.radius_x)
+        self.radius_y = _safe_float(self.radius_y)
+        self.is_locked = _safe_bool(self.is_locked)
         if isinstance(self.fill_color, str):
             self.fill_color = bool(
                 self.fill_color and self.fill_color.lower() != "none"
             )
         else:
-            self.fill_color = _safe_bool(self.fill_color, False)
+            self.fill_color = _safe_bool(self.fill_color)
 
 
 # ---------------- POLYLINE ----------------
@@ -302,13 +306,13 @@ class EeSymbolPolyline:
 
     def __post_init__(self) -> None:
         # Safe conversions for all fields
-        self.is_locked = _safe_bool(self.is_locked, False)
+        self.is_locked = _safe_bool(self.is_locked)
         if isinstance(self.fill_color, str):
             self.fill_color = bool(
                 self.fill_color and self.fill_color.lower() != "none"
             )
         else:
-            self.fill_color = _safe_bool(self.fill_color, False)
+            self.fill_color = _safe_bool(self.fill_color)
 
 
 # ---------------- POLYGON ----------------
@@ -317,10 +321,6 @@ class EeSymbolPolygon(EeSymbolPolyline):
     pass
 
 
-# ---------------- PATH ----------------
-# Known limitation: only M/L/Z commands are converted (as polygon segments).
-# Curve commands (C/Q/A) are skipped; paths are approximated as straight-line polygons.
-# Full SVG path spec: https://www.w3.org/TR/SVG11/paths.html#PathElement
 @dataclass
 class EeSymbolPath:
     paths: str
@@ -333,13 +333,13 @@ class EeSymbolPath:
 
     def __post_init__(self) -> None:
         # Safe conversions for all fields
-        self.is_locked = _safe_bool(self.is_locked, False)
+        self.is_locked = _safe_bool(self.is_locked)
         if isinstance(self.fill_color, str):
             self.fill_color = bool(
                 self.fill_color and self.fill_color.lower() != "none"
             )
         else:
-            self.fill_color = _safe_bool(self.fill_color, False)
+            self.fill_color = _safe_bool(self.fill_color)
 
 
 # ---------------- TEXT ----------------
@@ -352,9 +352,9 @@ class EeSymbolText:
     font_size: float  # in mm
 
     def __post_init__(self) -> None:
-        self.pos_x = _safe_float(self.pos_x, 0.0)
-        self.pos_y = _safe_float(self.pos_y, 0.0)
-        self.rotation = _safe_float(self.rotation, 0.0)
+        self.pos_x = _safe_float(self.pos_x)
+        self.pos_y = _safe_float(self.pos_y)
+        self.rotation = _safe_float(self.rotation)
         self.font_size = _safe_float(self.font_size, 1.27)
 
 
@@ -403,13 +403,14 @@ class EeFootprintBbox:
     y: float
 
     def __post_init__(self) -> None:
-        # Safe conversions for all numeric fields
-        self.x = _safe_float(self.x, 0.0)
-        self.y = _safe_float(self.y, 0.0)
-
-    def convert_to_mm(self) -> None:
-        self.x = convert_to_mm(self.x)
-        self.y = convert_to_mm(self.y)
+        x_raw = _safe_float(self.x)
+        y_raw = _safe_float(self.y)
+        self.x_px: float = (
+            x_raw  # raw EE units — needed for SOLIDREGION path subtraction
+        )
+        self.y_px: float = y_raw
+        self.x = convert_to_mm(x_raw)
+        self.y = convert_to_mm(y_raw)
 
 
 @dataclass
@@ -427,30 +428,21 @@ class EeFootprintPad:
     rotation: float
     id: str
     hole_length: float
-    hole_point: str
+    slot_outline: str
     is_plated: bool
     is_locked: bool
 
     def __post_init__(self) -> None:
-        # Safe conversions for all numeric fields
-        self.center_x = _safe_float(self.center_x, 0.0)
-        self.center_y = _safe_float(self.center_y, 0.0)
-        self.width = _safe_float(self.width, 0.0)
-        self.height = _safe_float(self.height, 0.0)
-        self.hole_radius = _safe_float(self.hole_radius, 0.0)
-        self.rotation = _safe_float(self.rotation, 0.0)
-        self.hole_length = _safe_float(self.hole_length, 0.0)
-        self.layer_id = _safe_int(self.layer_id, 0)
-        self.is_locked = _safe_bool(self.is_locked, False)
+        self.center_x = convert_to_mm(_safe_float(self.center_x))
+        self.center_y = convert_to_mm(_safe_float(self.center_y))
+        self.width = convert_to_mm(_safe_float(self.width))
+        self.height = convert_to_mm(_safe_float(self.height))
+        self.hole_radius = convert_to_mm(_safe_float(self.hole_radius))
+        self.rotation = _safe_float(self.rotation)
+        self.hole_length = convert_to_mm(_safe_float(self.hole_length))
+        self.layer_id = _safe_int(self.layer_id)
+        self.is_locked = _safe_bool(self.is_locked)
         self.is_plated = _safe_bool(self.is_plated, True)
-
-    def convert_to_mm(self) -> None:
-        self.center_x = convert_to_mm(self.center_x)
-        self.center_y = convert_to_mm(self.center_y)
-        self.width = convert_to_mm(self.width)
-        self.height = convert_to_mm(self.height)
-        self.hole_radius = convert_to_mm(self.hole_radius)
-        self.hole_length = convert_to_mm(self.hole_length)
 
 
 @dataclass
@@ -463,13 +455,9 @@ class EeFootprintTrack:
     is_locked: bool
 
     def __post_init__(self) -> None:
-        # Safe conversions for all numeric fields
-        self.stroke_width = _safe_float(self.stroke_width, 0.0)
-        self.layer_id = _safe_int(self.layer_id, 0)
-        self.is_locked = _safe_bool(self.is_locked, False)
-
-    def convert_to_mm(self) -> None:
-        self.stroke_width = convert_to_mm(self.stroke_width)
+        self.stroke_width = convert_to_mm(_safe_float(self.stroke_width))
+        self.layer_id = _safe_int(self.layer_id)
+        self.is_locked = _safe_bool(self.is_locked)
 
 
 @dataclass
@@ -481,16 +469,10 @@ class EeFootprintHole:
     is_locked: bool
 
     def __post_init__(self) -> None:
-        # Safe conversions for all numeric fields
-        self.center_x = _safe_float(self.center_x, 0.0)
-        self.center_y = _safe_float(self.center_y, 0.0)
-        self.radius = _safe_float(self.radius, 0.0)
-        self.is_locked = _safe_bool(self.is_locked, False)
-
-    def convert_to_mm(self) -> None:
-        self.center_x = convert_to_mm(self.center_x)
-        self.center_y = convert_to_mm(self.center_y)
-        self.radius = convert_to_mm(self.radius)
+        self.center_x = convert_to_mm(_safe_float(self.center_x))
+        self.center_y = convert_to_mm(_safe_float(self.center_y))
+        self.radius = convert_to_mm(_safe_float(self.radius))
+        self.is_locked = _safe_bool(self.is_locked)
 
 
 @dataclass
@@ -504,18 +486,11 @@ class EeFootprintVia:
     is_locked: bool
 
     def __post_init__(self) -> None:
-        # Safe conversions for all numeric fields
-        self.center_x = _safe_float(self.center_x, 0.0)
-        self.center_y = _safe_float(self.center_y, 0.0)
-        self.diameter = _safe_float(self.diameter, 0.0)
-        self.radius = _safe_float(self.radius, 0.0)
-        self.is_locked = _safe_bool(self.is_locked, False)
-
-    def convert_to_mm(self) -> None:
-        self.center_x = convert_to_mm(self.center_x)
-        self.center_y = convert_to_mm(self.center_y)
-        self.radius = convert_to_mm(self.radius)
-        self.diameter = convert_to_mm(self.diameter)
+        self.center_x = convert_to_mm(_safe_float(self.center_x))
+        self.center_y = convert_to_mm(_safe_float(self.center_y))
+        self.diameter = convert_to_mm(_safe_float(self.diameter))
+        self.radius = convert_to_mm(_safe_float(self.radius))
+        self.is_locked = _safe_bool(self.is_locked)
 
 
 @dataclass
@@ -529,18 +504,12 @@ class EeFootprintCircle:
     is_locked: bool
 
     def __post_init__(self) -> None:
-        self.cx = _safe_float(self.cx, 0.0)
-        self.cy = _safe_float(self.cy, 0.0)
-        self.radius = _safe_float(self.radius, 0.0)
-        self.stroke_width = _safe_float(self.stroke_width, 0.0)
-        self.layer_id = _safe_int(self.layer_id, 0)
-        self.is_locked = _safe_bool(self.is_locked, False)
-
-    def convert_to_mm(self) -> None:
-        self.cx = convert_to_mm(self.cx)
-        self.cy = convert_to_mm(self.cy)
-        self.radius = convert_to_mm(self.radius)
-        self.stroke_width = convert_to_mm(self.stroke_width)
+        self.cx = convert_to_mm(_safe_float(self.cx))
+        self.cy = convert_to_mm(_safe_float(self.cy))
+        self.radius = convert_to_mm(_safe_float(self.radius))
+        self.stroke_width = convert_to_mm(_safe_float(self.stroke_width))
+        self.layer_id = _safe_int(self.layer_id)
+        self.is_locked = _safe_bool(self.is_locked)
 
 
 @dataclass
@@ -549,27 +518,19 @@ class EeFootprintRectangle:
     y: float
     width: float
     height: float
-    stroke_width: float
-    id: str
     layer_id: int
+    id: str
     is_locked: bool
+    stroke_width: float
 
     def __post_init__(self) -> None:
-        # Safe conversions for all numeric fields
-        self.x = _safe_float(self.x, 0.0)
-        self.y = _safe_float(self.y, 0.0)
-        self.width = _safe_float(self.width, 0.0)
-        self.height = _safe_float(self.height, 0.0)
-        self.stroke_width = _safe_float(self.stroke_width, 0.0)
-        self.layer_id = _safe_int(self.layer_id, 0)
-        self.is_locked = _safe_bool(self.is_locked, False)
-
-    def convert_to_mm(self) -> None:
-        self.x = convert_to_mm(self.x)
-        self.y = convert_to_mm(self.y)
-        self.width = convert_to_mm(self.width)
-        self.height = convert_to_mm(self.height)
-        self.stroke_width = convert_to_mm(self.stroke_width)
+        self.x = convert_to_mm(_safe_float(self.x))
+        self.y = convert_to_mm(_safe_float(self.y))
+        self.width = convert_to_mm(_safe_float(self.width))
+        self.height = convert_to_mm(_safe_float(self.height))
+        self.stroke_width = convert_to_mm(_safe_float(self.stroke_width))
+        self.layer_id = _safe_int(self.layer_id)
+        self.is_locked = _safe_bool(self.is_locked)
 
 
 @dataclass
@@ -583,12 +544,9 @@ class EeFootprintArc:
     is_locked: bool
 
     def __post_init__(self) -> None:
-        self.stroke_width = _safe_float(self.stroke_width, 0.0)
-        self.layer_id = _safe_int(self.layer_id, 0)
-        self.is_locked = _safe_bool(self.is_locked, False)
-
-    def convert_to_mm(self) -> None:
-        self.stroke_width = convert_to_mm(self.stroke_width)
+        self.stroke_width = convert_to_mm(_safe_float(self.stroke_width))
+        self.layer_id = _safe_int(self.layer_id)
+        self.is_locked = _safe_bool(self.is_locked)
 
 
 @dataclass
@@ -619,21 +577,14 @@ class EeFootprintText:
     is_locked: bool
 
     def __post_init__(self) -> None:
-        # Safe conversions for all numeric fields
-        self.center_x = _safe_float(self.center_x, 0.0)
-        self.center_y = _safe_float(self.center_y, 0.0)
-        self.stroke_width = _safe_float(self.stroke_width, 0.0)
-        self.rotation = _safe_int(self.rotation, 0)
-        self.font_size = _safe_float(self.font_size, 7.0)
-        self.layer_id = _safe_int(self.layer_id, 0)
+        self.center_x = convert_to_mm(_safe_float(self.center_x))
+        self.center_y = convert_to_mm(_safe_float(self.center_y))
+        self.stroke_width = convert_to_mm(_safe_float(self.stroke_width))
+        self.rotation = _safe_int(self.rotation)
+        self.font_size = convert_to_mm(_safe_float(self.font_size, 7.0))
+        self.layer_id = _safe_int(self.layer_id)
         self.is_displayed = _safe_bool(self.is_displayed, True)
-        self.is_locked = _safe_bool(self.is_locked, False)
-
-    def convert_to_mm(self) -> None:
-        self.center_x = convert_to_mm(self.center_x)
-        self.center_y = convert_to_mm(self.center_y)
-        self.stroke_width = convert_to_mm(self.stroke_width)
-        self.font_size = convert_to_mm(self.font_size)
+        self.is_locked = _safe_bool(self.is_locked)
 
 
 # ---------------- FOOTPRINT ----------------
@@ -659,9 +610,9 @@ class Ee3dModelBase:
 
     def __post_init__(self) -> None:
         # Safe conversions for all numeric fields
-        self.x = _safe_float(self.x, 0.0)
-        self.y = _safe_float(self.y, 0.0)
-        self.z = _safe_float(self.z, 0.0)
+        self.x = _safe_float(self.x)
+        self.y = _safe_float(self.y)
+        self.z = _safe_float(self.z)
 
 
 @dataclass
@@ -670,15 +621,15 @@ class Ee3dModel:
     uuid: str
     translation: Ee3dModelBase
     rotation: Ee3dModelBase
-    raw_obj: str | None = None
-    step: bytes | None = None
+    raw_obj: Optional[str] = None
+    step: Optional[bytes] = None
 
 
 @dataclass
 class EeFootprint:
     info: EeFootprintInfo
     bbox: EeFootprintBbox
-    model_3d: Ee3dModel | None
+    model_3d: Optional[Ee3dModel]
     pads: list[EeFootprintPad] = field(default_factory=list)
     tracks: list[EeFootprintTrack] = field(default_factory=list)
     holes: list[EeFootprintHole] = field(default_factory=list)

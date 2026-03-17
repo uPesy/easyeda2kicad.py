@@ -3,6 +3,7 @@ from __future__ import annotations
 # Global imports
 import itertools
 import re
+from typing import Union
 import textwrap
 from dataclasses import dataclass, field, fields
 from enum import Enum, auto
@@ -147,8 +148,8 @@ class KiSymbolInfo:
     keywords: str = ""
     description: str = ""
     custom_fields: dict[str, str] = field(default_factory=dict)
-    y_low: int | float = 0
-    y_high: int | float = 0
+    y_low: Union[int, float] = 0
+    y_high: Union[int, float] = 0
 
     def export(self, version: int = KICAD_SYM_VERSION_20211014) -> list[str]:
         description_key = (
@@ -307,8 +308,8 @@ class KiSymbolPin:
     length: float
     type: KiPinType
     orientation: float
-    pos_x: int | float
-    pos_y: int | float
+    pos_x: Union[int, float]
+    pos_y: Union[int, float]
 
     def export(self, version: int = KICAD_SYM_VERSION_20211014) -> str:
         return """
@@ -337,10 +338,10 @@ class KiSymbolPin:
 # ---------------- RECTANGLE ----------------
 @dataclass
 class KiSymbolRectangle:
-    pos_x0: int | float = 0
-    pos_y0: int | float = 0
-    pos_x1: int | float = 0
-    pos_y1: int | float = 0
+    pos_x0: Union[int, float] = 0
+    pos_y0: Union[int, float] = 0
+    pos_x1: Union[int, float] = 0
+    pos_y1: Union[int, float] = 0
 
     def export(self, version: int = KICAD_SYM_VERSION_20211014) -> str:
         return """
@@ -386,9 +387,9 @@ class KiSymbolPolygon:
 # ---------------- CIRCLE ----------------
 @dataclass
 class KiSymbolCircle:
-    pos_x: int | float = 0
-    pos_y: int | float = 0
-    radius: int | float = 0
+    pos_x: Union[int, float] = 0
+    pos_y: Union[int, float] = 0
+    radius: Union[int, float] = 0
     background_filling: bool = False
 
     def export(self, version: int = KICAD_SYM_VERSION_20211014) -> str:
@@ -414,7 +415,6 @@ class KiSymbolCircle:
 # ---------------- ARC ----------------
 @dataclass
 class KiSymbolArc:
-    radius: float = 0
     angle_start: float = 0.0
     angle_end: float = 0.0
     start_x: float = 0
@@ -456,18 +456,25 @@ class KiSymbolBezier:
     is_closed: bool = False
 
     def export(self, version: int = KICAD_SYM_VERSION_20211014) -> str:
-        return """
+        fmt_pts = " ".join(f"(xy {p[0]:.2f} {p[1]:.2f})" for p in self.points)
+        fill = KiBoxFill.background.name if self.is_closed else KiBoxFill.none.name
+        lw = KiSymbolDefaults.DEFAULT_BOX_LINE_WIDTH.value
+        if version >= KICAD_SYM_VERSION_20220914:
+            return f"""
             (bezier
-              (pts
-                {polyline_path}
-              )
-              (stroke (width {line_width}) (type default))
+              (pts {fmt_pts})
+              (stroke (width {lw}) (type default))
               (fill (type {fill}))
-            )""".format(
-            polyline_path="".join([f" (xy {pts[0]} {pts[1]})" for pts in self.points]),
-            line_width=KiSymbolDefaults.DEFAULT_BOX_LINE_WIDTH.value,
-            fill=KiBoxFill.background.name if self.is_closed else KiBoxFill.none.name,
-        )
+            )"""
+        # Format < 20220914 has no (bezier ...) — emit straight line start→end
+        start = self.points[0] if self.points else [0, 0]
+        end = self.points[-1] if len(self.points) > 1 else start
+        return f"""
+            (polyline
+              (pts (xy {start[0]:.2f} {start[1]:.2f}) (xy {end[0]:.2f} {end[1]:.2f}))
+              (stroke (width {lw}) (type default))
+              (fill (type {fill}))
+            )"""
 
 
 # ---------------- TEXT ----------------
@@ -574,4 +581,4 @@ class KiSymbol:
             ),
             pins=textwrap.indent(textwrap.dedent("".join(sym_pins)), "  " * 3),
         )
-        return re.sub(r"\n\s*\n", "\n", component_data, re.MULTILINE)
+        return re.sub(r"\n\s*\n", "\n", component_data, flags=re.MULTILINE)
