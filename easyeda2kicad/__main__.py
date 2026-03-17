@@ -15,6 +15,7 @@ from .easyeda.easyeda_importer import (
     EasyedaFootprintImporter,
     EasyedaSymbolImporter,
 )
+from .easyeda.easyeda_svg_renderer import render_footprint_svg, render_symbol_svg
 from .easyeda.parameters_easyeda import EeSymbol
 from .kicad.export_kicad_3d_model import Exporter3dModelKicad
 from .kicad.export_kicad_footprint import ExporterFootprintKicad
@@ -72,6 +73,13 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--full",
         help="Get the symbol, footprint and 3d model of this id",
+        required=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--svg",
+        help="Export symbol and footprint as SVG (from raw API data, no KiCad conversion)",
         required=False,
         action="store_true",
     )
@@ -139,11 +147,14 @@ def valid_arguments(arguments: dict[str, Any]) -> bool:
     if arguments["full"]:
         arguments["symbol"], arguments["footprint"], arguments["3d"] = True, True, True
 
-    if not any([arguments["symbol"], arguments["footprint"], arguments["3d"]]):
+    if not any(
+        [arguments["symbol"], arguments["footprint"], arguments["3d"], arguments["svg"]]
+    ):
         logging.error(
             "Missing action arguments\n"
             "  easyeda2kicad --lcsc_id=C2040 --footprint\n"
-            "  easyeda2kicad --lcsc_id=C2040 --symbol"
+            "  easyeda2kicad --lcsc_id=C2040 --symbol\n"
+            "  easyeda2kicad --lcsc_id=C2040 --svg"
         )
         return False
 
@@ -262,6 +273,25 @@ def _process_component(
             f"Created Kicad footprint for ID: {component_id}\n"
             f"       Footprint name: {easyeda_footprint.info.name}\n"
             f"       Footprint path: {footprint_path / footprint_filename}"
+        )
+
+    if arguments["svg"]:
+        # ---------------- SVG ----------------
+        svg_dir = Path(f"{output}.svgs")
+        svg_dir.mkdir(parents=True, exist_ok=True)
+
+        sym_svg_path = svg_dir / f"{component_id}_symbol.svg"
+        sym_svg = render_symbol_svg(cad_data)
+        sym_svg_path.write_text(sym_svg, encoding="utf-8")
+        logging.info(
+            f"Created SVG symbol for ID: {component_id}\n       Path: {sym_svg_path}"
+        )
+
+        fp_svg_path = svg_dir / f"{component_id}_footprint.svg"
+        fp_svg = render_footprint_svg(cad_data)
+        fp_svg_path.write_text(fp_svg, encoding="utf-8")
+        logging.info(
+            f"Created SVG footprint for ID: {component_id}\n       Path: {fp_svg_path}"
         )
 
     if arguments["3d"]:
