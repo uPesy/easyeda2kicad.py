@@ -8,59 +8,110 @@ from typing import List
 
 # ---------------------------- FOOTPRINT PART ----------------------------
 
-KI_MODULE_INFO = "(module {package_lib}:{package_name} (layer F.Cu) (tedit {edit})\n"
+KI_FOOTPRINT_HEADER = (
+    '(footprint "{package_name}"\n'
+    "\t(version 20240108)\n"
+    '\t(generator "easyeda2kicad")\n'
+    '\t(generator_version "0.8.0")\n'
+    '\t(layer "F.Cu")\n'
+)
 KI_DESCRIPTION = (
     '\t(descr "{datasheet_link}, generated with easyeda2kicad.py on {date}")\n'
 )
 KI_TAGS_INFO = '\t(tags "{tag}")\n'
 KI_FP_TYPE = "\t(attr {component_type})\n"
-KI_REFERENCE = (
-    "\t(fp_text reference REF** (at {pos_x} {pos_y}) (layer F.SilkS)\n\t\t(effects"
-    " (font (size 1 1) (thickness 0.15)))\n\t)\n"
+KI_PROPERTY_REFERENCE = (
+    '\t(property "Reference" "REF**"\n'
+    "\t\t(at {pos_x} {pos_y} 0)\n"
+    '\t\t(layer "F.SilkS")\n'
+    "\t\t(effects (font (size 1 1) (thickness 0.15)))\n\t)\n"
 )
-KI_PACKAGE_VALUE = (
-    "\t(fp_text value {package_name} (at {pos_x} {pos_y}) (layer F.Fab)\n\t\t(effects"
-    " (font (size 1 1) (thickness 0.15)))\n\t)\n"
+KI_PROPERTY_VALUE = (
+    '\t(property "Value" "{package_name}"\n'
+    "\t\t(at {pos_x} {pos_y} 0)\n"
+    '\t\t(layer "F.Fab")\n'
+    "\t\t(effects (font (size 1 1) (thickness 0.15)))\n\t)\n"
+)
+KI_PROPERTY_DATASHEET = (
+    '\t(property "Datasheet" ""\n'
+    "\t\t(at 0 0 0)\n"
+    '\t\t(layer "F.Fab")\n'
+    "\t\t(hide yes)\n"
+    "\t\t(effects (font (size 1.27 1.27)))\n\t)\n"
+)
+KI_PROPERTY_DESCRIPTION = (
+    '\t(property "Description" ""\n'
+    "\t\t(at 0 0 0)\n"
+    '\t\t(layer "F.Fab")\n'
+    "\t\t(hide yes)\n"
+    "\t\t(effects (font (size 1.27 1.27)))\n\t)\n"
 )
 KI_FAB_REF = (
-    "\t(fp_text user %R (at 0 0) (layer F.Fab)\n\t\t(effects (font (size 1 1)"
-    " (thickness 0.15)))\n\t)\n"
+    '\t(fp_text user "${REFERENCE}"\n'
+    "\t\t(at 0 0 0)\n"
+    '\t\t(layer "F.Fab")\n'
+    "\t\t(effects (font (size 1 1) (thickness 0.15)))\n\t)\n"
 )
-KI_END_FILE = ")"
+KI_END_FILE = ")\n"
 
-KI_PAD = (
-    "\t(pad {number} {type} {shape} (at {pos_x:.2f} {pos_y:.2f} {orientation:.2f})"
-    " (size {width:.2f} {height:.2f}) (layers {layers}){drill}{polygon})\n"
-)
 KI_LINE = (
-    "\t(fp_line (start {start_x:.2f} {start_y:.2f}) (end {end_x:.2f} {end_y:.2f})"
-    " (layer {layers}) (width {stroke_width:.2f}))\n"
+    "\t(fp_line\n"
+    "\t\t(start {start_x:.2f} {start_y:.2f})\n"
+    "\t\t(end {end_x:.2f} {end_y:.2f})\n"
+    "\t\t(stroke (width {stroke_width:.2f}) (type solid))\n"
+    '\t\t(layer "{layers}")\n'
+    "\t)\n"
 )
 KI_HOLE = (
-    '\t(pad "" thru_hole circle (at {pos_x:.2f} {pos_y:.2f}) (size {size:.2f}'
-    " {size:.2f}) (drill {size:.2f}) (layers *.Cu *.Mask))\n"
+    '\t(pad "" thru_hole circle\n'
+    "\t\t(at {pos_x:.2f} {pos_y:.2f})\n"
+    "\t\t(size {size:.2f} {size:.2f})\n"
+    "\t\t(drill {size:.2f})\n"
+    '\t\t(layers "*.Cu" "*.Mask")\n'
+    "\t\t(remove_unused_layers no)\n"
+    "\t)\n"
 )
 KI_VIA = (
-    '\t(pad "" thru_hole circle (at {pos_x:.2f} {pos_y:.2f}) (size {diameter:.2f}'
-    " {diameter:.2f}) (drill {size:.2f}) (layers *.Cu *.Paste *.Mask))\n"
+    '\t(pad "" thru_hole circle\n'
+    "\t\t(at {pos_x:.2f} {pos_y:.2f})\n"
+    "\t\t(size {diameter:.2f} {diameter:.2f})\n"
+    "\t\t(drill {size:.2f})\n"
+    '\t\t(layers "*.Cu" "*.Paste" "*.Mask")\n'
+    "\t\t(remove_unused_layers no)\n"
+    "\t)\n"
 )
 KI_CIRCLE = (
-    "\t(fp_circle (center {cx:.2f} {cy:.2f}) (end {end_x:.2f} {end_y:.2f}) (layer"
-    " {layers}) (width {stroke_width:.2f}))\n"
+    "\t(fp_circle\n"
+    "\t\t(center {cx:.2f} {cy:.2f})\n"
+    "\t\t(end {end_x:.2f} {end_y:.2f})\n"
+    "\t\t(stroke (width {stroke_width:.2f}) (type solid))\n"
+    "\t\t(fill no)\n"
+    '\t\t(layer "{layers}")\n'
+    "\t)\n"
 )
 KI_ARC = (
-    "\t(fp_arc (start {start_x:.2f} {start_y:.2f}) (end {end_x:.2f} {end_y:.2f}) (angle"
-    " {angle:.2f}) (layer {layers}) (width {stroke_width:.2f}))\n"
+    "\t(fp_arc\n"
+    "\t\t(start {start_x:.2f} {start_y:.2f})\n"
+    "\t\t(mid {mid_x:.2f} {mid_y:.2f})\n"
+    "\t\t(end {end_x:.2f} {end_y:.2f})\n"
+    "\t\t(stroke (width {stroke_width:.2f}) (type solid))\n"
+    '\t\t(layer "{layers}")\n'
+    "\t)\n"
 )
 KI_TEXT = (
-    "\t(fp_text user {text} (at {pos_x:.2f} {pos_y:.2f} {orientation:.2f}) (layer"
-    " {layers}){display}\n\t\t(effects (font (size {font_size:.2f} {font_size:.2f})"
+    "\t(fp_text user {text}\n"
+    "\t\t(at {pos_x:.2f} {pos_y:.2f} {orientation:.2f})\n"
+    '\t\t(layer "{layers}")\n'
+    "{display}"
+    "\t\t(effects (font (size {font_size:.2f} {font_size:.2f})"
     " (thickness {thickness:.2f})) (justify left{mirror}))\n\t)\n"
 )
 KI_MODEL_3D = (
-    '\t(model "{file_3d}"\n\t\t(offset (xyz {pos_x:.3f} {pos_y:.3f}'
-    " {pos_z:.3f}))\n\t\t(scale (xyz 1 1 1))\n\t\t(rotate (xyz {rot_x:.0f} {rot_y:.0f}"
-    " {rot_z:.0f}))\n\t)\n"
+    '\t(model "{file_3d}"\n'
+    "\t\t(offset (xyz {pos_x:.3f} {pos_y:.3f} {pos_z:.3f}))\n"
+    "\t\t(scale (xyz 1 1 1))\n"
+    "\t\t(rotate (xyz {rot_x:.0f} {rot_y:.0f} {rot_z:.0f}))\n"
+    "\t)\n"
 )
 
 
@@ -73,21 +124,21 @@ KI_PAD_SHAPE = {
     "POLYGON": "custom",
 }
 KI_PAD_LAYER = {
-    1: "F.Cu F.Paste F.Mask",
-    2: "B.Cu B.Paste B.Mask",
-    3: "F.SilkS",
-    11: "*.Cu *.Paste *.Mask",
-    13: "F.Fab",
-    15: "Dwgs.User",
+    1: '"F.Cu" "F.Paste" "F.Mask"',
+    2: '"B.Cu" "B.Paste" "B.Mask"',
+    3: '"F.SilkS"',
+    11: '"*.Cu" "*.Paste" "*.Mask"',
+    13: '"F.Fab"',
+    15: '"Dwgs.User"',
 }
 
 KI_PAD_LAYER_THT = {
-    1: "F.Cu F.Mask",
-    2: "B.Cu B.Mask",
-    3: "F.SilkS",
-    11: "*.Cu *.Mask",
-    13: "F.Fab",
-    15: "Dwgs.User",
+    1: '"F.Cu" "F.Mask"',
+    2: '"B.Cu" "B.Mask"',
+    3: '"F.SilkS"',
+    11: '"*.Cu" "*.Mask"',
+    13: '"F.Fab"',
+    15: '"Dwgs.User"',
 }
 
 KI_LAYERS = {

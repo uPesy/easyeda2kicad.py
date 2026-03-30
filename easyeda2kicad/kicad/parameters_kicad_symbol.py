@@ -217,7 +217,6 @@ class KiSymbolInfo:
                 (property
                   "{key}"
                   "{value}"
-                  (id {id_})
                   (at 0 {pos_y:.2f} 0)
                   (effects (font (size {font_size} {font_size}) {style}) {hide})
                 )"""
@@ -230,7 +229,7 @@ class KiSymbolInfo:
             property_template.format(
                 key="Reference",
                 value=self.prefix,
-                id_=0,
+
                 pos_y=self.y_high + field_offset_y,
                 font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
                 style="",
@@ -239,7 +238,7 @@ class KiSymbolInfo:
             property_template.format(
                 key="Value",
                 value=self.name,
-                id_=1,
+
                 pos_y=self.y_low - field_offset_y,
                 font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
                 style="",
@@ -252,7 +251,7 @@ class KiSymbolInfo:
                 property_template.format(
                     key="Footprint",
                     value=self.package,
-                    id_=2,
+
                     pos_y=self.y_low - field_offset_y,
                     font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
                     style="",
@@ -265,7 +264,7 @@ class KiSymbolInfo:
                 property_template.format(
                     key="Datasheet",
                     value=self.datasheet,
-                    id_=3,
+
                     pos_y=self.y_low - field_offset_y,
                     font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
                     style="",
@@ -278,7 +277,7 @@ class KiSymbolInfo:
                 property_template.format(
                     key="Manufacturer",
                     value=self.manufacturer,
-                    id_=4,
+
                     pos_y=self.y_low - field_offset_y,
                     font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
                     style="",
@@ -291,7 +290,7 @@ class KiSymbolInfo:
                 property_template.format(
                     key="LCSC Part",
                     value=self.lcsc_id,
-                    id_=5,
+
                     pos_y=self.y_low - field_offset_y,
                     font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
                     style="",
@@ -304,7 +303,7 @@ class KiSymbolInfo:
                 property_template.format(
                     key="JLC Part",
                     value=self.jlc_id,
-                    id_=6,
+
                     pos_y=self.y_low - field_offset_y,
                     font_size=KiExportConfigV6.PROPERTY_FONT_SIZE.value,
                     style="",

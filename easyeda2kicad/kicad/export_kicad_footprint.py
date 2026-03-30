@@ -1,6 +1,6 @@
 # Global imports
 import logging
-from math import acos, cos, isnan, pi, sin, sqrt
+from math import acos, atan2, cos, isnan, pi, sin, sqrt
 from typing import Tuple, Union
 
 from easyeda2kicad.easyeda.parameters_easyeda import ee_footprint
@@ -277,8 +277,9 @@ class ExporterFootprintKicad:
                         for i in range(0, len(point_list), 2)
                     )
                     ki_pad.polygon = (
-                        "\n\t\t(primitives \n\t\t\t(gr_poly \n\t\t\t\t(pts"
-                        f" {path}\n\t\t\t\t) \n\t\t\t\t(width 0.1) \n\t\t\t)\n\t\t)\n\t"
+                        "\n\t\t(primitives\n\t\t\t(gr_poly\n\t\t\t\t(pts"
+                        f" {path}\n\t\t\t\t)\n\t\t\t\t(stroke (width 0.1) (type solid))"
+                        "\n\t\t\t\t(fill yes)\n\t\t\t)\n\t\t)"
                     )
 
             self.output.pads.append(ki_pad)
@@ -286,8 +287,8 @@ class ExporterFootprintKicad:
         # For tracks
         for ee_track in self.input.tracks:
             ki_track = KiFootprintTrack(
-                layers=KI_PAD_LAYER[ee_track.layer_id]
-                if ee_track.layer_id in KI_PAD_LAYER
+                layers=KI_LAYERS[ee_track.layer_id]
+                if ee_track.layer_id in KI_LAYERS
                 else "F.Fab",
                 stroke_width=max(ee_track.stroke_width, 0.01),
             )
@@ -350,8 +351,8 @@ class ExporterFootprintKicad:
         # For rectangles
         for ee_rectangle in self.input.rectangles:
             ki_rectangle = KiFootprintRectangle(
-                layers=KI_PAD_LAYER[ee_rectangle.layer_id]
-                if ee_rectangle.layer_id in KI_PAD_LAYER
+                layers=KI_LAYERS[ee_rectangle.layer_id]
+                if ee_rectangle.layer_id in KI_LAYERS
                 else "F.Fab",
                 stroke_width=max(ee_rectangle.stroke_width, 0.01),
             )
@@ -463,13 +464,57 @@ class ExporterFootprintKicad:
     def get_ki_footprint(self) -> KiFootprint:
         return self.output
 
+    def _format_pad(self, pad: KiFootprintPad) -> str:
+        lines = []
+        lines.append(f'\t(pad "{pad.number}" {pad.type} {pad.shape}')
+        lines.append(f"\t\t(at {pad.pos_x:.2f} {pad.pos_y:.2f} {pad.orientation:.2f})")
+        lines.append(f"\t\t(size {pad.width:.2f} {pad.height:.2f})")
+        if pad.drill:
+            lines.append(f"\t\t{pad.drill}")
+        lines.append(f"\t\t(layers {pad.layers})")
+        if pad.type == "thru_hole":
+            lines.append("\t\t(remove_unused_layers no)")
+        if pad.polygon:
+            lines.append(pad.polygon)
+        lines.append("\t)")
+        return "\n".join(lines) + "\n"
+
+    def _arc_to_three_points(self, arc: KiFootprintArc) -> dict:
+        # In old format: start_x/y = center, end_x/y = arc start point, angle = sweep
+        cx, cy = arc.start_x, arc.start_y
+        sx, sy = arc.end_x, arc.end_y
+        radius = sqrt((sx - cx) ** 2 + (sy - cy) ** 2)
+
+        if radius == 0:
+            return {
+                "start_x": sx, "start_y": sy,
+                "mid_x": sx, "mid_y": sy,
+                "end_x": sx, "end_y": sy,
+                "stroke_width": arc.stroke_width,
+                "layers": arc.layers,
+            }
+
+        start_angle = atan2(sy - cy, sx - cx)
+        sweep_rad = (arc.angle / 180.0) * pi
+        mid_angle = start_angle + sweep_rad / 2
+        end_angle = start_angle + sweep_rad
+
+        return {
+            "start_x": sx,
+            "start_y": sy,
+            "mid_x": round(cx + radius * cos(mid_angle), 2),
+            "mid_y": round(cy + radius * sin(mid_angle), 2),
+            "end_x": round(cx + radius * cos(end_angle), 2),
+            "end_y": round(cy + radius * sin(end_angle), 2),
+            "stroke_width": arc.stroke_width,
+            "layers": arc.layers,
+        }
+
     def export(self, footprint_full_path: str, model_3d_path: str) -> None:
         ki = self.output
         ki_lib = ""
 
-        ki_lib += KI_MODULE_INFO.format(
-            package_lib="easyeda2kicad", package_name=ki.info.name, edit="5DC5F6A4"
-        )
+        ki_lib += KI_FOOTPRINT_HEADER.format(package_name=ki.info.name)
 
         if ki.info.fp_type:
             ki_lib += KI_FP_TYPE.format(
@@ -480,12 +525,12 @@ class ExporterFootprintKicad:
         y_low = min(pad.pos_y for pad in ki.pads)
         y_high = max(pad.pos_y for pad in ki.pads)
 
-        ki_lib += KI_REFERENCE.format(pos_x="0", pos_y=y_low - 4)
-
-        ki_lib += KI_PACKAGE_VALUE.format(
+        ki_lib += KI_PROPERTY_REFERENCE.format(pos_x="0", pos_y=y_low - 4)
+        ki_lib += KI_PROPERTY_VALUE.format(
             package_name=ki.info.name, pos_x="0", pos_y=y_high + 4
         )
-        ki_lib += KI_FAB_REF
+        ki_lib += KI_PROPERTY_DATASHEET
+        ki_lib += KI_PROPERTY_DESCRIPTION
 
         # ---------------------------------------
 
@@ -500,8 +545,21 @@ class ExporterFootprintKicad:
                     stroke_width=track.stroke_width,
                 )
 
+        for circle in ki.circles:
+            ki_lib += KI_CIRCLE.format(**vars(circle))
+
+        ki_lib += KI_FAB_REF
+
+        for text in ki.texts:
+            text_vars = vars(text).copy()
+            if text_vars["display"]:
+                text_vars["display"] = "\t\t(hide yes)\n"
+            else:
+                text_vars["display"] = ""
+            ki_lib += KI_TEXT.format(**text_vars)
+
         for pad in ki.pads:
-            ki_lib += KI_PAD.format(**vars(pad))
+            ki_lib += self._format_pad(pad)
 
         for hole in ki.holes:
             ki_lib += KI_HOLE.format(**vars(hole))
@@ -509,14 +567,11 @@ class ExporterFootprintKicad:
         for via in ki.vias:
             ki_lib += KI_VIA.format(**vars(via))
 
-        for circle in ki.circles:
-            ki_lib += KI_CIRCLE.format(**vars(circle))
-
         for arc in ki.arcs:
-            ki_lib += KI_ARC.format(**vars(arc))
+            arc_data = self._arc_to_three_points(arc)
+            ki_lib += KI_ARC.format(**arc_data)
 
-        for text in ki.texts:
-            ki_lib += KI_TEXT.format(**vars(text))
+        ki_lib += "\t(embedded_fonts no)\n"
 
         if ki.model_3d is not None:
             ki_lib += KI_MODEL_3D.format(

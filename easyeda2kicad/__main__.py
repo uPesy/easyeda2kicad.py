@@ -185,8 +185,9 @@ def valid_arguments(arguments: dict) -> bool:
                 dedent(
                     """\
                 (kicad_symbol_lib
-                  (version 20211014)
-                  (generator https://github.com/uPesy/easyeda2kicad.py)
+                  (version 20240108)
+                  (generator "easyeda2kicad")
+                  (generator_version "0.8.0")
                 )"""
                 )
                 if kicad_version == KicadVersion.v6
