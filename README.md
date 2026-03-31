@@ -1,44 +1,65 @@
-# easyeda2kicad v0.8.0
+# easyeda2kicad (Wadam100 fork)
 
-_________________
-[![PyPI version](https://badge.fury.io/py/easyeda2kicad.svg)](https://badge.fury.io/py/easyeda2kicad)
-[![License](https://img.shields.io/github/license/upesy/easyeda2kicad.py.svg)](https://pypi.org/project/isort/)
-[![Downloads](https://pepy.tech/badge/easyeda2kicad)](https://pepy.tech/project/easyeda2kicad)
-![Python versions](https://img.shields.io/pypi/pyversions/easyeda2kicad.svg)
-[![Git hook: pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
-[![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
-_________________
+A Python script that converts any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a KiCad library including **3D model** in color. This fork includes updates for **KiCad 10** output format support.
 
+This tool will speed up your PCB design workflow especially when using [JLCPCB SMT assembly services](https://jlcpcb.com/caa).
 
-A Python script that converts any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a Kicad library including **3D model** in color. This tool will speed up your PCB design workflow especially when using [JLCPCB SMT assembly services](https://jlcpcb.com/caa). **It supports library formats for both Kicad v6.x and Kicad v5.x.**
+> Based on the original [uPesy/easyeda2kicad.py](https://github.com/uPesy/easyeda2kicad.py) project.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/demo_symbol.png" width="500">
-</p>
-<div align="center">
-  <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/demo_footprint.png" width="500">
-</div>
+---
 
+## Prerequisites
 
-## 🎆 Sponsor and Support
+- **Python 3.6** or higher
+- **pip** (Python package manager)
+- **Git**
 
-If this tool has saved you a lot of time when designing a PCB, please consider supporting the project by :
-- Subscribing to uPesy Premium Membership to have access to high-quality electronics tutorials at https://www.upesy.com/products/subscription
-- Buying one of my ESP32 DevKit boards: https://www.upesy.com/pages/store
+## Installation
 
-<div align="center">
-<a href="https://www.upesy.com/" target="_blank"><img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/upesy_store.jpg" width="350"/></a>
-</div>
+### Option 1: Install directly from GitHub (recommended)
 
-## 💾 Installation
+Install the latest version straight from this repository:
 
 ```bash
-pip install easyeda2kicad
+pip install git+https://github.com/Wadam100/easyeda2kicad.py.git
 ```
 
-## 💻 Usage
+To upgrade to the latest version later:
+
+```bash
+pip install --upgrade git+https://github.com/Wadam100/easyeda2kicad.py.git
+```
+
+### Option 2: Clone and install locally
+
+1. **Clone the repository:**
+
+```bash
+git clone https://github.com/Wadam100/easyeda2kicad.py.git
+cd easyeda2kicad.py
+```
+
+2. **Install the package:**
+
+```bash
+pip install .
+```
+
+Or install in editable/development mode (useful if you want to modify the code):
+
+```bash
+pip install -e .
+```
+
+### Verify the installation
+
+After installing, confirm it works by running:
+
+```bash
+easyeda2kicad --help
+```
+
+## Usage
 
 ```bash
 # For symbol + footprint + 3d model (with --full argument)
