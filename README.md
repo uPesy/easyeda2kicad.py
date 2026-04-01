@@ -23,7 +23,7 @@ A Python script that converts any electronic components from [EasyEDA](https://e
 If you have already Python installed you can run directly in the common terminal.<br>
 If not, you can use the Python executable included with Kicad by using the KiCad Command Prompt.
 <div align="left">
-  <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/kicad_command_prompt_install.png" width="500">
+  <img src="/ressources/kicad_command_prompt_install.png" width="800">
 </div>
 
 Then run this command to install easyeda2kicad
