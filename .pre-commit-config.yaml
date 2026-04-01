@@ -1,86 +1,30 @@
 repos:
--   repo: https://github.com/hadialqattan/pycln
-    rev: v1.1.0
-    hooks:
-    -   id: pycln
-        args: [--config=pyproject.toml]
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+    rev: v4.6.0
     hooks:
     -   id: no-commit-to-branch
         args: ["--branch","master"]
     -   id: check-yaml
     -   id: check-toml
-    -   id: check-xml
     -   id: check-json
     -   id: check-case-conflict
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
-        files: "\\.(py|txt|yaml|xml|json|md|toml|lock|cfg|html|sh|js|yml)$"
+        files: \.(py|txt|yaml|xml|json|md|toml|cfg)$
     -   id: requirements-txt-fixer
     -   id: mixed-line-ending
-        args: ["--fix","auto"]
-    -   id: check-executables-have-shebangs
--   repo: https://github.com/asottile/pyupgrade
-    rev: v2.31.0
-    hooks:
-    -   id: pyupgrade
-        args: [--py36-plus]
--   repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-    -   id: isort
-        files: "\\.(py)$"
-        args: ["--profile", "black", "--filter-files"]
--   repo: https://github.com/psf/black
-    rev: 22.3.0
-    hooks:
-    -   id: black
-        args: []
--   repo: https://github.com/PyCQA/flake8.git
-    rev: 4.0.1
-    hooks:
-    -   id: flake8
-        additional_dependencies: [
-                'flake8-bugbear',
-                'flake8-coding',
-                'flake8-comprehensions',
-                # 'flake8-docstrings==1.5.0',
-                # 'flake8-print==3.1.4',
-            ]
-        files: "\\.(py)$"
-        exclude: (.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env)/"
-# -   repo: https://github.com/pycqa/pylint
-#     rev: v2.13.7
-#     hooks:
-#     - id: pylint
-#       additional_dependencies:
-#         - 'pydantic'
-#       args:
-#         []
-# -   repo: https://github.com/pre-commit/mirrors-mypy
-#     rev: v0.942
-#     hooks:
-#     -   id: mypy
-#         args: [--no-strict-optional, --ignore-missing-imports]
-#         files: "\\.(py)$"
-#         exclude: (.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env)/"
-#         additional_dependencies: ['pydantic','types-requests']
--   repo: https://github.com/PyCQA/bandit
-    rev: '1.7.4'
-    hooks:
-    -   id: bandit
-        files: "\\.(py)$"
-        exclude: (.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env)/"
-        args: ["-c", "pyproject.toml"]
-        additional_dependencies: [ "bandit[toml]" ]
--   repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.5.1
-    hooks:
-    -   id: prettier
-        args: [--tab-width=4, --print-width=120, --end-of-line=auto]
-        types_or: [javascript, jsx, ts, tsx, html, css, json]
-        exclude: (.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env)/"
+        args: [--fix, auto]
 
-# default_language_version:
-#     python: python3.8
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.0
+    hooks:
+    -   id: ruff
+        args: [--fix]
+    -   id: ruff-format
+
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+    -   id: mypy
+        args: [--strict]
+        files: \.py$

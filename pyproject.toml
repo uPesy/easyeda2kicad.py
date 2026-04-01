@@ -16,7 +16,8 @@ exclude="(.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|b
 
 # https://mypy.readthedocs.io/en/stable/config_file.html
 [tool.mypy]
-python_version = 3.8
+python_version = "3.9"
+explicit_package_bases = true
 ignore_missing_imports = true
 check_untyped_defs = true
 disallow_any_expr = false
@@ -27,9 +28,7 @@ pretty = true
 
 [tool.pylint.master]
 output-format = "colorized"
-extension-pkg-whitelist = [
-    "pydantic"
-]
+extension-pkg-whitelist = []
 ignore="(.eggs|.git|.hg|.mypy_cache|__pycache__|.nox|.tox|.venv|.svn|buck-out|build|dist|env|)/"
 
 [tool.pylint.format]
@@ -52,3 +51,12 @@ disable = [
 [tool.bandit]
 # tests = ["B201", "B301"]
 skips = []
+
+[tool.ruff.lint]
+select = ["S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101",  # assert is expected and correct in pytest tests
+    "S108",  # /tmp/... strings in tests are regex patterns, not real paths
+]

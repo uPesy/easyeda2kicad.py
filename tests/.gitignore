@@ -1,0 +1,8 @@
+# Ignore test outputs
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Reference outputs are generated locally with: pytest --create-reference
+# They are excluded from git to keep the repo small
+reference_outputs/

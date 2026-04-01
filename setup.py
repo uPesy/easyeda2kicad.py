@@ -1,12 +1,14 @@
+from __future__ import annotations
+
 from setuptools import find_packages, setup
 
 with open("README.md") as fh:
     long_description = fh.read()
 
-production_dependencies = ["pydantic>=2.0.0", "requests>2.0.0"]
+production_dependencies: list[str] = []
 
-development_dependencies = [
-    "pre-commit>=2.17.0",
+development_dependencies: list[str] = [
+    "pre-commit>=3.0.0",
 ]
 
 with open("requirements.txt", "w", encoding="utf-8") as f:
@@ -20,7 +22,7 @@ setup(
     ),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version="0.8.0",
+    version="1.0.0",
     author="uPesy",
     author_email="contact@upesy.com",
     url="https://github.com/uPesy/easyeda2kicad.py",
@@ -34,7 +36,7 @@ setup(
     packages=find_packages(exclude=["tests", "utils"]),
     package_dir={"easyeda2kicad": "easyeda2kicad"},
     entry_points={"console_scripts": ["easyeda2kicad = easyeda2kicad.__main__:main"]},
-    python_requires=">=3.6",
+    python_requires=">=3.9",
     install_requires=production_dependencies,
     extras_require={"dev": development_dependencies},
     zip_safe=False,
