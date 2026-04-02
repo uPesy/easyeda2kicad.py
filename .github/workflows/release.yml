@@ -1,4 +1,4 @@
-name: Bump version
+name: Release
 
 on:
   workflow_dispatch:
@@ -18,10 +18,13 @@ jobs:
     permissions:
       contents: write
 
+    outputs:
+      version: ${{ steps.bump.outputs.new }}
+
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.API_GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -77,3 +80,39 @@ jobs:
           git commit -m "chore: bump version ${{ steps.bump.outputs.old }} → ${{ steps.bump.outputs.new }}"
           git tag "v${{ steps.bump.outputs.new }}"
           git push --follow-tags
+
+  publish:
+    needs: bump
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write  # required for OIDC trusted publishing
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: "v${{ needs.bump.outputs.version }}"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ needs.bump.outputs.version }}"
+          name: "v${{ needs.bump.outputs.version }}"
+          generate_release_notes: true
+          files: dist/*
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
