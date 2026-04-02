@@ -52,6 +52,9 @@ disable = [
 # tests = ["B201", "B301"]
 skips = []
 
+[tool.ruff]
+target-version = "py39"
+
 [tool.ruff.lint]
 select = ["S"]
 
