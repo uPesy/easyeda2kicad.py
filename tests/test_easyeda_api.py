@@ -736,7 +736,6 @@ class TestEdgeCases:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.network
 class TestGetSvgFromApiNetwork:
     def test_returns_non_empty_svgs(self) -> None:
         api = EasyedaApi()
