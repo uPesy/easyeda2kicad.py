@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 with open("README.md") as fh:
     long_description = fh.read()
 
-production_dependencies = ["pydantic>=2.0.0", "requests>2.0.0"]
+production_dependencies = ["pydantic>=2.0.0", "requests>2.0.0", "fake-useragent>=2.2.0"]
 
 development_dependencies = [
     "pre-commit>=2.17.0",
