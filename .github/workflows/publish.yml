@@ -6,14 +6,7 @@ on:
     paths:
       - "easyeda2kicad/_version.py"
 
-concurrency:
-  group: publish
-  cancel-in-progress: false
-
 jobs:
-  test:
-    uses: ./.github/workflows/ci.yml
-
   publish:
     needs: test
     runs-on: ubuntu-latest

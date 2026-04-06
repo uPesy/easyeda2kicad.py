@@ -5,7 +5,6 @@ on:
     branches: [master, dev]
   pull_request:
     branches: [master, dev]
-  workflow_call:
 
 jobs:
   lint:
