@@ -1,0 +1,64 @@
+name: Publish
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "easyeda2kicad/_version.py"
+
+jobs:
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # required for creating tags and GitHub releases
+      id-token: write  # required for OIDC trusted publishing to PyPI
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version
+        id: version
+        run: |
+          VERSION=$(grep -m1 '__version__' easyeda2kicad/_version.py | cut -d'"' -f2)
+          if [ -z "$VERSION" ]; then
+            echo "Error: could not read __version__ from _version.py" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check tag does not exist
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Error: tag $TAG already exists - was _version.py changed without bumping the version?" >&2
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Build package
+        run: |
+          python -m pip install build
+          python -m build
+
+      - name: Create tag
+        run: |
+          git tag "v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ steps.version.outputs.version }}"
+          name: "v${{ steps.version.outputs.version }}"
+          generate_release_notes: true
+          files: dist/*
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

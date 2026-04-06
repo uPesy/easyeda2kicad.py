@@ -1,11 +1,49 @@
+from __future__ import annotations
+
 # Global imports
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Union
+from typing import Any, Optional, Union
 
-from pydantic import BaseModel, field_validator
+# Local imports
+from .svg_path_parser import parse_svg_path
 
-from easyeda2kicad.easyeda.svg_path_parser import parse_svg_path
+
+# Safe conversion helpers – used by all EasyEDA dataclass __post_init__ methods.
+# EasyEDA API returns all field values as strings; these helpers handle the conversion.
+def _safe_float(
+    value: Union[str, float, int, bool, None], default: float = 0.0
+) -> float:
+    if value is None or value == "":
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+
+def _safe_int(value: Union[str, float, int, bool, None], default: int = 0) -> int:
+    if value is None or value == "":
+        return default
+    try:
+        return int(float(value))  # float first to handle "1.0" -> 1
+    except (ValueError, TypeError):
+        return default
+
+
+def _safe_bool(
+    value: Union[str, float, int, bool, None], default: bool = False
+) -> bool:
+    if value is None or value == "":
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() in ("true", "1", "yes", "on", "show")
+    try:
+        return bool(int(value))
+    except (ValueError, TypeError):
+        return default
 
 
 class EasyedaPinType(Enum):
@@ -17,13 +55,24 @@ class EasyedaPinType(Enum):
 
 
 # ------------------------- Symbol -------------------------
-class EeSymbolBbox(BaseModel):
+@dataclass
+class EeSymbolBbox:
     x: float
     y: float
+    width: float = 0.0
+    height: float = 0.0
+
+    def __post_init__(self) -> None:
+        # Safe conversions for all numeric fields
+        self.x = _safe_float(self.x)
+        self.y = _safe_float(self.y)
+        self.width = _safe_float(self.width)
+        self.height = _safe_float(self.height)
 
 
 # ---------------- PIN ----------------
-class EeSymbolPinSettings(BaseModel):
+@dataclass
+class EeSymbolPinSettings:
     is_displayed: bool
     type: EasyedaPinType
     spice_pin_number: str
@@ -33,47 +82,47 @@ class EeSymbolPinSettings(BaseModel):
     id: str
     is_locked: bool
 
-    @field_validator("is_displayed", mode="before")
-    @classmethod
-    def parse_display_field(cls, field: str) -> bool:
-        return True if field == "show" else field
-
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, is_locked: str) -> str:
-        return is_locked or False
-
-    @field_validator("rotation", mode="before")
-    @classmethod
-    def empty_str_rotation(cls, rotation: str) -> str:
-        return rotation or 0.0
-
-    @field_validator("type", mode="before")
-    @classmethod
-    def convert_pin_type(cls, field: str) -> str:
-        return (
-            EasyedaPinType(int(field or 0))
-            if int(field or 0) in EasyedaPinType._value2member_map_
-            else EasyedaPinType._unspecified
+    def __post_init__(self) -> None:
+        # Convert string values safely
+        self.is_displayed = _safe_bool(self.is_displayed)
+        self.is_locked = _safe_bool(self.is_locked)
+        self.rotation = _safe_int(self.rotation)
+        self.pos_x = _safe_float(self.pos_x)
+        self.pos_y = _safe_float(self.pos_y)
+        self.spice_pin_number = (
+            str(self.spice_pin_number) if self.spice_pin_number else ""
         )
+        if isinstance(self.type, str):
+            type_val = _safe_int(self.type)
+            self.type = (
+                EasyedaPinType(type_val)
+                if type_val in EasyedaPinType._value2member_map_
+                else EasyedaPinType.unspecified
+            )
 
 
-class EeSymbolPinDot(BaseModel):
+@dataclass
+class EeSymbolPinDot:
     dot_x: float
     dot_y: float
 
+    def __post_init__(self) -> None:
+        self.dot_x = _safe_float(self.dot_x)
+        self.dot_y = _safe_float(self.dot_y)
 
-class EeSymbolPinPath(BaseModel):
+
+@dataclass
+class EeSymbolPinPath:
     path: str
     color: str
 
-    @field_validator("path", mode="before")
-    @classmethod
-    def tune_path(cls, field: str) -> str:
-        return field.replace("v", "h")
+    def __post_init__(self) -> None:
+        if isinstance(self.path, str):
+            self.path = self.path.replace("v", "h")
 
 
-class EeSymbolPinName(BaseModel):
+@dataclass
+class EeSymbolPinName:
     is_displayed: bool
     pos_x: float
     pos_y: float
@@ -83,43 +132,37 @@ class EeSymbolPinName(BaseModel):
     font: str
     font_size: float
 
-    @field_validator("font_size", mode="before")
-    @classmethod
-    def empty_str_font(cls, font_size: str) -> float:
-        if isinstance(font_size, str) and "pt" in font_size:
-            return float(font_size.replace("pt", ""))
-        return font_size or 7.0
-
-    @field_validator("is_displayed", mode="before")
-    @classmethod
-    def parse_display_field(cls, field: str) -> str:
-        return True if field == "show" else field
-
-    @field_validator("rotation", mode="before")
-    @classmethod
-    def empty_str_rotation(cls, rotation: str) -> str:
-        return rotation or 0.0
+    def __post_init__(self) -> None:
+        # Safe conversions for all numeric fields
+        self.pos_x = _safe_float(self.pos_x)
+        self.pos_y = _safe_float(self.pos_y)
+        self.rotation = _safe_int(self.rotation)
+        self.is_displayed = _safe_bool(self.is_displayed, True)
+        if isinstance(self.font_size, str) and "pt" in self.font_size:
+            self.font_size = _safe_float(self.font_size.replace("pt", ""), 7.0)
+        else:
+            self.font_size = _safe_float(self.font_size, 7.0)
 
 
-class EeSymbolPinDotBis(BaseModel):
+@dataclass
+class EeSymbolPinDotBis:
     is_displayed: bool
     circle_x: float
     circle_y: float
 
-    @field_validator("is_displayed", mode="before")
-    @classmethod
-    def parse_display_field(cls, field: str) -> str:
-        return True if field == "show" else field
+    def __post_init__(self) -> None:
+        self.circle_x = _safe_float(self.circle_x)
+        self.circle_y = _safe_float(self.circle_y)
+        self.is_displayed = _safe_bool(self.is_displayed, True)
 
 
-class EeSymbolPinClock(BaseModel):
+@dataclass
+class EeSymbolPinClock:
     is_displayed: bool
     path: str
 
-    @field_validator("is_displayed", mode="before")
-    @classmethod
-    def parse_display_field(cls, field: str) -> str:
-        return True if field == "show" else field
+    def __post_init__(self) -> None:
+        self.is_displayed = _safe_bool(self.is_displayed, True)
 
 
 @dataclass
@@ -133,11 +176,10 @@ class EeSymbolPin:
 
 
 # ---------------- RECTANGLE ----------------
-class EeSymbolRectangle(BaseModel):
+@dataclass
+class EeSymbolRectangle:
     pos_x: float
     pos_y: float
-    rx: Union[float, None] = None
-    ry: Union[float, None] = None
     width: float
     height: float
     stroke_color: str
@@ -146,15 +188,34 @@ class EeSymbolRectangle(BaseModel):
     fill_color: str
     id: str
     is_locked: bool
+    rx: Optional[float] = None
+    ry: Optional[float] = None
 
-    @field_validator("*", mode="before")
-    @classmethod
-    def empty_str_to_none(cls, field: str) -> str:
-        return field or None
+    def __post_init__(self) -> None:
+        # Safe conversions for all numeric fields
+        self.pos_x = _safe_float(self.pos_x)
+        self.pos_y = _safe_float(self.pos_y)
+        self.rx = _safe_float(self.rx) if self.rx is not None else None
+        self.ry = _safe_float(self.ry) if self.ry is not None else None
+        self.width = _safe_float(self.width)
+        self.height = _safe_float(self.height)
+        self.is_locked = _safe_bool(self.is_locked)
+        # Convert empty strings to None for all string fields
+        for field_name in [
+            "stroke_color",
+            "stroke_width",
+            "stroke_style",
+            "fill_color",
+            "id",
+        ]:
+            value = getattr(self, field_name)
+            if isinstance(value, str) and not value:
+                setattr(self, field_name, None)
 
 
 # ---------------- CIRCLE ----------------
-class EeSymbolCircle(BaseModel):
+@dataclass
+class EeSymbolCircle:
     center_x: float
     center_y: float
     radius: float
@@ -165,20 +226,24 @@ class EeSymbolCircle(BaseModel):
     id: str
     is_locked: bool
 
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field: str) -> str:
-        return field or False
-
-    @field_validator("fill_color", mode="before")
-    @classmethod
-    def parse_background_filling(cls, fill_color: str) -> str:
-        return bool(fill_color and fill_color.lower() != "none")
+    def __post_init__(self) -> None:
+        # Safe conversions for all numeric fields
+        self.center_x = _safe_float(self.center_x)
+        self.center_y = _safe_float(self.center_y)
+        self.radius = _safe_float(self.radius)
+        self.is_locked = _safe_bool(self.is_locked)
+        if isinstance(self.fill_color, str):
+            self.fill_color = bool(
+                self.fill_color and self.fill_color.lower() != "none"
+            )
+        else:
+            self.fill_color = _safe_bool(self.fill_color)
 
 
 # ---------------- ARC ----------------
-class EeSymbolArc(BaseModel):
-    path: list
+@dataclass
+class EeSymbolArc:
+    path: list[Any]
     helper_dots: str
     stroke_color: str
     stroke_width: str
@@ -187,23 +252,21 @@ class EeSymbolArc(BaseModel):
     id: str
     is_locked: bool
 
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field: str) -> str:
-        return field or False
-
-    @field_validator("fill_color", mode="before")
-    @classmethod
-    def parse_background_filling(cls, fill_color: str) -> str:
-        return bool(fill_color and fill_color.lower() != "none")
-
-    @field_validator("path", mode="before")
-    @classmethod
-    def convert_svg_path(cls, path: str) -> list:
-        return parse_svg_path(svg_path=path)
+    def __post_init__(self) -> None:
+        # Safe conversions for all fields
+        self.is_locked = _safe_bool(self.is_locked)
+        if isinstance(self.fill_color, str):
+            self.fill_color = bool(
+                self.fill_color and self.fill_color.lower() != "none"
+            )
+        else:
+            self.fill_color = _safe_bool(self.fill_color)
+        if isinstance(self.path, str):
+            self.path = parse_svg_path(svg_path=self.path)
 
 
-class EeSymbolEllipse(BaseModel):
+@dataclass
+class EeSymbolEllipse:
     center_x: float
     center_y: float
     radius_x: float
@@ -215,19 +278,24 @@ class EeSymbolEllipse(BaseModel):
     id: str
     is_locked: bool
 
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field: str) -> str:
-        return field or False
-
-    @field_validator("fill_color", mode="before")
-    @classmethod
-    def parse_background_filling(cls, fill_color: str) -> str:
-        return bool(fill_color and fill_color.lower() != "none")
+    def __post_init__(self) -> None:
+        # Safe conversions for all numeric fields
+        self.center_x = _safe_float(self.center_x)
+        self.center_y = _safe_float(self.center_y)
+        self.radius_x = _safe_float(self.radius_x)
+        self.radius_y = _safe_float(self.radius_y)
+        self.is_locked = _safe_bool(self.is_locked)
+        if isinstance(self.fill_color, str):
+            self.fill_color = bool(
+                self.fill_color and self.fill_color.lower() != "none"
+            )
+        else:
+            self.fill_color = _safe_bool(self.fill_color)
 
 
 # ---------------- POLYLINE ----------------
-class EeSymbolPolyline(BaseModel):
+@dataclass
+class EeSymbolPolyline:
     points: str
     stroke_color: str
     stroke_width: str
@@ -236,27 +304,25 @@ class EeSymbolPolyline(BaseModel):
     id: str
     is_locked: bool
 
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field: str) -> str:
-        return field or False
-
-    @field_validator("fill_color", mode="before")
-    @classmethod
-    def parse_background_filling(cls, fill_color: str) -> str:
-        return bool(fill_color and fill_color.lower() != "none")
+    def __post_init__(self) -> None:
+        # Safe conversions for all fields
+        self.is_locked = _safe_bool(self.is_locked)
+        if isinstance(self.fill_color, str):
+            self.fill_color = bool(
+                self.fill_color and self.fill_color.lower() != "none"
+            )
+        else:
+            self.fill_color = _safe_bool(self.fill_color)
 
 
 # ---------------- POLYGON ----------------
+@dataclass
 class EeSymbolPolygon(EeSymbolPolyline):
-    ...
+    pass
 
 
-# ---------------- PATH ----------------
-# TODO : EeSymbolPath.paths should be a SVG PATH https://www.w3.org/TR/SVG11/paths.html#PathElement
-# TODO : small svg parser and then convert to kicad
-# TODO: support bezier curve, currently paths are seen as polygone
-class EeSymbolPath(BaseModel):
+@dataclass
+class EeSymbolPath:
     paths: str
     stroke_color: str
     stroke_width: str
@@ -265,19 +331,31 @@ class EeSymbolPath(BaseModel):
     id: str
     is_locked: bool
 
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field: str) -> str:
-        return field or False
+    def __post_init__(self) -> None:
+        # Safe conversions for all fields
+        self.is_locked = _safe_bool(self.is_locked)
+        if isinstance(self.fill_color, str):
+            self.fill_color = bool(
+                self.fill_color and self.fill_color.lower() != "none"
+            )
+        else:
+            self.fill_color = _safe_bool(self.fill_color)
 
-    @field_validator("fill_color", mode="before")
-    @classmethod
-    def parse_background_filling(cls, fill_color: str) -> str:
-        return bool(fill_color and fill_color.lower() != "none")
 
-    # @validator("paths", pre=True)
-    # def clean_svg_path(cls, paths:str):
-    #     return paths.replace("M", "").replace("C","")
+# ---------------- TEXT ----------------
+@dataclass
+class EeSymbolText:
+    text: str
+    pos_x: float
+    pos_y: float
+    rotation: float
+    font_size: float  # in mm
+
+    def __post_init__(self) -> None:
+        self.pos_x = _safe_float(self.pos_x)
+        self.pos_y = _safe_float(self.pos_y)
+        self.rotation = _safe_float(self.rotation)
+        self.font_size = _safe_float(self.font_size, 1.27)
 
 
 # ---------------- SYMBOL ----------------
@@ -289,42 +367,54 @@ class EeSymbolInfo:
     manufacturer: str = ""
     datasheet: str = ""
     lcsc_id: str = ""
-    jlc_id: str = ""
+    mpn: str = ""
+    keywords: str = ""
+    description: str = ""
 
 
 @dataclass
 class EeSymbol:
     info: EeSymbolInfo
     bbox: EeSymbolBbox
-    pins: List[EeSymbolPin] = field(default_factory=list)
-    rectangles: List[EeSymbolRectangle] = field(default_factory=list)
-    circles: List[EeSymbolCircle] = field(default_factory=list)
-    arcs: List[EeSymbolArc] = field(default_factory=list)
-    ellipses: List[EeSymbolEllipse] = field(default_factory=list)
-    polylines: List[EeSymbolPolyline] = field(default_factory=list)
-    polygons: List[EeSymbolPolygon] = field(default_factory=list)
-    paths: List[EeSymbolPath] = field(default_factory=list)
+    pins: list[EeSymbolPin] = field(default_factory=list)
+    rectangles: list[EeSymbolRectangle] = field(default_factory=list)
+    circles: list[EeSymbolCircle] = field(default_factory=list)
+    arcs: list[EeSymbolArc] = field(default_factory=list)
+    ellipses: list[EeSymbolEllipse] = field(default_factory=list)
+    polylines: list[EeSymbolPolyline] = field(default_factory=list)
+    polygons: list[EeSymbolPolygon] = field(default_factory=list)
+    paths: list[EeSymbolPath] = field(default_factory=list)
+    texts: list[EeSymbolText] = field(default_factory=list)
+    # Sub-units of a multi-unit symbol (e.g. op-amp body + power pins as separate units)
+    sub_symbols: list["EeSymbol"] = field(default_factory=list)
 
 
 # ------------------------- Footprint -------------------------
 
 
 def convert_to_mm(dim: float) -> float:
-    return float(dim) * 10 * 0.0254
+    # KiCad uses 1nm (0.000001mm) internal resolution → round to 6 decimal places
+    return round(float(dim) * 10 * 0.0254, 6)
 
 
 @dataclass
 class EeFootprintBbox:
-
     x: float
     y: float
 
-    def convert_to_mm(self) -> None:
-        self.x = convert_to_mm(self.x)
-        self.y = convert_to_mm(self.y)
+    def __post_init__(self) -> None:
+        x_raw = _safe_float(self.x)
+        y_raw = _safe_float(self.y)
+        self.x_px: float = (
+            x_raw  # raw EE units — needed for SOLIDREGION path subtraction
+        )
+        self.y_px: float = y_raw
+        self.x = convert_to_mm(x_raw)
+        self.y = convert_to_mm(y_raw)
 
 
-class EeFootprintPad(BaseModel):
+@dataclass
+class EeFootprintPad:
     shape: str
     center_x: float
     center_y: float
@@ -338,30 +428,25 @@ class EeFootprintPad(BaseModel):
     rotation: float
     id: str
     hole_length: float
-    hole_point: str
+    slot_outline: str
     is_plated: bool
     is_locked: bool
 
-    def convert_to_mm(self) -> None:
-        self.center_x = convert_to_mm(self.center_x)
-        self.center_y = convert_to_mm(self.center_y)
-        self.width = convert_to_mm(self.width)
-        self.height = convert_to_mm(self.height)
-        self.hole_radius = convert_to_mm(self.hole_radius)
-        self.hole_length = convert_to_mm(self.hole_length)
-
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field: str) -> str:
-        return field or False
-
-    @field_validator("rotation", mode="before")
-    @classmethod
-    def empty_str_rotation(cls, field: str) -> str:
-        return field or 0.0
+    def __post_init__(self) -> None:
+        self.center_x = convert_to_mm(_safe_float(self.center_x))
+        self.center_y = convert_to_mm(_safe_float(self.center_y))
+        self.width = convert_to_mm(_safe_float(self.width))
+        self.height = convert_to_mm(_safe_float(self.height))
+        self.hole_radius = convert_to_mm(_safe_float(self.hole_radius))
+        self.rotation = _safe_float(self.rotation)
+        self.hole_length = convert_to_mm(_safe_float(self.hole_length))
+        self.layer_id = _safe_int(self.layer_id)
+        self.is_locked = _safe_bool(self.is_locked)
+        self.is_plated = _safe_bool(self.is_plated, True)
 
 
-class EeFootprintTrack(BaseModel):
+@dataclass
+class EeFootprintTrack:
     stroke_width: float
     layer_id: int
     net: str
@@ -369,34 +454,29 @@ class EeFootprintTrack(BaseModel):
     id: str
     is_locked: bool
 
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field: str) -> str:
-        return field or False
-
-    def convert_to_mm(self) -> None:
-        self.stroke_width = convert_to_mm(self.stroke_width)
+    def __post_init__(self) -> None:
+        self.stroke_width = convert_to_mm(_safe_float(self.stroke_width))
+        self.layer_id = _safe_int(self.layer_id)
+        self.is_locked = _safe_bool(self.is_locked)
 
 
-class EeFootprintHole(BaseModel):
+@dataclass
+class EeFootprintHole:
     center_x: float
     center_y: float
     radius: float
     id: str
     is_locked: bool
 
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field: str) -> str:
-        return field or False
-
-    def convert_to_mm(self) -> None:
-        self.center_x = convert_to_mm(self.center_x)
-        self.center_y = convert_to_mm(self.center_y)
-        self.radius = convert_to_mm(self.radius)
+    def __post_init__(self) -> None:
+        self.center_x = convert_to_mm(_safe_float(self.center_x))
+        self.center_y = convert_to_mm(_safe_float(self.center_y))
+        self.radius = convert_to_mm(_safe_float(self.radius))
+        self.is_locked = _safe_bool(self.is_locked)
 
 
-class EeFootprintVia(BaseModel):
+@dataclass
+class EeFootprintVia:
     center_x: float
     center_y: float
     diameter: float
@@ -405,19 +485,16 @@ class EeFootprintVia(BaseModel):
     id: str
     is_locked: bool
 
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field: str) -> str:
-        return field or False
-
-    def convert_to_mm(self) -> None:
-        self.center_x = convert_to_mm(self.center_x)
-        self.center_y = convert_to_mm(self.center_y)
-        self.radius = convert_to_mm(self.radius)
-        self.diameter = convert_to_mm(self.diameter)
+    def __post_init__(self) -> None:
+        self.center_x = convert_to_mm(_safe_float(self.center_x))
+        self.center_y = convert_to_mm(_safe_float(self.center_y))
+        self.diameter = convert_to_mm(_safe_float(self.diameter))
+        self.radius = convert_to_mm(_safe_float(self.radius))
+        self.is_locked = _safe_bool(self.is_locked)
 
 
-class EeFootprintCircle(BaseModel):
+@dataclass
+class EeFootprintCircle:
     cx: float
     cy: float
     radius: float
@@ -426,41 +503,38 @@ class EeFootprintCircle(BaseModel):
     id: str
     is_locked: bool
 
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field: str) -> str:
-        return field or False
-
-    def convert_to_mm(self) -> None:
-        self.cx = convert_to_mm(self.cx)
-        self.cy = convert_to_mm(self.cy)
-        self.radius = convert_to_mm(self.radius)
-        self.stroke_width = convert_to_mm(self.stroke_width)
+    def __post_init__(self) -> None:
+        self.cx = convert_to_mm(_safe_float(self.cx))
+        self.cy = convert_to_mm(_safe_float(self.cy))
+        self.radius = convert_to_mm(_safe_float(self.radius))
+        self.stroke_width = convert_to_mm(_safe_float(self.stroke_width))
+        self.layer_id = _safe_int(self.layer_id)
+        self.is_locked = _safe_bool(self.is_locked)
 
 
-class EeFootprintRectangle(BaseModel):
+@dataclass
+class EeFootprintRectangle:
     x: float
     y: float
     width: float
     height: float
-    stroke_width: float
-    id: str
     layer_id: int
+    id: str
     is_locked: bool
+    stroke_width: float
 
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field):
-        return False if field == "" else bool(float(field))
-
-    def convert_to_mm(self):
-        self.x = convert_to_mm(self.x)
-        self.y = convert_to_mm(self.y)
-        self.width = convert_to_mm(self.width)
-        self.height = convert_to_mm(self.height)
+    def __post_init__(self) -> None:
+        self.x = convert_to_mm(_safe_float(self.x))
+        self.y = convert_to_mm(_safe_float(self.y))
+        self.width = convert_to_mm(_safe_float(self.width))
+        self.height = convert_to_mm(_safe_float(self.height))
+        self.stroke_width = convert_to_mm(_safe_float(self.stroke_width))
+        self.layer_id = _safe_int(self.layer_id)
+        self.is_locked = _safe_bool(self.is_locked)
 
 
-class EeFootprintArc(BaseModel):
+@dataclass
+class EeFootprintArc:
     stroke_width: float
     layer_id: int
     net: str
@@ -469,19 +543,30 @@ class EeFootprintArc(BaseModel):
     id: str
     is_locked: bool
 
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field):
-        return False if field == "" else field
+    def __post_init__(self) -> None:
+        self.stroke_width = convert_to_mm(_safe_float(self.stroke_width))
+        self.layer_id = _safe_int(self.layer_id)
+        self.is_locked = _safe_bool(self.is_locked)
 
 
-class EeFootprintText(BaseModel):
+@dataclass
+class EeFootprintSolidRegion:
+    layer_id: int
+    path: str  # SVG path string (M/L/H/V/A/Z commands)
+    region_type: str  # "solid", "cutout", "npth"
+
+    def __post_init__(self) -> None:
+        self.layer_id = _safe_int(self.layer_id, 3)
+
+
+@dataclass
+class EeFootprintText:
     type: str
     center_x: float
     center_y: float
     stroke_width: float
     rotation: int
-    miror: str
+    mirror: str
     layer_id: int
     net: str
     font_size: float
@@ -491,27 +576,15 @@ class EeFootprintText(BaseModel):
     id: str
     is_locked: bool
 
-    @field_validator("is_displayed", mode="before")
-    @classmethod
-    def empty_str_display(cls, field):
-        return True if field == "" else field
-
-    @field_validator("is_locked", mode="before")
-    @classmethod
-    def empty_str_lock(cls, field):
-        return False if field == "" else field
-
-    @field_validator("rotation", mode="before")
-    @classmethod
-    def empty_str_rotation(cls, field):
-        return 0.0 if field == "" else field
-
-    def convert_to_mm(self):
-
-        self.center_x = convert_to_mm(self.center_x)
-        self.center_y = convert_to_mm(self.center_y)
-        self.stroke_width = convert_to_mm(self.stroke_width)
-        self.font_size = convert_to_mm(self.font_size)
+    def __post_init__(self) -> None:
+        self.center_x = convert_to_mm(_safe_float(self.center_x))
+        self.center_y = convert_to_mm(_safe_float(self.center_y))
+        self.stroke_width = convert_to_mm(_safe_float(self.stroke_width))
+        self.rotation = _safe_int(self.rotation)
+        self.font_size = convert_to_mm(_safe_float(self.font_size, 7.0))
+        self.layer_id = _safe_int(self.layer_id)
+        self.is_displayed = _safe_bool(self.is_displayed, True)
+        self.is_locked = _safe_bool(self.is_locked)
 
 
 # ---------------- FOOTPRINT ----------------
@@ -522,18 +595,24 @@ class EeFootprintInfo:
     name: str
     fp_type: str
     model_3d_name: str
+    lcsc_id: str = ""
+    manufacturer: str = ""
+    mpn: str = ""
+    description: str = ""
 
 
 # ------------------------- 3D MODEL -------------------------
-class Ee3dModelBase(BaseModel):
+@dataclass
+class Ee3dModelBase:
     x: float = 0.0
     y: float = 0.0
     z: float = 0.0
 
-    def convert_to_mm(self) -> None:
-        self.x = convert_to_mm(self.x)
-        self.y = convert_to_mm(self.y)
-        self.z = convert_to_mm(self.z)
+    def __post_init__(self) -> None:
+        # Safe conversions for all numeric fields
+        self.x = _safe_float(self.x)
+        self.y = _safe_float(self.y)
+        self.z = _safe_float(self.z)
 
 
 @dataclass
@@ -542,24 +621,21 @@ class Ee3dModel:
     uuid: str
     translation: Ee3dModelBase
     rotation: Ee3dModelBase
-    raw_obj: str = None
-    step: bytes = None
-
-    def convert_to_mm(self) -> None:
-        self.translation.convert_to_mm()
-        # self.translation.z = self.translation.z
+    raw_obj: Optional[str] = None
+    step: Optional[bytes] = None
 
 
 @dataclass
-class ee_footprint:
+class EeFootprint:
     info: EeFootprintInfo
     bbox: EeFootprintBbox
-    model_3d: Ee3dModel
-    pads: List[EeFootprintPad] = field(default_factory=list)
-    tracks: List[EeFootprintTrack] = field(default_factory=list)
-    holes: List[EeFootprintHole] = field(default_factory=list)
-    vias: List[EeFootprintVia] = field(default_factory=list)
-    circles: List[EeFootprintCircle] = field(default_factory=list)
-    arcs: List[EeFootprintArc] = field(default_factory=list)
-    rectangles: List[EeFootprintRectangle] = field(default_factory=list)
-    texts: List[EeFootprintText] = field(default_factory=list)
+    model_3d: Optional[Ee3dModel]
+    pads: list[EeFootprintPad] = field(default_factory=list)
+    tracks: list[EeFootprintTrack] = field(default_factory=list)
+    holes: list[EeFootprintHole] = field(default_factory=list)
+    vias: list[EeFootprintVia] = field(default_factory=list)
+    circles: list[EeFootprintCircle] = field(default_factory=list)
+    arcs: list[EeFootprintArc] = field(default_factory=list)
+    rectangles: list[EeFootprintRectangle] = field(default_factory=list)
+    texts: list[EeFootprintText] = field(default_factory=list)
+    solid_regions: list[EeFootprintSolidRegion] = field(default_factory=list)

@@ -1,10 +1,8 @@
+from __future__ import annotations
+
 # Global imports
-import itertools
-import re
-import textwrap
-from dataclasses import dataclass, field, fields
-from enum import Enum, auto
-from typing import List
+from dataclasses import dataclass, field
+from typing import Optional
 
 # ---------------------------- FOOTPRINT PART ----------------------------
 
@@ -15,11 +13,11 @@ KI_DESCRIPTION = (
 KI_TAGS_INFO = '\t(tags "{tag}")\n'
 KI_FP_TYPE = "\t(attr {component_type})\n"
 KI_REFERENCE = (
-    "\t(fp_text reference REF** (at {pos_x} {pos_y}) (layer F.SilkS)\n\t\t(effects"
+    "\t(fp_text reference REF** (at {pos_x:.3f} {pos_y:.3f}) (layer F.SilkS)\n\t\t(effects"
     " (font (size 1 1) (thickness 0.15)))\n\t)\n"
 )
 KI_PACKAGE_VALUE = (
-    "\t(fp_text value {package_name} (at {pos_x} {pos_y}) (layer F.Fab)\n\t\t(effects"
+    "\t(fp_text value {package_name} (at {pos_x:.3f} {pos_y:.3f}) (layer F.Fab)\n\t\t(effects"
     " (font (size 1 1) (thickness 0.15)))\n\t)\n"
 )
 KI_FAB_REF = (
@@ -28,9 +26,10 @@ KI_FAB_REF = (
 )
 KI_END_FILE = ")"
 
+KI_PAD_SIZE_MIN = 0.001
 KI_PAD = (
     "\t(pad {number} {type} {shape} (at {pos_x:.2f} {pos_y:.2f} {orientation:.2f})"
-    " (size {width:.2f} {height:.2f}) (layers {layers}){drill}{polygon})\n"
+    " (size {width:.3f} {height:.3f}) (layers {layers}){drill}{polygon})\n"
 )
 KI_LINE = (
     "\t(fp_line (start {start_x:.2f} {start_y:.2f}) (end {end_x:.2f} {end_y:.2f})"
@@ -57,6 +56,8 @@ KI_TEXT = (
     " {layers}){display}\n\t\t(effects (font (size {font_size:.2f} {font_size:.2f})"
     " (thickness {thickness:.2f})) (justify left{mirror}))\n\t)\n"
 )
+KI_FP_POLY = '\t(fp_poly (pts {pts}) (stroke (width 0) (type solid)) (fill solid) (layer "{layer}"))\n'
+
 KI_MODEL_3D = (
     '\t(model "{file_3d}"\n\t\t(offset (xyz {pos_x:.3f} {pos_y:.3f}'
     " {pos_z:.3f}))\n\t\t(scale (xyz 1 1 1))\n\t\t(rotate (xyz {rot_x:.0f} {rot_y:.0f}"
@@ -99,22 +100,16 @@ KI_LAYERS = {
     6: "B.Paste",
     7: "F.Mask",
     8: "B.Mask",
-    10: "Edge.Cuts",
-    11: "Edge.Cuts",
-    12: "Cmts.User",
-    13: "F.Fab",
-    14: "B.Fab",
-    15: "Dwgs.User",
-    101: "F.Fab",
+    10: "Edge.Cuts",  # BoardOutLine
+    # 11 = Multi-Layer (all copper) — not valid for graphical elements; handled by KI_PAD_LAYER for pads
+    12: "Cmts.User",  # Document
+    13: "F.Fab",  # TopAssembly
+    14: "B.Fab",  # BottomAssembly
+    15: "Dwgs.User",  # Mechanical
+    99: "F.CrtYd",  # ComponentShapeLayer (LIBBODY) - invisible in EasyEDA, maps to courtyard in KiCad
+    100: "F.Fab",  # LeadShapeLayer - lead shapes for fabrication
+    101: "F.SilkS",  # ComponentPolarityLayer - polarity markings on silkscreen
 }
-
-
-# Round all float values contained in the dataclass
-def round_float_values(self) -> None:
-    for _field in fields(self):
-        current_value = getattr(self, _field.name)
-        if isinstance(current_value, float):
-            setattr(self, _field.name, round(current_value, 2))
 
 
 # ---------------- PAD ----------------
@@ -128,21 +123,18 @@ class KiFootprintPad:
     height: float
     layers: str
     number: str
-    drill: float
+    drill: str
     orientation: float
     polygon: str
-
-    def __post_init__(self) -> None:
-        round_float_values(self)
 
 
 # ---------------- TRACK ----------------
 @dataclass
 class KiFootprintTrack:
-    points_start_x: List[float] = field(default_factory=list)
-    points_start_y: List[float] = field(default_factory=list)
-    points_end_x: List[float] = field(default_factory=list)
-    points_end_y: List[float] = field(default_factory=list)
+    points_start_x: list[float] = field(default_factory=list)
+    points_start_y: list[float] = field(default_factory=list)
+    points_end_x: list[float] = field(default_factory=list)
+    points_end_y: list[float] = field(default_factory=list)
     stroke_width: float = 0
     layers: str = ""
 
@@ -153,9 +145,6 @@ class KiFootprintHole:
     pos_x: float
     pos_y: float
     size: float
-
-    def __post_init__(self) -> None:
-        round_float_values(self)
 
 
 # ---------------- CIRCLE ----------------
@@ -168,20 +157,10 @@ class KiFootprintCircle:
     layers: str
     stroke_width: float
 
-    def __post_init__(self) -> None:
-        round_float_values(self)
-
 
 # ---------------- RECTANGLE ----------------
 @dataclass
-class KiFootprintRectangle(KiFootprintTrack):
-    ...
-    # points_start_x:List[float] = field(default_factory=list)
-    # points_start_y:List[float] = field(default_factory=list)
-    # points_end_x:List[float] = field(default_factory=list)
-    # points_end_y:List[float] = field(default_factory=list)
-    # stroke_width:float = 0
-    # layers:str = ''
+class KiFootprintRectangle(KiFootprintTrack): ...
 
 
 # ---------------- ARC ----------------
@@ -194,9 +173,6 @@ class KiFootprintArc:
     angle: float
     layers: str
     stroke_width: float
-
-    def __post_init__(self):
-        round_float_values(self)
 
 
 # ---------------- TEXT ----------------
@@ -212,9 +188,6 @@ class KiFootprintText:
     display: str
     mirror: str
 
-    def __post_init__(self):
-        round_float_values(self)
-
 
 # ---------------- VIA ----------------
 @dataclass
@@ -224,24 +197,23 @@ class KiFootprintVia:
     size: float
     diameter: float
 
-    def __post_init__(self) -> None:
-        round_float_values(self)
-
-    # TODO
-
 
 # ---------------- SOLID REGION ----------------
+# EasyEDA SOLIDREGION: filled polygon on silkscreen or fab layer
+# (e.g. pin-1 dot, polarity mark, component outline fill).
+# Maps to KiCad fp_poly.
 @dataclass
 class KiFootprintSolidRegion:
-    name: str = ""
-    # TODO
+    layer: str
+    points: list[tuple[float, float]]
 
 
 # ---------------- COPPER AREA ----------------
+# EasyEDA COPPERAREA: copper fill zone (ground plane, thermal relief area).
+# In KiCad this maps to a zone. Not yet implemented.
 @dataclass
 class KiFootprintCopperArea:
     name: str = ""
-    # TODO
 
 
 # ---------------- FOOTPRINT INFO ----------------
@@ -249,6 +221,10 @@ class KiFootprintCopperArea:
 class KiFootprintInfo:
     name: str
     fp_type: str
+    lcsc_id: str = ""
+    manufacturer: str = ""
+    mpn: str = ""
+    description: str = ""
 
 
 # ---------------- 3D MODEL ----------------
@@ -264,21 +240,21 @@ class Ki3dModel:
     name: str
     translation: Ki3dModelBase
     rotation: Ki3dModelBase
-    raw_wrl: str = None
+    raw_wrl: Optional[str] = None
 
 
 # ---------------- FOOTPRINT  ----------------
 @dataclass
 class KiFootprint:
     info: KiFootprintInfo
-    model_3d: Ki3dModel
-    pads: List[KiFootprintPad] = field(default_factory=list)
-    tracks: List[KiFootprintTrack] = field(default_factory=list)
-    vias: List[KiFootprintVia] = field(default_factory=list)
-    holes: List[KiFootprintHole] = field(default_factory=list)
-    circles: List[KiFootprintCircle] = field(default_factory=list)
-    arcs: List[KiFootprintArc] = field(default_factory=list)
-    rectangles: List[KiFootprintRectangle] = field(default_factory=list)
-    texts: List[KiFootprintText] = field(default_factory=list)
-    solid_regions: List[KiFootprintSolidRegion] = field(default_factory=list)
-    copper_areas: List[KiFootprintCopperArea] = field(default_factory=list)
+    model_3d: Optional[Ki3dModel]
+    pads: list[KiFootprintPad] = field(default_factory=list)
+    tracks: list[KiFootprintTrack] = field(default_factory=list)
+    vias: list[KiFootprintVia] = field(default_factory=list)
+    holes: list[KiFootprintHole] = field(default_factory=list)
+    circles: list[KiFootprintCircle] = field(default_factory=list)
+    arcs: list[KiFootprintArc] = field(default_factory=list)
+    rectangles: list[KiFootprintRectangle] = field(default_factory=list)
+    texts: list[KiFootprintText] = field(default_factory=list)
+    solid_regions: list[KiFootprintSolidRegion] = field(default_factory=list)
+    copper_areas: list[KiFootprintCopperArea] = field(default_factory=list)

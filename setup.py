@@ -1,16 +1,18 @@
+from __future__ import annotations
+
+import re
+
 from setuptools import find_packages, setup
 
 with open("README.md") as fh:
     long_description = fh.read()
 
-production_dependencies = ["pydantic>=2.0.0", "requests>2.0.0"]
-
-development_dependencies = [
-    "pre-commit>=2.17.0",
-]
-
-with open("requirements.txt", "w", encoding="utf-8") as f:
-    f.write("\n".join(production_dependencies + development_dependencies))
+# Read version from single source of truth
+with open("easyeda2kicad/_version.py") as fh:
+    _match = re.search(r'^__version__ = "([^"]+)"', fh.read(), re.MULTILINE)
+    if _match is None:
+        raise RuntimeError("Cannot find __version__ in _version.py")
+    _version = _match.group(1)
 
 setup(
     name="easyeda2kicad",
@@ -20,27 +22,29 @@ setup(
     ),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version="0.8.0",
+    version=_version,
     author="uPesy",
     author_email="contact@upesy.com",
     url="https://github.com/uPesy/easyeda2kicad.py",
     project_urls={
         "Code": "https://github.com/uPesy/easyeda2kicad.py",
     },
-    # download_url='',
     license="AGPL-3.0",
     py_modules=["easyeda2kicad"],
     platforms="any",
     packages=find_packages(exclude=["tests", "utils"]),
     package_dir={"easyeda2kicad": "easyeda2kicad"},
     entry_points={"console_scripts": ["easyeda2kicad = easyeda2kicad.__main__:main"]},
-    python_requires=">=3.6",
-    install_requires=production_dependencies,
-    extras_require={"dev": development_dependencies},
+    python_requires=">=3.9",
+    install_requires=[],
+    extras_require={
+        "dev": [
+            "pre-commit>=3.0.0",
+        ]
+    },
     zip_safe=False,
     keywords="easyeda kicad library conversion",
     classifiers=[
-        # More information at https://pypi.org/classifiers/.
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Natural Language :: English",
