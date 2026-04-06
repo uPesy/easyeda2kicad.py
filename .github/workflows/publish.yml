@@ -8,7 +8,7 @@ on:
 
 jobs:
   publish:
-    needs: test
+    name: Publish to PyPI
     runs-on: ubuntu-latest
     permissions:
       contents: write  # required for creating tags and GitHub releases
