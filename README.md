@@ -1,13 +1,11 @@
-# easyeda2kicad v1.0.0
+# easyeda2kicad
 
-[![PyPI version](https://badge.fury.io/py/easyeda2kicad.svg)](https://badge.fury.io/py/easyeda2kicad)
-[![License](https://img.shields.io/github/license/upesy/easyeda2kicad.py.svg)](https://pypi.org/project/isort/)
+[![PyPI version](https://img.shields.io/pypi/v/easyeda2kicad.svg)](https://pypi.org/project/easyeda2kicad/)
+[![License](https://img.shields.io/github/license/upesy/easyeda2kicad.py.svg)](https://github.com/uPesy/easyeda2kicad.py/blob/master/LICENSE)
 [![Downloads](https://pepy.tech/badge/easyeda2kicad)](https://pepy.tech/project/easyeda2kicad)
 ![Python versions](https://img.shields.io/pypi/pyversions/easyeda2kicad.svg)
 [![Git hook: pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
-[![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 A Python script that converts any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a KiCad library including **3D model** in color. This tool will speed up your PCB design workflow especially when using [JLCPCB SMT assembly services](https://jlcpcb.com/caa). **It supports KiCad v6 and newer.**
 
@@ -20,13 +18,7 @@ A Python script that converts any electronic components from [EasyEDA](https://e
 
 ## 💾 Installation
 
-If you have already Python installed you can run directly in the common terminal.<br>
-If not, you can use the Python executable included with Kicad by using the KiCad Command Prompt.
-<div align="left">
-  <img src="/ressources/kicad_command_prompt_install.png" width="800">
-</div>
-
-Then run this command to install easyeda2kicad
+If you have Python installed on your system:
 
 ```bash
 pip install easyeda2kicad
@@ -34,45 +26,37 @@ pip install easyeda2kicad
 
 ### Installation using the KiCad Command Prompt
 
-KiCad ships with its own Python interpreter. If you don't have a separate Python installation, you can use the **KiCad Command Prompt** to install easyeda2kicad into KiCad's Python environment.
+KiCad ships with its own Python interpreter. If you don't have a separate Python installation, you can use KiCad's bundled Python to install easyeda2kicad.
 
-**Windows:** Open the KiCad Command Prompt via *Start Menu → KiCad → KiCad Command Prompt*, then run:
+**Windows:** KiCad bundles its own Python. Search for *KiCad Command Prompt* in the Start Menu, then run `pip install easyeda2kicad`. Note: KiCad's Scripts folder is not on PATH, so use `python -m easyeda2kicad` to run the tool from the KiCad Command Prompt.
 
-```bash
-pip install easyeda2kicad
-```
+**Linux:** On most distributions, KiCad uses the system Python — `pip install easyeda2kicad` works directly.
 
-**Linux / macOS:** KiCad's Python is typically not on the system PATH. Use the full path to KiCad's pip, for example:
+**macOS:** KiCad bundles its own Python. Install into it with:
 
 ```bash
-/usr/lib/kicad/lib/python3/dist-packages/../../../bin/python3 -m pip install easyeda2kicad
+/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/Current/bin/python3 -m pip install easyeda2kicad
 ```
 
-Or locate it with:
+> **Tip:** In the PCB Editor, open *Tools → Scripting Console* and run `import sys; print(sys.executable)` to get KiCad's Python path. Then run that path with `-m pip install easyeda2kicad` in a terminal.
 
-```bash
-find /usr -name "pip*" | grep kicad
-```
-
-After installation, run `easyeda2kicad` from the same KiCad Command Prompt.
+After installation, run `easyeda2kicad` from the same terminal or KiCad Command Prompt.
 
 ## 💻 Usage
 
 ```bash
-# For symbol + footprint + 3d model (with --full argument)
+# Symbol + footprint + 3D model
 easyeda2kicad --full --lcsc_id=C2040
-# For symbol + footprint + 3d model
-easyeda2kicad --symbol --footprint --3d --lcsc_id=C2040
-# For symbol + footprint
-easyeda2kicad --symbol --footprint --lcsc_id=C2040
-# For symbol only
+# Individual parts
 easyeda2kicad --symbol --lcsc_id=C2040
-# For footprint only
 easyeda2kicad --footprint --lcsc_id=C2040
-# For 3d model only
 easyeda2kicad --3d --lcsc_id=C2040
-# Import multiple components at once
+# Multiple components at once
 easyeda2kicad --full --lcsc_id C2040 C20197 C163691
+# Custom output path
+easyeda2kicad --full --lcsc_id=C2040 --output ~/libs/my_lib
+# SVG preview (no KiCad conversion)
+easyeda2kicad --svg --lcsc_id=C2040 --output ~/libs/my_lib
 ```
 
 By default, all libraries are saved in `~/Documents/Kicad/easyeda2kicad/` (Linux/macOS) or `C:/Users/your_name/Documents/Kicad/easyeda2kicad/` (Windows), with:
@@ -127,8 +111,7 @@ easyeda2kicad --symbol --lcsc_id=C2040 --custom-field "Manufacturer:Texas Instru
 
 Malformed values (missing `:`) fail fast. Duplicate keys use the last value.
 
-If EasyEDA does not provide a datasheet URL for a symbol, easyeda2kicad falls
-back to `https://www.lcsc.com/datasheet/<LCSC-ID>.pdf`.
+If EasyEDA does not provide a datasheet URL for a symbol, easyeda2kicad falls back to `https://www.lcsc.com/datasheet/<LCSC-ID>.pdf`.
 
 ### Using a proxy server
 
