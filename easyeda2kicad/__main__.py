@@ -259,8 +259,12 @@ def _process_component(
         easyeda_footprint = EasyedaFootprintImporter(
             easyeda_cp_cad_data=cad_data
         ).get_footprint()
+        # Sanitize footprint name for filename (slashes/backslashes are invalid)
+        sanitized_fp_name = (
+            easyeda_footprint.info.name.replace("/", "_").replace("\\", "_")
+        )
         if (
-            Path(f"{output}.pretty") / f"{easyeda_footprint.info.name}.kicad_mod"
+            Path(f"{output}.pretty") / f"{sanitized_fp_name}.kicad_mod"
         ).is_file() and not arguments["overwrite"]:
             logging.error(
                 f"Footprint for {component_id} already exists. Use --overwrite to replace"
@@ -276,7 +280,7 @@ def _process_component(
             )
         else:
             model_3d_path = Path(f"{output}.3dshapes").as_posix()
-        footprint_filename = f"{easyeda_footprint.info.name}.kicad_mod"
+        footprint_filename = f"{sanitized_fp_name}.kicad_mod"
         ExporterFootprintKicad(footprint=easyeda_footprint).export(
             footprint_full_path=str(footprint_path / footprint_filename),
             model_3d_path=model_3d_path,

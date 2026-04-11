@@ -119,8 +119,13 @@ You can import several components in a single call:
 easyeda2kicad --full --lcsc_id C2040 C20197 C163691
 ```
 
-If you created your own symbol, footprint or 3D model which is not listed in public libraries, you can retrieve the component by specifying the uuid argument. Find the uuid through the network inspector of your browser when you select a component in your workspace library(thus filed a request). The requested url should be something like this:
+### Import User-created Components
+
+If you created your own symbol, footprint or 3D model which is not listed in public libraries, you can retrieve the component by specifying the uuid argument. Find the uuid through the network inspector of your browser when you select a component in your workspace library(thus filed a request). The requested url should be something like these:
 https://easyeda.com/api/components/{uuid}?version=6.5.42&uuid={uuid}&datastrid=blah
+https://www.easyeda.com/api/components/{uuid}?version=6.5.54&uuid={uuid}&_=blah
+
+### Custom symbol fields
 
 Use `--custom-field` to add extra properties to generated symbols:
 
