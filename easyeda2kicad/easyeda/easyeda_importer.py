@@ -439,7 +439,11 @@ class EasyedaSymbolImporter:
             origin_y = _safe_float(head_data.get("y")) or 0.0
 
         lcsc_dict = ee_data.get("lcsc") or {}
-        lcsc_number = lcsc_dict.get("number", "")
+        lcsc_number = (
+            lcsc_dict.get("number", "")
+            or ee_data_info.get("Supplier Part", "")
+            or ee_data_info.get("LCSC Part", "")
+        )
 
         new_ee_symbol = EeSymbol(
             info=EeSymbolInfo(
@@ -451,9 +455,11 @@ class EasyedaSymbolImporter:
                 mpn=ee_data_info.get("Manufacturer Part", "")
                 or ee_data_info.get("BOM_Manufacturer Part", ""),
                 datasheet=lcsc_dict.get("url", "")
+                or ee_data_info.get("link", "")
+                or ee_data_info.get("datasheet", "")
                 or (
                     f"https://www.lcsc.com/datasheet/{lcsc_number}.pdf"
-                    if lcsc_number
+                    if lcsc_number and lcsc_number.startswith("C")
                     else ""
                 ),
                 lcsc_id=lcsc_number,
