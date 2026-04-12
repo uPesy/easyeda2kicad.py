@@ -50,7 +50,11 @@ def get_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
-        "--lcsc_id", help="LCSC id(s)", required=True, type=str, nargs="+"
+        "--lcsc_id", help="LCSC id(s)", required=False, type=str, nargs="+"
+    )
+
+    parser.add_argument(
+        "--uuid", help="Component uuid(s)", required=False, type=str, nargs="+"
     )
 
     parser.add_argument(
@@ -140,10 +144,15 @@ def get_parser() -> argparse.ArgumentParser:
 
 
 def valid_arguments(arguments: dict[str, Any]) -> bool:
-    for lcsc_id in arguments["lcsc_id"]:
-        if not lcsc_id.startswith("C"):
-            logging.error(f"lcsc_id '{lcsc_id}' should start with C")
-            return False
+    if not arguments.get("lcsc_id") and not arguments.get("uuid"):
+        logging.error("Either --lcsc_id or --uuid must be provided")
+        return False
+
+    if arguments.get("lcsc_id"):
+        for lcsc_id in arguments["lcsc_id"]:
+            if not lcsc_id.startswith("C"):
+                logging.error(f"lcsc_id '{lcsc_id}' should start with C")
+                return False
 
     if arguments["full"]:
         arguments["symbol"], arguments["footprint"], arguments["3d"] = True, True, True
@@ -201,12 +210,14 @@ def valid_arguments(arguments: dict[str, Any]) -> bool:
 
 
 def _process_component(
-    component_id: str,
     arguments: dict[str, Any],
     api: EasyedaApi,
+    lcsc_id: str | None = None,
+    uuid: str | None = None,
 ) -> bool:
-    """Process a single LCSC component. Returns True on success, False on error."""
-    cad_data = api.get_cad_data_of_component(lcsc_id=component_id)
+    """Process a single component (LCSC or UUID). Returns True on success, False on error."""
+    component_id = lcsc_id or uuid
+    cad_data = api.get_cad_data_of_component(lcsc_id=lcsc_id, uuid=uuid)
     if not cad_data:
         logging.error(f"Failed to fetch data from EasyEDA API for part {component_id}")
         return False
@@ -248,8 +259,12 @@ def _process_component(
         easyeda_footprint = EasyedaFootprintImporter(
             easyeda_cp_cad_data=cad_data
         ).get_footprint()
+        # Sanitize footprint name for filename (slashes/backslashes are invalid)
+        sanitized_fp_name = (
+            easyeda_footprint.info.name.replace("/", "_").replace("\\", "_")
+        )
         if (
-            Path(f"{output}.pretty") / f"{easyeda_footprint.info.name}.kicad_mod"
+            Path(f"{output}.pretty") / f"{sanitized_fp_name}.kicad_mod"
         ).is_file() and not arguments["overwrite"]:
             logging.error(
                 f"Footprint for {component_id} already exists. Use --overwrite to replace"
@@ -265,7 +280,7 @@ def _process_component(
             )
         else:
             model_3d_path = Path(f"{output}.3dshapes").as_posix()
-        footprint_filename = f"{easyeda_footprint.info.name}.kicad_mod"
+        footprint_filename = f"{sanitized_fp_name}.kicad_mod"
         ExporterFootprintKicad(footprint=easyeda_footprint).export(
             footprint_full_path=str(footprint_path / footprint_filename),
             model_3d_path=model_3d_path,
@@ -354,9 +369,15 @@ def main(argv: list[str] = sys.argv[1:]) -> int:
     api = EasyedaApi(use_cache=arguments["use_cache"])
     had_errors = False
 
-    for component_id in arguments["lcsc_id"]:
-        if not _process_component(component_id, arguments, api):
-            had_errors = True
+    if arguments.get("lcsc_id"):
+        for lcsc_id in arguments["lcsc_id"]:
+            if not _process_component(arguments, api, lcsc_id=lcsc_id):
+                had_errors = True
+
+    if arguments.get("uuid"):
+        for uuid in arguments["uuid"]:
+            if not _process_component(arguments, api, uuid=uuid):
+                had_errors = True
 
     return 1 if had_errors else 0
 
