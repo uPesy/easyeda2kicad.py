@@ -258,6 +258,8 @@ def _process_component(
         easyeda_footprint = EasyedaFootprintImporter(
             easyeda_cp_cad_data=cad_data
         ).get_footprint()
+        # Keep footprint description untouched by LCSC/JLC enrichment request: no descr field.
+        easyeda_footprint.info.description = ""
         if (
             Path(f"{output}.pretty") / f"{easyeda_footprint.info.name}.kicad_mod"
         ).is_file() and not arguments["overwrite"]:
