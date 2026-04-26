@@ -602,6 +602,96 @@ class TestGetProductImageUrl:
         assert api.get_product_image_url("https://www.lcsc.com/product/C1.html") is None
 
 
+class TestGetProductDescription:
+    def test_json_ld_additional_property_specs_preferred(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        api = EasyedaApi(use_cache=False)
+        ld = json.dumps(
+            {
+                "@context": "https://schema.org",
+                "@type": "Product",
+                "name": "INA296A3IDR",
+                "additionalProperty": [
+                    {"name": "Gain", "value": "50V/V"},
+                    {"name": "Bandwidth", "value": "1.1MHz"},
+                    {"name": "Package", "value": "SOIC-8"},
+                ],
+            }
+        )
+        html = (
+            b"<html><head>"
+            b'<meta name="description" content="generic marketing text"/>'
+            + f'<script type="application/ld+json">{ld}</script>'.encode()
+            + b"</head></html>"
+        )
+        monkeypatch.setattr(
+            "urllib.request.urlopen", lambda *a, **kw: _fake_response(html)
+        )
+        result = api.get_product_description(
+            "https://www.lcsc.com/product-detail/C1591.html"
+        )
+        assert result == (
+            "INA296A3IDR | Gain: 50V/V; Bandwidth: 1.1MHz; Package: SOIC-8"
+        )
+
+    def test_meta_description_extracted(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        api = EasyedaApi(use_cache=False)
+        html = (
+            b"<html><head>"
+            b'<meta name="description" content="High precision resistor 1k 1%"/>'
+            b"</head></html>"
+        )
+        monkeypatch.setattr(
+            "urllib.request.urlopen", lambda *a, **kw: _fake_response(html)
+        )
+        result = api.get_product_description(
+            "https://www.lcsc.com/product-detail/C1591.html"
+        )
+        assert result == "High precision resistor 1k 1%"
+
+    def test_json_ld_fallback(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        api = EasyedaApi(use_cache=False)
+        ld = json.dumps(
+            {
+                "@type": "Product",
+                "description": "MLCC capacitor 100nF 50V X7R",
+            }
+        )
+        html = (
+            f'<html><head><script type="application/ld+json">{ld}</script>'
+            f"</head></html>"
+        ).encode()
+        monkeypatch.setattr(
+            "urllib.request.urlopen", lambda *a, **kw: _fake_response(html)
+        )
+        result = api.get_product_description(
+            "https://www.lcsc.com/product-detail/C1591.html"
+        )
+        assert result == "MLCC capacitor 100nF 50V X7R"
+
+    def test_og_title_fallback(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        api = EasyedaApi(use_cache=False)
+        html = (
+            b"<html><head>"
+            b'<meta property="og:title" content="STM32 MCU LQFP48"/>'
+            b"</head></html>"
+        )
+        monkeypatch.setattr(
+            "urllib.request.urlopen", lambda *a, **kw: _fake_response(html)
+        )
+        result = api.get_product_description(
+            "https://www.lcsc.com/product-detail/C1591.html"
+        )
+        assert result == "STM32 MCU LQFP48"
+
+    def test_non_lcsc_host_returns_none(self) -> None:
+        api = EasyedaApi(use_cache=False)
+        assert api.get_product_description("https://evil.com/page") is None
+
+
 # ---------------------------------------------------------------------------
 # _get_v2_json / search_v2_component_uuids_by_lcsc — monkeypatched
 # ---------------------------------------------------------------------------

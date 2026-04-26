@@ -11,6 +11,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+from html import unescape
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -503,3 +504,232 @@ class EasyedaApi:
                 if isinstance(value, str) and value.startswith("http"):
                     return value
         return None
+
+    def get_product_description(self, lcsc_url: str) -> str | None:
+        """Fetch a product description/title from an LCSC product page.
+
+        Extraction order:
+        1. ``meta[name=description]`` content
+        2. JSON-LD ``description``
+        3. ``og:title`` content
+        4. HTML ``<title>`` text
+
+        Only fetches from lcsc.com hosts. Returns None if unavailable.
+        """
+        if not lcsc_url:
+            return None
+        parsed = urllib.parse.urlparse(lcsc_url)
+        if parsed.hostname not in ("lcsc.com", "www.lcsc.com"):
+            logging.warning(
+                f"get_product_description: unexpected host {parsed.hostname!r}, skipping"
+            )
+            return None
+
+        try:
+            req = urllib.request.Request(  # noqa: S310
+                url=lcsc_url,
+                headers={
+                    **self.headers,
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                },
+            )
+            with urllib.request.urlopen(  # noqa: S310
+                req, timeout=10, context=self.ssl_context
+            ) as response:
+                html = self._decode_response(response.read())
+        except (urllib.error.URLError, OSError) as e:
+            logging.error(f"Failed to fetch LCSC product page for description: {e}")
+            return None
+
+        # 0) Prefer structured JSON-LD specs when available (more useful than marketing meta text)
+        structured = self._extract_structured_product_description_from_json_ld(html)
+        if structured:
+            return structured
+
+        # 0b) Fallback: parse HTML spec rows rendered on product page
+        html_specs = self._extract_structured_product_description_from_html_specs(html)
+        if html_specs:
+            return html_specs
+
+        meta_desc = re.search(
+            r'<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)["\']',
+            html,
+            re.IGNORECASE,
+        ) or re.search(
+            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+name=["\']description["\']',
+            html,
+            re.IGNORECASE,
+        )
+        if meta_desc:
+            return meta_desc.group(1).strip()
+
+        for blob in re.findall(
+            r'<script[^>]+type="application/ld\+json"[^>]*>(.*?)</script>',
+            html,
+            re.DOTALL,
+        ):
+            try:
+                data = json.loads(blob)
+            except json.JSONDecodeError:
+                continue
+
+            candidates = data if isinstance(data, list) else [data]
+            for entry in candidates:
+                if isinstance(entry, dict):
+                    desc = entry.get("description")
+                    if isinstance(desc, str) and desc.strip():
+                        return desc.strip()
+
+        og_title = re.search(
+            r'<meta[^>]+(?:name|property)=["\']og:title["\'][^>]+content=["\']([^"\']+)["\']',
+            html,
+            re.IGNORECASE,
+        ) or re.search(
+            r'<meta[^>]+content=["\']([^"\']+)["\'][^>]+(?:name|property)=["\']og:title["\']',
+            html,
+            re.IGNORECASE,
+        )
+        if og_title:
+            return og_title.group(1).strip()
+
+        title = re.search(r"<title>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
+        if title:
+            return re.sub(r"\s+", " ", title.group(1)).strip()
+
+        return None
+
+    def get_jlcpcb_specs_description(self, lcsc_id: str) -> str | None:
+        """Build a concise description from JLCPCB component attributes for an LCSC part."""
+        if not lcsc_id:
+            return None
+        result = self.search_jlcpcb_components(keyword=lcsc_id, page=1, page_size=10)
+        items = result.get("results") or []
+        match = next((i for i in items if i.get("lcsc") == lcsc_id), None)
+        if not isinstance(match, dict):
+            return None
+
+        name = (match.get("name") or "").strip()
+        brand = (match.get("brand") or "").strip()
+        package = (match.get("package") or "").strip()
+        attrs = match.get("attributes") or []
+
+        parts: list[str] = []
+        if brand:
+            parts.append(f"Manufacturer: {brand}")
+        if package:
+            parts.append(f"Package: {package}")
+
+        for a in attrs:
+            if not isinstance(a, dict):
+                continue
+            k = a.get("name")
+            v = a.get("value")
+            if isinstance(k, str) and isinstance(v, str) and k and v and v != "-":
+                parts.append(f"{k}: {v}")
+
+        if not parts:
+            return None
+        return (f"{name} | " if name else "") + "; ".join(parts)
+
+    def _extract_structured_product_description_from_json_ld(
+        self, html: str
+    ) -> str | None:
+        """Build a compact, spec-rich description from JSON-LD Product data."""
+        for blob in re.findall(
+            r'<script[^>]+type="application/ld\+json"[^>]*>(.*?)</script>',
+            html,
+            re.DOTALL,
+        ):
+            try:
+                data = json.loads(blob)
+            except json.JSONDecodeError:
+                continue
+
+            nodes = data if isinstance(data, list) else [data]
+            for node in nodes:
+                if not isinstance(node, dict):
+                    continue
+
+                node_type = node.get("@type")
+                if node_type not in ("Product", ["Product"], "Thing"):
+                    continue
+
+                name = node.get("name") if isinstance(node.get("name"), str) else ""
+                specs_parts: list[str] = []
+                additional = node.get("additionalProperty")
+                if isinstance(additional, list):
+                    for prop in additional:
+                        if not isinstance(prop, dict):
+                            continue
+                        key = prop.get("name")
+                        value = prop.get("value")
+                        if isinstance(key, str) and isinstance(value, str):
+                            key_clean = unescape(key).strip()
+                            val_clean = unescape(value).strip()
+                            if key_clean and val_clean and val_clean != "-":
+                                specs_parts.append(f"{key_clean}: {val_clean}")
+
+                if specs_parts:
+                    if name:
+                        return f"{name} | " + "; ".join(specs_parts)
+                    return "; ".join(specs_parts)
+
+        return None
+
+    def _extract_structured_product_description_from_html_specs(
+        self, html: str
+    ) -> str | None:
+        """Extract product spec rows from LCSC HTML and render concise description."""
+        # Try to capture common <tr><td>Key</td><td>Value</td></tr> style rows.
+        row_pattern = re.compile(
+            r"<tr[^>]*>\s*<t[dh][^>]*>(.*?)</t[dh]>\s*<t[dh][^>]*>(.*?)</t[dh]>\s*</tr>",
+            re.IGNORECASE | re.DOTALL,
+        )
+        rows = row_pattern.findall(html)
+        if not rows:
+            return None
+
+        def _clean(text: str) -> str:
+            text_no_tags = re.sub(r"<[^>]+>", " ", text)
+            return re.sub(r"\s+", " ", unescape(text_no_tags)).strip()
+
+        specs: list[tuple[str, str]] = []
+        for raw_key, raw_val in rows:
+            key = _clean(raw_key)
+            val = _clean(raw_val)
+            if not key or not val or val == "-":
+                continue
+            specs.append((key, val))
+
+        if not specs:
+            return None
+
+        preferred_order = [
+            "Manufacturer",
+            "Package",
+            "Gain",
+            "Bandwidth",
+            "Slew Rate",
+            "Single Supply",
+            "Differential Voltage",
+            "Common Mode Rejection Ratio (CMRR)",
+            "Operating Temperature",
+        ]
+        specs_map = {k: v for k, v in specs}
+        picked: list[str] = []
+        for k in preferred_order:
+            if k in specs_map:
+                picked.append(f"{k}: {specs_map[k]}")
+
+        # If none of preferred fields found, use first rows as generic fallback.
+        if not picked:
+            picked = [f"{k}: {v}" for k, v in specs[:10]]
+
+        # Prefix with product name from title if available.
+        title = re.search(r"<title>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
+        if title:
+            name = re.sub(r"\s+", " ", _clean(title.group(1))).split("-")[0].strip()
+            if name:
+                return f"{name} | " + "; ".join(picked)
+
+        return "; ".join(picked)
