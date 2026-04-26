@@ -213,11 +213,21 @@ def _process_component(
 
     output = arguments["output"]
 
+    # Always use product-detail page for description scraping.
+    # cad_data['lcsc']['url'] may point to datasheet PDF and is unsuitable.
+    lcsc_url = f"https://www.lcsc.com/product-detail/{component_id}.html"
+    # Prefer structured spec description from JLCPCB attributes, then LCSC page parsing.
+    lcsc_page_description = api.get_jlcpcb_specs_description(component_id) or (
+        api.get_product_description(lcsc_url) or ""
+    )
+
     if arguments["symbol"]:
         # ---------------- SYMBOL ----------------
         easyeda_symbol: EeSymbol = EasyedaSymbolImporter(
             easyeda_cp_cad_data=cad_data
         ).get_symbol()
+        if lcsc_page_description:
+            easyeda_symbol.info.description = lcsc_page_description
         lib_path = f"{output}.kicad_sym"
         exporter = ExporterSymbolKicad(
             symbol=easyeda_symbol,
