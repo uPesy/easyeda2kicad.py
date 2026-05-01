@@ -4,6 +4,7 @@ import math
 
 import pytest
 
+from easyeda2kicad.easyeda.easyeda_importer import _sanitize_footprint_name
 from easyeda2kicad.kicad.export_kicad_footprint import (
     angle_to_ki,
     compute_arc,
@@ -147,3 +148,34 @@ class TestComputeArc:
         d_start = math.sqrt((1 - cx) ** 2 + (0 - cy) ** 2)
         d_end = math.sqrt((1 - cx) ** 2 + (0 - cy) ** 2)
         assert abs(d_start - d_end) < TOL
+
+
+# ---------------------------------------------------------------------------
+# _sanitize_footprint_name
+# ---------------------------------------------------------------------------
+
+
+class TestSanitizeFootprintName:
+    def test_clean_name_unchanged(self) -> None:
+        assert _sanitize_footprint_name("SOT-23") == "SOT-23"
+
+    def test_forward_slash_replaced(self) -> None:
+        assert _sanitize_footprint_name("USB/UART") == "USB_UART"
+
+    def test_backslash_replaced(self) -> None:
+        assert _sanitize_footprint_name("A\\B") == "A_B"
+
+    def test_colon_replaced(self) -> None:
+        assert _sanitize_footprint_name("lib:name") == "lib_name"
+
+    def test_angle_brackets_replaced(self) -> None:
+        assert _sanitize_footprint_name("A<->B") == "A_-_B"
+
+    def test_quote_replaced(self) -> None:
+        assert _sanitize_footprint_name('say"hi"') == "say_hi_"
+
+    def test_spaces_preserved(self) -> None:
+        assert _sanitize_footprint_name("SOT 23") == "SOT 23"
+
+    def test_mixed_illegal_chars(self) -> None:
+        assert _sanitize_footprint_name("USB/Serial:1\\2") == "USB_Serial_1_2"

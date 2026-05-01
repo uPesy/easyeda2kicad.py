@@ -33,6 +33,7 @@ except ImportError:
 
 API_BASE_LEGACY = "https://easyeda.com"
 API_ENDPOINT = "https://easyeda.com/api/products/{lcsc_id}/components"
+API_ENDPOINT_BY_UUID = "https://easyeda.com/api/components/{uuid}"
 ENDPOINT_SVG = "https://easyeda.com/api/products/{lcsc_id}/svgs"
 ENDPOINT_3D_MODEL = "https://modules.easyeda.com/3dmodel/{uuid}"
 ENDPOINT_3D_MODEL_STEP = "https://modules.easyeda.com/qAxj6KHrDKw4blvCG8QJPs7Y/{uuid}"
@@ -161,9 +162,14 @@ class EasyedaApi:
         logging.debug("Using system default SSL certificates")
         return context
 
-    def get_info_from_easyeda_api(self, lcsc_id: str) -> dict[str, Any]:
-        # Try to read from cache first
-        cache_path = self._get_cache_path(lcsc_id, "json")
+    def get_info_from_easyeda_api(
+        self, lcsc_id: str | None = None, uuid: str | None = None
+    ) -> dict[str, Any]:
+        identifier = lcsc_id or uuid
+        if not identifier:
+            return {}
+
+        cache_path = self._get_cache_path(identifier, "json")
         cached_data = self._read_from_cache(cache_path, binary=False)
         if cached_data is not None:
             try:
@@ -171,13 +177,15 @@ class EasyedaApi:
                 return cached
             except json.JSONDecodeError:
                 logging.warning(
-                    f"Invalid cached JSON for {lcsc_id}, fetching fresh data"
+                    f"Invalid cached JSON for {identifier}, fetching fresh data"
                 )
 
         try:
-            req = urllib.request.Request(  # noqa: S310
-                url=API_ENDPOINT.format(lcsc_id=lcsc_id), headers=self.headers
-            )
+            if lcsc_id:
+                url = API_ENDPOINT.format(lcsc_id=lcsc_id)
+            else:
+                url = API_ENDPOINT_BY_UUID.format(uuid=uuid)
+            req = urllib.request.Request(url=url, headers=self.headers)  # noqa: S310
             with urllib.request.urlopen(  # noqa: S310
                 req, timeout=30, context=self.ssl_context
             ) as response:
@@ -192,7 +200,6 @@ class EasyedaApi:
                 logging.debug(f"{api_response}")
                 return {}
 
-            # Write to cache
             self._write_to_cache(cache_path, data, binary=False)
 
             return api_response
@@ -200,8 +207,10 @@ class EasyedaApi:
             logging.error(f"API request failed: {e}")
             return {}
 
-    def get_cad_data_of_component(self, lcsc_id: str) -> dict[str, Any]:
-        cp_cad_info = self.get_info_from_easyeda_api(lcsc_id=lcsc_id)
+    def get_cad_data_of_component(
+        self, lcsc_id: str | None = None, uuid: str | None = None
+    ) -> dict[str, Any]:
+        cp_cad_info = self.get_info_from_easyeda_api(lcsc_id=lcsc_id, uuid=uuid)
         if not cp_cad_info:
             return {}
         result: dict[str, Any] = cp_cad_info["result"]

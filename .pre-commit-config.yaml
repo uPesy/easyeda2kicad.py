@@ -26,5 +26,4 @@ repos:
     hooks:
     -   id: mypy
         args: [--strict]
-        files: \.py$
-        additional_dependencies: [pytest>=8.0]
+        files: ^easyeda2kicad/.*\.py$

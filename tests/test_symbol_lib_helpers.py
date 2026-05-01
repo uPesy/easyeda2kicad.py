@@ -11,6 +11,7 @@ from easyeda2kicad.kicad.export_kicad_symbol import (
     read_symbol_lib_version,
     write_component_in_symbol_lib_file,
 )
+from easyeda2kicad.kicad.parameters_kicad_symbol import sanitize_fields
 
 
 # ---- fixtures ----
@@ -181,3 +182,32 @@ def test_read_version_file_not_found() -> None:
 def test_read_version_none() -> None:
     """None as lib_path falls back to the oldest known version."""
     assert read_symbol_lib_version(None) == 20211014
+
+
+# ---- sanitize_fields ----
+
+
+class TestSanitizeFields:
+    def test_clean_name_unchanged(self) -> None:
+        assert sanitize_fields("STM32F103") == "STM32F103"
+
+    def test_spaces_removed(self) -> None:
+        assert sanitize_fields("USB Bridge") == "USBBridge"
+
+    def test_slash_replaced(self) -> None:
+        assert sanitize_fields("USB/UART") == "USB_UART"
+
+    def test_colon_replaced(self) -> None:
+        assert sanitize_fields("MUX:4to1") == "MUX_4to1"
+
+    def test_backslash_replaced(self) -> None:
+        assert sanitize_fields("A\\B") == "A_B"
+
+    def test_angle_brackets_replaced(self) -> None:
+        assert sanitize_fields("A<->B") == "A_-_B"
+
+    def test_quote_replaced(self) -> None:
+        assert sanitize_fields('say"hi"') == "say_hi_"
+
+    def test_mixed_illegal_chars(self) -> None:
+        assert sanitize_fields('USB/Serial: "Bridge"') == "USB_Serial__Bridge_"

@@ -79,8 +79,12 @@ class KiSymbolDefaults(Enum):
     FIELD_OFFSET_INCREMENT = 2.54
 
 
+# Characters illegal in KiCad LIB_IDs (lib_id.cpp: isLegalChar).
+_ILLEGAL_SYMBOL_ID_RE = re.compile(r'[/\\:<>"\t\n\r]')
+
+
 def sanitize_fields(name: str) -> str:
-    return name.replace(" ", "").replace("/", "_").replace(":", "_")
+    return _ILLEGAL_SYMBOL_ID_RE.sub("_", name).replace(" ", "")
 
 
 def apply_text_style(text: str) -> str:
