@@ -230,22 +230,28 @@ def _parse_solid_region_path(
         cmd = token[0]
         args = [a for a in re.split(r"[,\s]+", token[1:].strip()) if a]
 
-        if cmd == "M" and len(args) >= 2:
-            cur_x, cur_y = float(args[0]), float(args[1])
-            points.append((fp_to_ki(cur_x - bbox_x_px), fp_to_ki(cur_y - bbox_y_px)))
-        elif cmd == "L" and len(args) >= 2:
-            cur_x, cur_y = float(args[0]), float(args[1])
-            points.append((fp_to_ki(cur_x - bbox_x_px), fp_to_ki(cur_y - bbox_y_px)))
+        # append with deduplication, since coordinates seem to be unnecessarily restated sometimes
+        def _append_point():
+            point = (fp_to_ki(cur_x - bbox_x_px), fp_to_ki(cur_y - bbox_y_px))
+            if not points or points[-1] != point:
+                points.append(point)
+
+        # subsequent coordinate pairs are treated as "L" commands,
+        # so "M" is functionally the same as "L" if we only support a single path
+        if cmd in {"M", "L"} and len(args) >= 2:
+            for i in range(0, len(args) - (len(args) % 2), 2):
+                cur_x, cur_y = float(args[i]), float(args[i + 1])
+                _append_point()
         elif cmd == "H" and len(args) >= 1:
             cur_x = float(args[0])
-            points.append((fp_to_ki(cur_x - bbox_x_px), fp_to_ki(cur_y - bbox_y_px)))
+            _append_point()
         elif cmd == "V" and len(args) >= 1:
             cur_y = float(args[0])
-            points.append((fp_to_ki(cur_x - bbox_x_px), fp_to_ki(cur_y - bbox_y_px)))
+            _append_point()
         elif cmd == "A" and len(args) >= 7:
             # Approximate arc by its endpoint only
             cur_x, cur_y = float(args[5]), float(args[6])
-            points.append((fp_to_ki(cur_x - bbox_x_px), fp_to_ki(cur_y - bbox_y_px)))
+            _append_point()
         elif cmd == "Z" and points and points[0] != points[-1]:
             points.append(points[0])
 
