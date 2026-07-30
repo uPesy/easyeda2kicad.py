@@ -22,6 +22,7 @@ from easyeda2kicad.easyeda.parameters_easyeda import (
 from easyeda2kicad.easyeda.parameters_easyeda import EasyedaPinType
 from easyeda2kicad.kicad.export_kicad_symbol import (
     convert_ee_arcs,
+    convert_ee_full_circle_arcs,
     convert_ee_paths,
     convert_ee_pins,
     convert_ee_polylines,
@@ -286,6 +287,29 @@ def test_arc_zero_radius(caplog: pytest.LogCaptureFixture) -> None:
         result = convert_ee_arcs([arc], BBOX)
     assert result == []
     assert "degenerate arc" in caplog.text
+
+
+def test_nearly_closed_large_arc_converts_to_circle() -> None:
+    # EasyEDA uses a 0.01px endpoint offset to encode a complete circle.
+    arc = _make_arc("M 211 389 A 3 3 0 1 0 211 389.01")
+    bbox = EeSymbolBbox(x=220, y=400)
+
+    circles = convert_ee_full_circle_arcs([arc], bbox)
+
+    assert convert_ee_arcs([arc], bbox) == []
+    assert len(circles) == 1
+    assert circles[0].pos_x == pytest.approx(-3.048, abs=1e-3)
+    assert circles[0].pos_y == pytest.approx(2.793, abs=1e-3)
+    assert circles[0].radius == pytest.approx(0.762, abs=1e-6)
+    assert "(circle" in circles[0].export()
+
+
+def test_nearly_closed_small_arc_is_not_misclassified_as_circle() -> None:
+    arc = _make_arc("M 211 389 A 3 3 0 0 0 211 389.01")
+    bbox = EeSymbolBbox(x=220, y=400)
+
+    assert convert_ee_full_circle_arcs([arc], bbox) == []
+    assert len(convert_ee_arcs([arc], bbox)) == 1
 
 
 # ---- integrate_sub_units ----

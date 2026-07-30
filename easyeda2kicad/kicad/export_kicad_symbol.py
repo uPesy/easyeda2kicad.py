@@ -330,6 +330,85 @@ def _svg_arc_mid_point(
     return mid_x, mid_y
 
 
+def _is_full_circle_arc(ee_arc: EeSymbolArc) -> bool:
+    """Return whether EasyEDA encoded a full circle as a nearly closed SVG arc.
+
+    SVG cannot represent a full circle with a single arc whose endpoints are
+    exactly equal. EasyEDA works around that by moving the endpoint by a tiny
+    amount and setting the large-arc flag. Emitting that shape as a KiCad arc
+    is not stable: KiCad collapses it to a zero-length arc when the symbol is
+    saved. Circular instances must therefore be emitted as KiCad circles.
+    """
+    if (
+        len(ee_arc.path) < 2
+        or not isinstance(ee_arc.path[0], SvgPathMoveTo)
+        or not isinstance(ee_arc.path[1], SvgPathEllipticalArc)
+    ):
+        return False
+
+    move = ee_arc.path[0]
+    arc = ee_arc.path[1]
+    radius_x = abs(float(arc.radius_x))
+    radius_y = abs(float(arc.radius_y))
+    if (
+        radius_x == 0
+        or radius_y == 0
+        or not arc.flag_large_arc
+        or not math.isclose(radius_x, radius_y, rel_tol=1e-6, abs_tol=1e-6)
+    ):
+        return False
+
+    endpoint_distance = math.hypot(
+        float(move.start_x) - float(arc.end_x),
+        float(move.start_y) - float(arc.end_y),
+    )
+    endpoint_tolerance = max(0.05, radius_x * 0.01)
+    return endpoint_distance <= endpoint_tolerance
+
+
+def convert_ee_full_circle_arcs(
+    ee_arcs: list[EeSymbolArc],
+    ee_bbox: EeSymbolBbox,
+) -> list[KiSymbolCircle]:
+    """Convert EasyEDA's nearly closed circular arcs to stable KiCad circles."""
+    kicad_circles = []
+    for ee_arc in ee_arcs:
+        if not _is_full_circle_arc(ee_arc):
+            continue
+
+        move = ee_arc.path[0]
+        arc = ee_arc.path[1]
+        start_x = float(move.start_x)
+        start_y = float(move.start_y)
+        radius = abs(float(arc.radius_x))
+        opposite_x, opposite_y = _svg_arc_mid_point(
+            sx=start_x,
+            sy=start_y,
+            ex=float(arc.end_x),
+            ey=float(arc.end_y),
+            rx=radius,
+            ry=radius,
+            x_rotation_deg=float(arc.x_axis_rotation),
+            large_arc=arc.flag_large_arc,
+            sweep=arc.flag_sweep,
+        )
+
+        # The midpoint of a nearly complete arc is the point opposite its
+        # start, so their midpoint is the circle center.
+        center_x = (start_x + opposite_x) / 2.0
+        center_y = (start_y + opposite_y) / 2.0
+        kicad_circles.append(
+            KiSymbolCircle(
+                pos_x=px_to_mm(center_x - ee_bbox.x),
+                pos_y=-px_to_mm(center_y - ee_bbox.y),
+                radius=px_to_mm(radius),
+                background_filling=ee_arc.fill_color,
+            )
+        )
+
+    return kicad_circles
+
+
 def convert_ee_arcs(
     ee_arcs: list[EeSymbolArc],
     ee_bbox: EeSymbolBbox,
@@ -348,6 +427,10 @@ def convert_ee_arcs(
                 f"Skipping degenerate arc (radius_x={ee_arc.path[1].radius_x},"
                 f" radius_y={ee_arc.path[1].radius_y})"
             )
+            continue
+        elif _is_full_circle_arc(ee_arc):
+            # Handled by convert_ee_full_circle_arcs(). KiCad collapses this
+            # nearly closed representation when the symbol is saved.
             continue
         else:
             svg_arc = ee_arc.path[1]
@@ -585,7 +668,8 @@ def convert_to_kicad(
         rectangles=convert_ee_rectangles(
             ee_rectangles=ee_symbol.rectangles, ee_bbox=snapped_bbox
         ),
-        circles=convert_ee_circles(ee_circles=ee_symbol.circles, ee_bbox=snapped_bbox),
+        circles=convert_ee_circles(ee_circles=ee_symbol.circles, ee_bbox=snapped_bbox)
+        + convert_ee_full_circle_arcs(ee_arcs=ee_symbol.arcs, ee_bbox=snapped_bbox),
         arcs=convert_ee_arcs(ee_arcs=ee_symbol.arcs, ee_bbox=snapped_bbox),
     )
     kicad_symbol.circles += convert_ee_ellipses(
