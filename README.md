@@ -9,7 +9,7 @@
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 [![security: bandit](https://img.shields.io/badge/security-bandit-yellow.svg)](https://github.com/PyCQA/bandit)
 
-A Python script that converts any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a KiCad library including **3D model** in color. This tool will speed up your PCB design workflow especially when using [JLCPCB SMT assembly services](https://jlcpcb.com/caa). **It supports KiCad v6 and newer.**
+A Python script that converts any electronic components from [EasyEDA](https://easyeda.com/) or [LCSC](https://www.lcsc.com/) to a KiCad library including **3D model** in color. This tool will speed up your PCB design workflow especially when using [JLCPCB SMT assembly services](https://jlcpcb.com/caa). **It supports KiCad v6 and newer; embedded 3D models require KiCad v9 or newer.**
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/uPesy/easyeda2kicad.py/master/ressources/demo_symbol.png" width="500">
@@ -75,6 +75,12 @@ easyeda2kicad --3d --lcsc_id=C2040
 easyeda2kicad --full --lcsc_id C2040 C20197 C163691
 ```
 
+Footprints embed their WRL models by default, making each `.kicad_mod` file self-contained. Use `--no-embed-3d-model` to retain an external `.3dshapes` reference instead, including when targeting KiCad 6–8:
+
+```bash
+easyeda2kicad --footprint --lcsc_id=C2040 --no-embed-3d-model
+```
+
 By default, all libraries are saved in `~/Documents/Kicad/easyeda2kicad/` (Linux/macOS) or `C:/Users/your_name/Documents/Kicad/easyeda2kicad/` (Windows), with:
 
 - `easyeda2kicad.kicad_sym` file for symbol library (KiCad v6+)
@@ -99,12 +105,12 @@ Use `--overwrite` to replace an existing symbol, footprint, or 3D model already 
 easyeda2kicad --full --lcsc_id=C2040 --output ~/libs/my_lib --overwrite
 ```
 
-### Project-relative 3D model paths
+### Project-relative external 3D model paths
 
-When working in a KiCad project folder, use `--project-relative` together with `--output` to store 3D model paths relative to the project root (`${KIPRJMOD}`):
+When using external models in a KiCad project folder, combine `--no-embed-3d-model`, `--project-relative`, and `--output` to store 3D model paths relative to the project root (`${KIPRJMOD}`):
 
 ```bash
-easyeda2kicad --full --lcsc_id=C2040 --output ~/myproject/libs/my_lib --project-relative
+easyeda2kicad --full --lcsc_id=C2040 --output ~/myproject/libs/my_lib --no-embed-3d-model --project-relative
 ```
 
 This stores the 3D path as `${KIPRJMOD}/libs/my_lib.3dshapes/...` instead of an absolute filesystem path, making the project portable.
