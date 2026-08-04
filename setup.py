@@ -36,7 +36,7 @@ setup(
     package_dir={"easyeda2kicad": "easyeda2kicad"},
     entry_points={"console_scripts": ["easyeda2kicad = easyeda2kicad.__main__:main"]},
     python_requires=">=3.9",
-    install_requires=[],
+    install_requires=["zstandard>=0.21.0"],
     extras_require={
         "dev": [
             "pre-commit>=3.0.0",

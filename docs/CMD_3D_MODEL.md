@@ -9,10 +9,10 @@ This document describes how 3D models are obtained and integrated into KiCad foo
 ## Workflow Overview
 
 1. Extract UUID and metadata from SVGNODE in footprint data
-2. Download OBJ and STEP files from EasyEDA using UUID
+2. Download OBJ from EasyEDA using UUID, plus STEP for `--3d` or `--full`
 3. Convert OBJ → WRL (VRML) for KiCad visualization
 4. Pass-through STEP files unchanged (binary)
-5. Reference models in footprint with coordinate transformation
+5. Embed the WRL model in the footprint, with an external-reference opt-out
 
 ---
 
@@ -174,7 +174,28 @@ rz = 360 - model_3d.rotation.z
 
 ## KiCad Footprint Integration
 
-**Model Reference:**
+**Embedded model reference (default, KiCad v9+):**
+
+```
+(embedded_files
+  (file
+    (name "IND-SMD_L7.0-W6.6-H3.0.wrl")
+    (type model)
+    (data |<zstd-compressed base64 data>|)
+    (checksum "<KiCad MMH3 checksum>")
+  )
+)
+
+(model "kicad-embed://IND-SMD_L7.0-W6.6-H3.0.wrl"
+  (offset (xyz 0 0 0))
+  (scale (xyz 1 1 1))
+  (rotate (xyz 0 0 0))
+)
+```
+
+The payload is compressed with Zstandard at level 15, Base64 encoded, and wrapped at 76 characters to match KiCad's embedded-file format.
+
+**External model reference (`--no-embed-3d-model`):**
 
 ```
 (model "${EASYEDA2KICAD}/IND-SMD_L7.0-W6.6-H3.0.wrl"
@@ -183,14 +204,16 @@ rz = 360 - model_3d.rotation.z
   (rotate (xyz 0 0 0))
 )
 
-(model "${EASYEDA2KICAD}/IND-SMD_L7.0-W6.6-H3.0.step"
-  (at (xyz 0 0 0))
-  (scale (xyz 1 1 1))
-  (rotate (xyz 0 0 0))
-)
 ```
 
-**File Structure:**
+**Default file structure:**
+
+```
+MyLibrary.pretty/
+  └── Footprint.kicad_mod       # Contains the embedded WRL model
+```
+
+`--full` and `--3d` still write standalone WRL and STEP files. With `--no-embed-3d-model`, footprints refer to those external files:
 
 ```
 MyLibrary.pretty/

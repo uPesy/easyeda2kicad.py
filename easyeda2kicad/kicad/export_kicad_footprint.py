@@ -8,6 +8,7 @@ from pathlib import Path
 
 # Local imports
 from ..easyeda.parameters_easyeda import EeFootprint, EeFootprintSolidRegion
+from .embedded_files import format_embedded_model
 from .parameters_kicad_footprint import (
     KI_ARC,
     KI_CIRCLE,
@@ -587,6 +588,7 @@ class ExporterFootprintKicad:
         footprint_full_path: str,
         model_3d_path: str,
         model_3d_extension: str = "wrl",
+        embedded_model_data: str | bytes | None = None,
     ) -> None:
         ki = self.output
         ki_lib = ""
@@ -669,8 +671,18 @@ class ExporterFootprintKicad:
                 ki_lib += KI_FP_POLY.format(pts=pts_str, layer=region.layer)
 
         if ki.model_3d is not None:
+            model_filename = f"{ki.model_3d.name}.{model_3d_extension}"
+            if embedded_model_data is not None:
+                ki_lib += format_embedded_model(
+                    name=model_filename,
+                    data=embedded_model_data,
+                )
+                model_reference = f"kicad-embed://{model_filename}"
+            else:
+                model_reference = f"{model_3d_path}/{model_filename}"
+
             ki_lib += KI_MODEL_3D.format(
-                file_3d=f"{model_3d_path}/{ki.model_3d.name}.{model_3d_extension}",
+                file_3d=model_reference,
                 pos_x=ki.model_3d.translation.x,
                 pos_y=ki.model_3d.translation.y,
                 pos_z=ki.model_3d.translation.z,

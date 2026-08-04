@@ -111,6 +111,17 @@ def get_parser() -> argparse.ArgumentParser:
     )
 
     parser.add_argument(
+        "--embed-3d-model",
+        dest="embed_3d_model",
+        help=(
+            "Embed the WRL model in each footprint (default). Use"
+            " --no-embed-3d-model for an external model reference"
+        ),
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
+
+    parser.add_argument(
         "--debug",
         help="set the logging level to debug",
         required=False,
@@ -212,6 +223,7 @@ def _process_component(
         return False
 
     output = arguments["output"]
+    model_exporter: Exporter3dModelKicad | None = None
 
     if arguments["symbol"]:
         # ---------------- SYMBOL ----------------
@@ -256,6 +268,20 @@ def _process_component(
             )
             return False
         footprint_path = Path(f"{output}.pretty")
+        embedded_model_data: str | None = None
+        if arguments["embed_3d_model"] and easyeda_footprint.model_3d is not None:
+            model_3d = easyeda_footprint.model_3d
+            model_3d.raw_obj = api.get_raw_3d_model_obj(uuid=model_3d.uuid)
+            if arguments["3d"]:
+                model_3d.step = api.get_step_3d_model(uuid=model_3d.uuid)
+            model_exporter = Exporter3dModelKicad(model_3d=model_3d)
+            if model_exporter.output and model_exporter.output.raw_wrl:
+                embedded_model_data = model_exporter.output.raw_wrl
+            else:
+                logging.warning(
+                    f"Unable to embed 3D model for {component_id}; using external reference"
+                )
+
         if arguments.get("use_default_folder"):
             model_3d_path = "${EASYEDA2KICAD}/easyeda2kicad.3dshapes"
         elif arguments["project_relative"]:
@@ -269,6 +295,7 @@ def _process_component(
         ExporterFootprintKicad(footprint=easyeda_footprint).export(
             footprint_full_path=str(footprint_path / footprint_filename),
             model_3d_path=model_3d_path,
+            embedded_model_data=embedded_model_data,
         )
         logging.info(
             f"Created Kicad footprint for ID: {component_id}\n"
@@ -297,13 +324,14 @@ def _process_component(
 
     if arguments["3d"]:
         # ---------------- 3D MODEL ----------------
-        model_exporter = Exporter3dModelKicad(
-            model_3d=Easyeda3dModelImporter(
-                easyeda_cp_cad_data=cad_data,
-                download_raw_3d_model=True,
-                api=api,
-            ).output,
-        )
+        if model_exporter is None:
+            model_exporter = Exporter3dModelKicad(
+                model_3d=Easyeda3dModelImporter(
+                    easyeda_cp_cad_data=cad_data,
+                    download_raw_3d_model=True,
+                    api=api,
+                ).output,
+            )
         output_dir = Path(f"{output}.3dshapes")
         if not model_exporter.output:
             logging.warning(f"No 3D model available for ID: {component_id}")
