@@ -6,7 +6,13 @@ from pathlib import Path
 
 import pytest
 
+from easyeda2kicad.easyeda.parameters_easyeda import (
+    EeSymbol,
+    EeSymbolBbox,
+    EeSymbolInfo,
+)
 from easyeda2kicad.kicad.export_kicad_symbol import (
+    ExporterSymbolKicad,
     id_already_in_symbol_lib,
     read_symbol_lib_version,
     write_component_in_symbol_lib_file,
@@ -29,6 +35,10 @@ V6_SYMBOL_A = """\
     )
   )
 """
+
+# LCSC C7421520 — sanitize_fields() strips the space
+SPACED_NAME = "2.54-3P TPGT"
+SANITIZED_NAME = "2.54-3PTPGT"
 
 V6_SYMBOL_B = """\
 
@@ -133,6 +143,39 @@ def test_write_two_then_overwrite_first_unchanged(v6_lib_with_a: Path) -> None:
     assert content_after.count('(symbol "CompA"') == 1
     assert content_after.count('(symbol "CompB"') == 1
     assert content_before.strip() == content_after.strip()
+
+
+# ---- names needing sanitization ----
+
+
+def _spaced_symbol() -> EeSymbol:
+    return EeSymbol(
+        info=EeSymbolInfo(name=SPACED_NAME, prefix="J?", package="HDR-3P"),
+        bbox=EeSymbolBbox(x=0.0, y=0.0, width=0.0, height=0.0),
+    )
+
+
+def _save(lib: Path, overwrite: bool) -> bool:
+    exporter = ExporterSymbolKicad(symbol=_spaced_symbol(), lib_path=str(lib))
+    return exporter.save_to_lib(
+        lib_path=str(lib), footprint_lib_name="test", overwrite=overwrite
+    )
+
+
+def test_spaced_name_second_write_is_detected(v6_lib: Path) -> None:
+    """Without --overwrite, a re-import of a spaced name must be refused."""
+    assert _save(v6_lib, overwrite=False) is True
+    assert _save(v6_lib, overwrite=False) is False
+
+
+def test_spaced_name_overwrite_does_not_duplicate(v6_lib: Path) -> None:
+    """--overwrite must replace the symbol, not append a second copy."""
+    _save(v6_lib, overwrite=True)
+    _save(v6_lib, overwrite=True)
+
+    content = v6_lib.read_text(encoding="utf-8")
+    assert content.count(f'(symbol "{SANITIZED_NAME}"') == 1
+    assert f'(symbol "{SPACED_NAME}"' not in content
 
 
 # ---- read_symbol_lib_version ----
