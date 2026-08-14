@@ -37,6 +37,7 @@ from .parameters_kicad_symbol import (
     KiSymbolPolygon,
     KiSymbolRectangle,
     KiSymbolText,
+    sanitize_fields,
 )
 
 _SYM_LIB_REGEX = r'\n(\s*)\(symbol "{component_name}".*?\n\1\)(?=\n|$)'
@@ -670,6 +671,15 @@ class ExporterSymbolKicad:
             ee_symbol=self.input, custom_fields=custom_fields
         )
 
+    @property
+    def component_name(self) -> str:
+        """Name this symbol is written under in the .kicad_sym file.
+
+        Sanitized like KiSymbol.export() renders it, so lookups still match
+        when the raw name contains a space, "/" or ":".
+        """
+        return sanitize_fields(self.input.info.name)
+
     def export(self, footprint_lib_name: str) -> str:
         tune_footprint_ref_path(
             ki_symbol=self.output,
@@ -689,7 +699,7 @@ class ExporterSymbolKicad:
         return integrate_sub_units(
             main_symbol=main_content,
             sub_symbols=sub_contents,
-            component_name=self.input.info.name,
+            component_name=self.component_name,
         )
 
     def save_to_lib(
@@ -700,7 +710,7 @@ class ExporterSymbolKicad:
         Returns False if the symbol already exists and overwrite is False.
         """
         already_exists = id_already_in_symbol_lib(
-            lib_path=lib_path, component_name=self.input.info.name
+            lib_path=lib_path, component_name=self.component_name
         )
         if already_exists and not overwrite:
             return False
@@ -708,7 +718,7 @@ class ExporterSymbolKicad:
         content = self.export(footprint_lib_name=footprint_lib_name)
         write_component_in_symbol_lib_file(
             lib_path=lib_path,
-            component_name=self.input.info.name,
+            component_name=self.component_name,
             component_content=content,
             version=self.version,
         )
