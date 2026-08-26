@@ -3,6 +3,7 @@ from __future__ import annotations
 # Global imports
 import logging
 import re
+from enum import Enum
 from math import acos, cos, isnan, pi, sin, sqrt
 from pathlib import Path
 
@@ -202,6 +203,12 @@ def rotate(x: float, y: float, degrees: float) -> tuple[float, float]:
 
 # ---------------------------------------
 
+
+class SolidRegionOutput(Enum):
+    SOLID_REGION = "solid_region"
+    TRACK = "track"
+
+
 # Layers on which SOLIDREGION is imported.
 # Layer 5/6 (F.Paste/B.Paste) are skipped — paste areas belong to pad definitions, not graphics.
 # Layer 99 (ComponentShapeLayer/LIBBODY) is not visible in EasyEDA; imported as F.CrtYd outline.
@@ -253,18 +260,26 @@ def _parse_solid_region_path(
 
 
 def _convert_solid_region(
-    ee_region: EeFootprintSolidRegion, bbox_x: float, bbox_y: float
-) -> KiFootprintSolidRegion | None:
-    """Convert an EeFootprintSolidRegion to a KiFootprintSolidRegion.
+    ee_region: EeFootprintSolidRegion,
+    bbox_x: float,
+    bbox_y: float,
+    output: SolidRegionOutput,
+) -> KiFootprintSolidRegion | KiFootprintTrack | None:
+    """Convert an EeFootprintSolidRegion to a KiFootprintSolidRegion or KiFootprintTrack.
 
     Returns None if the layer is not imported or the path has < 3 points.
     """
-    if ee_region.layer_id not in _SOLID_REGION_LAYERS:
-        return None
-    if ee_region.region_type not in ("solid", "npth"):
+    if output is SolidRegionOutput.SOLID_REGION:
+        if ee_region.layer_id not in _SOLID_REGION_LAYERS:
+            return None
+        if ee_region.region_type != "solid":
+            return None
+    elif output is SolidRegionOutput.TRACK:
+        if ee_region.region_type != "npth":
+            return None
+    else:
         return None
 
-    layer = KI_LAYERS.get(ee_region.layer_id, "F.SilkS")
     points = _parse_solid_region_path(ee_region.path, bbox_x, bbox_y)
     if len(points) < 3:
         logging.warning(
@@ -273,7 +288,29 @@ def _convert_solid_region(
         )
         return None
 
-    return KiFootprintSolidRegion(layer=layer, points=points)
+    if output is SolidRegionOutput.SOLID_REGION:
+        layer = KI_LAYERS.get(ee_region.layer_id, "F.SilkS")
+        return KiFootprintSolidRegion(layer=layer, points=points)
+    elif output is SolidRegionOutput.TRACK:
+        if points[0] != points[-1]:
+            logging.warning(
+                "SOLIDREGION npth path cannot be converted to "
+                "Edge.Cuts: contour is not closed"
+            )
+            return None
+
+        track = KiFootprintTrack(layers=KI_LAYERS[10], stroke_width=0.05)
+        for start, end in zip(points, points[1:]):
+            if start == end:
+                continue
+            track.points_start_x.append(start[0])
+            track.points_start_y.append(start[1])
+            track.points_end_x.append(end[0])
+            track.points_end_y.append(end[1])
+        return track if track.points_start_x else None
+    else:
+        return None
+
 
 
 # ---------------------------------------
@@ -575,9 +612,24 @@ class ExporterFootprintKicad:
 
         # For solid regions
         for ee_region in self.input.solid_regions:
-            ki_region = _convert_solid_region(ee_region, bbox_x_px, bbox_y_px)
-            if ki_region is not None:
-                self.output.solid_regions.append(ki_region)
+            if ee_region.region_type == "npth":
+                ki_region = _convert_solid_region(
+                    ee_region,
+                    bbox_x_px,
+                    bbox_y_px,
+                    SolidRegionOutput.TRACK,
+                )
+                if ki_region is not None:
+                    self.output.tracks.append(ki_region)
+            else:
+                ki_region = _convert_solid_region(
+                    ee_region,
+                    bbox_x_px,
+                    bbox_y_px,
+                    SolidRegionOutput.SOLID_REGION,
+                )
+                if ki_region is not None:
+                    self.output.solid_regions.append(ki_region)
 
     def get_ki_footprint(self) -> KiFootprint:
         return self.output
